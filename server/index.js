@@ -31,10 +31,10 @@ app.use('/api/admin', adminRoutes);
 // Servir arquivos estáticos do React (após o build)
 app.use(express.static(path.join(__dirname, '../client/dist')));
 
-// Rota coringa para suportar React Router (SPA)
-app.get('(.*)', (req, res) => {
-    // Se for uma rota de API que não existe, o Express cairia aqui, 
-    // mas priorizamos as rotas /api definidas acima.
+// Middleware final para suportar React Router (SPA)
+// Qualquer rota que não for API ou Arquivo Estático cairá aqui
+app.use((req, res) => {
+    // Se não for uma rota de API, entrega o index.html do React
     if (!req.path.startsWith('/api')) {
         res.sendFile(path.join(__dirname, '../client/dist/index.html'));
     } else {
