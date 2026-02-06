@@ -67,7 +67,6 @@ const LandingPage = () => {
         <div style={{ textAlign: 'center', padding: '50px', color: 'red' }}>
             <h2>Página não encontrada</h2>
             <p>O endereço "<strong>{effectiveSlug}</strong>" não possui conteúdo ou ainda não foi criado.</p>
-            <p><small>Verifique se o servidor backend está rodando na porta 3001.</small></p>
         </div>
     );
 

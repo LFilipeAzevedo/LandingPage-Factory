@@ -40,7 +40,7 @@ function App() {
           } />
 
           {/* Public Routes */}
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<Navigate to="/admin/login" />} />
           <Route path="/:slug" element={<LandingPage />} />
         </Routes>
       </AuthProvider>
