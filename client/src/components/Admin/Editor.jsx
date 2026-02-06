@@ -768,19 +768,17 @@ const Editor = () => {
                                                     placeholder="Ex: 🎉 Novidade: Nosso curso premium..."
                                                 />
                                             </div>
-                                            <div style={{ marginBottom: '1rem' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                                    <label style={{ fontSize: '0.8rem' }}>Fundo</label>
-                                                    <label style={{ fontSize: '0.8rem' }}>Texto</label>
+                                            <div style={{ maxWidth: '280px', marginTop: '1rem' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', paddingRight: '10px' }}>
+                                                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Fundo</label>
+                                                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Texto</label>
                                                 </div>
-                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))', gap: '0.75rem' }}>
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                                                     <ColorPicker
-                                                        label="Fundo"
                                                         color={content.topBar.backgroundColor}
                                                         onChange={(val) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, backgroundColor: val } }))}
                                                     />
                                                     <ColorPicker
-                                                        label="Texto"
                                                         color={content.topBar.textColor}
                                                         onChange={(val) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, textColor: val } }))}
                                                     />
