@@ -3,7 +3,7 @@ const cors = require('cors');
 const db = require('./db');
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 // CORS configuration - dynamic based on environment
 const corsOptions = {
