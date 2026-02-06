@@ -768,20 +768,27 @@ const Editor = () => {
                                                     placeholder="Ex: 🎉 Novidade: Nosso curso premium..."
                                                 />
                                             </div>
-                                            <div style={{ maxWidth: '280px', marginTop: '1rem' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', paddingRight: '10px' }}>
-                                                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Fundo</label>
-                                                    <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>Texto</label>
-                                                </div>
-                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                                                    <ColorPicker
-                                                        color={content.topBar.backgroundColor}
-                                                        onChange={(val) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, backgroundColor: val } }))}
-                                                    />
-                                                    <ColorPicker
-                                                        color={content.topBar.textColor}
-                                                        onChange={(val) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, textColor: val } }))}
-                                                    />
+                                            <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0', marginTop: '1rem', maxWidth: '320px' }}>
+                                                <h4 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '0.9rem', color: '#64748b' }}>
+                                                    Cores da Barra
+                                                </h4>
+                                                <div style={{ marginBottom: '1rem' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', paddingRight: '10px' }}>
+                                                        <label style={{ fontSize: '0.8rem' }}>Fundo</label>
+                                                        <label style={{ fontSize: '0.8rem' }}>Texto</label>
+                                                    </div>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))', gap: '0.75rem' }}>
+                                                        <ColorPicker
+                                                            label="Fundo"
+                                                            color={content.topBar.backgroundColor}
+                                                            onChange={(val) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, backgroundColor: val } }))}
+                                                        />
+                                                        <ColorPicker
+                                                            label="Texto"
+                                                            color={content.topBar.textColor}
+                                                            onChange={(val) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, textColor: val } }))}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div style={{
