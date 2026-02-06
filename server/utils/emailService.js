@@ -25,6 +25,7 @@ const sendVerificationEmail = async (email, username, token) => {
     if (!userEmail || !passEmail) {
         if (process.env.NODE_ENV === 'production') {
             console.error('❌ ERRO CRÍTICO: EMAIL_USER ou EMAIL_PASS não configurado em PRODUÇÃO!');
+            return { success: false, error: 'Configuração de e-mail ausente no servidor.' };
         }
         console.log('\n========================================');
         console.log('📧 E-MAIL DE VERIFICAÇÃO (Modo Dev)');

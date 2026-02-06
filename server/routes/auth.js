@@ -106,8 +106,11 @@ router.post('/register', (req, res) => {
 
                     res.status(201).json({
                         success: true,
-                        message: 'Register successful! Please check your email to verify your account.',
-                        emailSent: emailResult.success
+                        message: emailResult.success
+                            ? 'Register successful! Please check your email to verify your account.'
+                            : 'Conta criada, mas houve um erro ao enviar o e-mail de verificação. Por favor, contate o suporte ou verifique as configurações de SMTP.',
+                        emailSent: emailResult.success,
+                        emailError: emailResult.error || null
                     });
                 });
             });
