@@ -18,6 +18,7 @@ const contentRoutes = require('./routes/content');
 const uploadRoutes = require('./routes/upload.js');
 const statsRoutes = require('./routes/stats');
 const adminRoutes = require('./routes/admin');
+const path = require('path');
 const fs = require('fs');
 const uploadsDir = path.join(__dirname, 'data/uploads');
 if (!fs.existsSync(uploadsDir)) {
