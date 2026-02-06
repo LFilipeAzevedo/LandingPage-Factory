@@ -1,0 +1,67 @@
+const nodemailer = require('nodemailer');
+require('dotenv').config();
+
+// Configuration for Nodemailer
+// In production, use your professional SMTP (SendGrid, Mailgun, AWS SES, etc)
+// For development, Mailtrap is highly recommended.
+const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST || 'sandbox.smtp.mailtrap.io',
+    port: process.env.EMAIL_PORT || 2525,
+    secure: process.env.EMAIL_SECURE === 'true', // true para porta 465, false para outras
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
+
+const sendVerificationEmail = async (email, username, token) => {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const url = `${frontendUrl}/admin/verify-email/${token}`;
+
+    // Se não houver credenciais configuradas, apenas loga no console (modo dev)
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        if (process.env.NODE_ENV === 'production') {
+            console.error('❌ ERRO CRÍTICO: EMAIL_USER ou EMAIL_PASS não configurado em PRODUÇÃO!');
+        }
+        console.log('\n========================================');
+        console.log('📧 E-MAIL DE VERIFICAÇÃO (Modo Dev)');
+        console.log('========================================');
+        console.log(`Para: ${email}`);
+        console.log(`Usuário: ${username}`);
+        console.log(`Link de verificação:`);
+        console.log(`\n${url}\n`);
+        console.log('========================================\n');
+        return { success: true };
+    }
+
+    const mailOptions = {
+        from: process.env.EMAIL_FROM || '"Landing Page Builder" <noreply@seu-dominio.com>',
+        to: email,
+        subject: 'Confirme sua conta - Landing Page Builder',
+        html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+                <h2 style="color: #fa4eab;">Bem-vindo, ${username}!</h2>
+                <p>Obrigado por se cadastrar em nossa plataforma. Para começar a criar suas landing pages, confirme seu e-mail clicando no botão abaixo:</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="${url}" style="background-color: #fa4eab; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                        CONFIRMAR MINHA CONTA
+                    </a>
+                </div>
+                <p style="font-size: 0.8rem; color: #666;">Se você não criou esta conta, por favor ignore este e-mail.</p>
+                <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+                <p style="font-size: 0.7rem; color: #999; text-align: center;">© 2026 Sua Empresa Desenvolvedora</p>
+            </div>
+        `
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Email de verificação enviado para ${email}`);
+        return { success: true };
+    } catch (error) {
+        console.error('Erro ao enviar e-mail:', error);
+        return { success: false, error };
+    }
+};
+
+module.exports = { sendVerificationEmail };

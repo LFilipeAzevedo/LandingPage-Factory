@@ -1,0 +1,33 @@
+# Dependency directories
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Environment files
+.env
+client/.env
+server/.env
+*.local
+
+# SQLite Database
+server/database.sqlite
+*.db
+*.sqlite
+
+# Production build
+client/dist/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# User Uploads (Prevents local test images from being in repo)
+server/uploads/*
+!server/uploads/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
