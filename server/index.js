@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 3001;
 
 // CORS configuration - dynamic based on environment
 const corsOptions = {
-    origin: process.env.FRONTEND_URL || '*', // Fallback for local dev
+    origin: process.env.URL_FRONTEND || process.env.FRONTEND_URL || '*', // Fallback for local dev
     optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));

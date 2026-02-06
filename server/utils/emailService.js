@@ -6,20 +6,23 @@ require('dotenv').config();
 // For development, Mailtrap is highly recommended.
 const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST || 'sandbox.smtp.mailtrap.io',
-    port: process.env.EMAIL_PORT || 2525,
-    secure: process.env.EMAIL_SECURE === 'true', // true para porta 465, false para outras
+    port: process.env.PORTA_DE_EMAIL || process.env.EMAIL_PORT || 2525,
+    secure: process.env.EMAIL_SEGURO === 'verdadeiro' || process.env.EMAIL_SECURE === 'true', // suporte PT/EN
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+        user: process.env.USUÁRIO_DE_EMAIL || process.env.EMAIL_USER,
+        pass: process.env.SENHA_DE_EMAIL || process.env.EMAIL_PASS
     }
 });
 
 const sendVerificationEmail = async (email, username, token) => {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = (process.env.URL_FRONTEND || process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
     const url = `${frontendUrl}/admin/verify-email/${token}`;
 
+    const userEmail = process.env.USUÁRIO_DE_EMAIL || process.env.EMAIL_USER;
+    const passEmail = process.env.SENHA_DE_EMAIL || process.env.EMAIL_PASS;
+
     // Se não houver credenciais configuradas, apenas loga no console (modo dev)
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    if (!userEmail || !passEmail) {
         if (process.env.NODE_ENV === 'production') {
             console.error('❌ ERRO CRÍTICO: EMAIL_USER ou EMAIL_PASS não configurado em PRODUÇÃO!');
         }
@@ -35,7 +38,7 @@ const sendVerificationEmail = async (email, username, token) => {
     }
 
     const mailOptions = {
-        from: process.env.EMAIL_FROM || '"Landing Page Builder" <noreply@seu-dominio.com>',
+        from: process.env['E-MAIL_DE'] || process.env.EMAIL_FROM || '"Landing Page Builder" <noreply@seu-dominio.com>',
         to: email,
         subject: 'Confirme sua conta - Landing Page Builder',
         html: `
