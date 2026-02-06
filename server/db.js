@@ -1,14 +1,20 @@
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcryptjs');
+const fs = require('fs');
 const path = require('path');
 
-// Connect to database (file-based)
-const dbPath = path.join(__dirname, 'database.sqlite');
+// Connect to database (now inside a folder for easier persistence)
+const dataDir = path.join(__dirname, 'data');
+if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+}
+
+const dbPath = path.join(dataDir, 'database.sqlite');
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Error connecting to database:', err.message);
     } else {
-        console.log('Connected to the SQLite database.');
+        console.log('Connected to the SQLite database at:', dbPath);
         // Prevent SQLITE_BUSY errors by waiting for locks to release
         db.run("PRAGMA busy_timeout = 5000");
         initDb();
