@@ -23,8 +23,8 @@ function verifyToken(req, res, next) {
 // Multer Storage Configuration
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        // Use absolute path to ensure certainty
-        const uploadDir = path.join(__dirname, '../uploads');
+        // Use absolute path to ensure certainty, pointing to the Volume-persistent folder
+        const uploadDir = path.join(__dirname, '../data/uploads');
         cb(null, uploadDir);
     },
     filename: function (req, file, cb) {

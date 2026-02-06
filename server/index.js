@@ -18,9 +18,13 @@ const contentRoutes = require('./routes/content');
 const uploadRoutes = require('./routes/upload.js');
 const statsRoutes = require('./routes/stats');
 const adminRoutes = require('./routes/admin');
-const path = require('path');
+const fs = require('fs');
+const uploadsDir = path.join(__dirname, 'data/uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(uploadsDir));
 app.use('/api/auth', authRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/upload', uploadRoutes);
