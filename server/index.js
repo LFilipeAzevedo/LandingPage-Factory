@@ -27,8 +27,19 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/admin', adminRoutes);
 
-app.get('/', (req, res) => {
-    res.send('Landing Page Builder API is running.');
+// --- Configuração para Deploy Railway (Servir Frontend) ---
+// Servir arquivos estáticos do React (após o build)
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
+// Rota coringa para suportar React Router (SPA)
+app.get('*', (req, res) => {
+    // Se for uma rota de API que não existe, o Express cairia aqui, 
+    // mas priorizamos as rotas /api definidas acima.
+    if (!req.path.startsWith('/api')) {
+        res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+    } else {
+        res.status(404).json({ message: 'API route not found' });
+    }
 });
 
 app.listen(PORT, () => {
