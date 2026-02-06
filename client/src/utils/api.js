@@ -5,9 +5,8 @@ const getBaseUrl = () => {
     if (import.meta.env.VITE_API_URL) {
         return import.meta.env.VITE_API_URL;
     }
-    // Fallback to current hostname (good for local dev and LAN testing)
-    const { hostname } = window.location;
-    return `http://${hostname}:3001`;
+    // Em produção (Railway), o frontend e backend rodam no mesmo domínio/porta
+    return window.location.origin;
 };
 
 const api = axios.create({

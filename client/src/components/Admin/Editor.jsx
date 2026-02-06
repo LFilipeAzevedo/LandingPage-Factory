@@ -335,8 +335,7 @@ const Editor = () => {
                     'Authorization': `Bearer ${token}`
                 }
             });
-            const { hostname } = window.location;
-            const fullUrl = `http://${hostname}:3001${response.data.url}`;
+            const fullUrl = `${window.location.origin}${response.data.url}`;
 
             // Create an image object to check dimensions
             const img = new Image();
@@ -377,8 +376,7 @@ const Editor = () => {
                 }
             });
 
-            const { hostname } = window.location;
-            const fullUrl = `http://${hostname}:3001${response.data.url}`;
+            const fullUrl = `${window.location.origin}${response.data.url}`;
 
             // Handle different fields
             if (field === 'heroImage') {

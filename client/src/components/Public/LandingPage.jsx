@@ -70,8 +70,6 @@ const LandingPage = () => {
         </div>
     );
 
-    if (!content) return <div>Site não encontrado (Conteúdo vazio).</div>;
-
     const {
         heroTitle,
         heroSubtitle,

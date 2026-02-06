@@ -16,31 +16,33 @@ router.post('/login', (req, res) => {
         return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    if (err) return res.status(500).json({ error: 'Database error' });
-    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+    db.get("SELECT * FROM users WHERE username = ?", [username], (err, user) => {
+        if (err) return res.status(500).json({ error: 'Database error' });
+        if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
-    // BLOCK login if NOT verified
-    if (user.is_verified === 0) {
-        return res.status(403).json({
-            error: 'Account not verified. Please check your email.',
-            requiresVerification: true
-        });
-    }
-
-    const passwordIsValid = bcrypt.compareSync(password, user.password_hash);
-    if (!passwordIsValid) return res.status(401).json({ error: 'Invalid credentials' });
-
-    const token = jwt.sign({ id: user.id, username: user.username, plan_tier: user.plan_tier }, SECRET_KEY, {
-        expiresIn: 86400 // 24 hours
-    });
-
-    res.json({
-        auth: true,
-        token: token,
-        user: {
-            username: user.username,
-            plan_tier: user.plan_tier
+        // BLOCK login if NOT verified
+        if (user.is_verified === 0) {
+            return res.status(403).json({
+                error: 'Account not verified. Please check your email.',
+                requiresVerification: true
+            });
         }
+
+        const passwordIsValid = bcrypt.compareSync(password, user.password_hash);
+        if (!passwordIsValid) return res.status(401).json({ error: 'Invalid credentials' });
+
+        const token = jwt.sign({ id: user.id, username: user.username, plan_tier: user.plan_tier }, SECRET_KEY, {
+            expiresIn: 86400 // 24 hours
+        });
+
+        res.json({
+            auth: true,
+            token: token,
+            user: {
+                username: user.username,
+                plan_tier: user.plan_tier
+            }
+        });
     });
 });
 
