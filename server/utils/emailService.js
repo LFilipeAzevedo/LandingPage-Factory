@@ -1,4 +1,6 @@
+const nodemailer = require('nodemailer');
 const dns = require('dns');
+require('dotenv').config();
 
 // Configuration for Nodemailer
 // In production, use your professional SMTP (SendGrid, Mailgun, AWS SES, etc)
