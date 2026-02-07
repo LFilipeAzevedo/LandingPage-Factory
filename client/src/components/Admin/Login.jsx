@@ -104,7 +104,7 @@ const Login = () => {
             {showForgotModal && (
                 <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
                     <div className="modal-content" style={{ background: 'white', padding: '2rem', borderRadius: '12px', width: '100%', maxWidth: '400px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
-                        <h3 style={{ marginTop: 0, color: '#1e293b' }}></h3>
+                        <h3 style={{ marginTop: 0, color: '#1e293b' }}>Recuperar Senha</h3>
                         <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.5rem' }}>Digite seu e-mail para receber um link de redefinição.</p>
 
                         {forgotMessage && <div style={{ padding: '0.75rem', borderRadius: '6px', marginBottom: '1rem', background: forgotMessage.includes('erro') ? '#fee2e2' : '#dcfce7', color: forgotMessage.includes('erro') ? '#991b1b' : '#166534', fontSize: '0.9rem' }}>{forgotMessage}</div>}

@@ -44,10 +44,10 @@ const sendVerificationEmail = async (email, username, token) => {
         subject: 'Confirme sua conta - Landing Page Builder',
         html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-                <h2 style="color: #fa4eab;">Bem-vindo, ${username}!</h2>
+                <h2 style="color: #106a94ff;">Bem-vindo, ${username}!</h2>
                 <p>Obrigado por se cadastrar em nossa plataforma. Para começar a criar suas landing pages, confirme seu e-mail clicando no botão abaixo:</p>
                 <div style="text-align: center; margin: 30px 0;">
-                    <a href="${url}" style="background-color: #fa4eab; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                    <a href="${url}" style="background-color: #109426ff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
                         CONFIRMAR MINHA CONTA
                     </a>
                 </div>
