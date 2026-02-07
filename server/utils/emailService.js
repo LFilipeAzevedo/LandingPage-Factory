@@ -15,11 +15,20 @@ const transporter = nodemailer.createTransport({
         user: process.env.USUÁRIO_DE_EMAIL || process.env.EMAIL_USER,
         pass: process.env.SENHA_DE_EMAIL || process.env.EMAIL_PASS
     },
-    // Fix for Railway ENETUNREACH (Force IPv4)
+    // Fix for Railway/Cloud connectivity issues
     family: 4,
-    // Add timeout to avoid hanging processes
-    connectionTimeout: 10000,
-    greetingTimeout: 10000
+    connectionTimeout: 20000, // 20 seconds
+    greetingTimeout: 20000,
+    socketTimeout: 30000,
+    tls: {
+        // Do not fail on invalid certs (common with proxies)
+        rejectUnauthorized: false,
+        // Force a stable TLS version
+        minVersion: 'TLSv1.2'
+    },
+    // Enable detailed debug logging to Railway console
+    debug: true,
+    logger: true
 });
 
 const sendVerificationEmail = async (email, username, token) => {
