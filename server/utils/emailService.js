@@ -68,4 +68,38 @@ const sendVerificationEmail = async (email, username, token) => {
     }
 };
 
-module.exports = { sendVerificationEmail };
+const sendPasswordResetEmail = async (email, token) => {
+    const frontendUrl = (process.env.URL_FRONTEND || process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+    const url = `${frontendUrl}/admin/reset-password/${token}`;
+
+    const mailOptions = {
+        from: process.env['E-MAIL_DE'] || process.env.EMAIL_FROM || '"Landing Page Builder" <noreply@seu-dominio.com>',
+        to: email,
+        subject: 'Redefinição de Senha - Landing Page Builder',
+        html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+                <h2 style="color: #fa4eab;">Redefinição de Senha</h2>
+                <p>Você solicitou a redefinição de senha para sua conta. Clique no botão abaixo para criar uma nova senha:</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="${url}" style="background-color: #fa4eab; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                        REDEFINIR MINHA SENHA
+                    </a>
+                </div>
+                <p style="font-size: 0.8rem; color: #666;">Se você não solicitou isso, por favor ignore este e-mail. O link expira em 1 hora.</p>
+                <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+                <p style="font-size: 0.7rem; color: #999; text-align: center;">© 2026 Landing Page Factory</p>
+            </div>
+        `
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Email de redefinição enviado para ${email}`);
+        return { success: true };
+    } catch (error) {
+        console.error('Erro ao enviar e-mail de redefinição:', error);
+        return { success: false, error };
+    }
+};
+
+module.exports = { sendVerificationEmail, sendPasswordResetEmail };

@@ -3,6 +3,8 @@ const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
 
+require('dotenv').config();
+
 // Connect to database (now inside a folder for easier persistence)
 const dataDir = path.join(__dirname, 'data');
 if (!fs.existsSync(dataDir)) {
@@ -33,6 +35,8 @@ function initDb() {
             is_verified BOOLEAN DEFAULT 0,
             is_active BOOLEAN DEFAULT 1,
             verification_token TEXT,
+            reset_token TEXT,
+            reset_token_expires DATETIME,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )`);
 
@@ -55,9 +59,14 @@ function initDb() {
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )`);
 
-        // Seed Default User (admin / admin123)
-        const defaultUser = 'admin';
-        const defaultPass = 'admin123';
+        // Seed Default User (from .env)
+        const defaultUser = process.env.ADMIN_USERNAME || 'LuizFactoryAdm';
+        const defaultPass = process.env.ADMIN_PASSWORD;
+
+        if (!defaultPass) {
+            console.warn("⚠️  Aviso: ADMIN_PASSWORD não configurado no .env. Ignorando criação do usuário admin padrão.");
+            return;
+        }
 
         // Cleanup: Remove old placeholder users that were used as templates
         const placeholderUsers = ['premium_user', 'static_user', 'basic_user'];
@@ -76,7 +85,7 @@ function initDb() {
                 db.run("INSERT INTO users (username, password_hash, plan_tier, is_verified) VALUES (?, ?, ?, ?)", [defaultUser, hash, 'adm_server', 1], function (err) {
                     if (err) console.error("Error creating default user:", err);
                     else {
-                        console.log("Default user created: admin / admin123 (Verified)");
+                        console.log("Default user created: LuizFactoryAdm / 162618@Ll~ (Verified)");
                         seedPage(this.lastID);
                     }
                 });

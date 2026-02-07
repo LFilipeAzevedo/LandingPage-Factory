@@ -189,9 +189,8 @@
     box-shadow: var(--shadow-sm);
     margin-bottom: var(--spacing-lg);
     min-height: 100px;
-    /* Previne colapsos durante re-renders */
-    contain: layout;
-    /* Melhora performance e estabilidade de scroll */
+    position: relative;
+    /* Garante base para z-index se necessário */
 }
 
 .form-section h3 {
@@ -598,4 +597,52 @@
     to {
         transform: rotate(360deg);
     }
+}
+
+/* --- SECTION FACTORY & CUSTOM MODULES --- */
+.dynamic-factory-section {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 2px dashed #cbd5e1;
+}
+
+.dynamic-factory-section:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.custom-section-edit {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Rich Content Styles for Preview/Public */
+.rich-content b,
+.rich-content strong {
+    font-weight: bold;
+}
+
+.rich-content i,
+.rich-content em {
+    font-style: italic;
+}
+
+.rich-content ul {
+    list-style: disc;
+    padding-left: 1.5rem;
+    margin: 1rem 0;
+}
+
+.rich-content p {
+    margin-bottom: 1rem;
 }

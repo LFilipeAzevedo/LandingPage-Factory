@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './components/Admin/Login';
 import Register from './components/Admin/Register';
 import VerifyEmail from './components/Admin/VerifyEmail';
+import ResetPassword from './components/Admin/ResetPassword';
 import Editor from './components/Admin/Editor';
 import LandingPage from './components/Public/LandingPage'; // Placeholder, will create next
 
@@ -33,6 +34,7 @@ function App() {
           <Route path="/admin/login" element={<Login />} />
           <Route path="/admin/register" element={<Register />} />
           <Route path="/admin/verify-email/:token" element={<VerifyEmail />} />
+          <Route path="/admin/reset-password/:token" element={<ResetPassword />} />
           <Route path="/admin/editor" element={
             <ProtectedRoute>
               <Editor />
