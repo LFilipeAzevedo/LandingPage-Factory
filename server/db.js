@@ -114,9 +114,15 @@ function initDb() {
                         if (err) console.error("Error creating default page:", err);
                         else console.log("Default page content created for user", userId);
                     });
-                } else if (!row.user_id) {
-                    // Update existing row if user_id is missing
-                    db.run("UPDATE pages SET user_id = ? WHERE id = ?", [userId, row.id]);
+                } else {
+                    // Force update the owner of 'home' page to the current Admin User
+                    // This fixes issues where 'home' belongs to an old/deleted user ID on a persisted DB
+                    if (row.user_id !== userId) {
+                        db.run("UPDATE pages SET user_id = ? WHERE id = ?", [userId, row.id], (err) => {
+                            if (err) console.error("Error updating page owner:", err);
+                            else console.log(`Page 'home' ownership transferred to user ${userId}`);
+                        });
+                    }
                 }
             });
         }
