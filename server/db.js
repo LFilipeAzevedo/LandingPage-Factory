@@ -85,7 +85,7 @@ function initDb() {
                 db.run("INSERT INTO users (username, password_hash, plan_tier, is_verified) VALUES (?, ?, ?, ?)", [defaultUser, hash, 'adm_server', 1], function (err) {
                     if (err) console.error("Error creating default user:", err);
                     else {
-                        console.log("Default user created: LuizFactoryAdm / 162618@Ll~ (Verified)");
+                        console.log("Default user created: LuizFactoryAdm (Verified)");
                         seedPage(this.lastID);
                     }
                 });

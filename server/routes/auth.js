@@ -100,17 +100,23 @@ router.post('/register', (req, res) => {
                     }
                     console.log('✅ Página criada com slug:', defaultSlug);
 
-                    // Send Verification Email
-                    const emailResult = await sendVerificationEmail(email, username, verificationToken);
-                    console.log('✅ Registro concluído com sucesso');
+                    // Send Verification Email (Asynchronous)
+                    sendVerificationEmail(email, username, verificationToken).then(emailResult => {
+                        if (emailResult.success) {
+                            console.log(`📬 E-mail de verificação enviado para ${email}`);
+                        } else {
+                            console.error('❌ Erro no e-mail de background:', emailResult.error);
+                        }
+                    }).catch(err => {
+                        console.error('🔥 Erro fatal no envio de e-mail:', err);
+                    });
+
+                    console.log('✅ Registro concluído com sucesso (Resposta enviada)');
 
                     res.status(201).json({
                         success: true,
-                        message: emailResult.success
-                            ? 'Register successful! Please check your email to verify your account.'
-                            : 'Conta criada, mas houve um erro ao enviar o e-mail de verificação. Por favor, contate o suporte ou verifique as configurações de SMTP.',
-                        emailSent: emailResult.success,
-                        emailError: emailResult.error || null
+                        message: 'Conta criada com sucesso! Verifique seu e-mail para ativar sua conta antes de fazer login.',
+                        emailSent: true // Assumimos que foi para a fila de envio
                     });
                 });
             });
@@ -155,13 +161,18 @@ router.post('/forgot-password', (req, res) => {
             if (err) return res.status(500).json({ error: 'Database error' });
 
             const { sendPasswordResetEmail } = require('../utils/emailService');
-            const emailResult = await sendPasswordResetEmail(email, resetToken);
+            // Send Password Reset Email (Asynchronous)
+            sendPasswordResetEmail(email, resetToken).then(emailResult => {
+                if (emailResult.success) {
+                    console.log(`📬 E-mail de redefinição enviado para ${email}`);
+                } else {
+                    console.error('❌ Erro no e-mail de reset background:', emailResult.error);
+                }
+            }).catch(err => {
+                console.error('🔥 Erro fatal no reset de e-mail:', err);
+            });
 
-            if (emailResult.success) {
-                res.json({ success: true, message: 'Se o e-mail existir, você receberá um link de redefinição.' });
-            } else {
-                res.status(500).json({ error: 'Failed to send email' });
-            }
+            res.json({ success: true, message: 'Se o e-mail existir, você receberá um link de redefinição.' });
         });
     });
 });

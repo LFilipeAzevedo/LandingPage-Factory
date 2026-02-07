@@ -4,14 +4,20 @@ require('dotenv').config();
 // Configuration for Nodemailer
 // In production, use your professional SMTP (SendGrid, Mailgun, AWS SES, etc)
 // For development, Mailtrap is highly recommended.
+const emailPort = process.env.PORTA_DE_EMAIL || process.env.EMAIL_PORT || 2525;
+const isSecure = process.env.EMAIL_SEGURO === 'verdadeiro' || process.env.EMAIL_SECURE === 'true' || emailPort == 465;
+
 const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST || 'sandbox.smtp.mailtrap.io',
-    port: process.env.PORTA_DE_EMAIL || process.env.EMAIL_PORT || 2525,
-    secure: process.env.EMAIL_SEGURO === 'verdadeiro' || process.env.EMAIL_SECURE === 'true', // suporte PT/EN
+    port: emailPort,
+    secure: isSecure,
     auth: {
         user: process.env.USUÁRIO_DE_EMAIL || process.env.EMAIL_USER,
         pass: process.env.SENHA_DE_EMAIL || process.env.EMAIL_PASS
-    }
+    },
+    // Add timeout to avoid hanging processes
+    connectionTimeout: 10000,
+    greetingTimeout: 10000
 });
 
 const sendVerificationEmail = async (email, username, token) => {
