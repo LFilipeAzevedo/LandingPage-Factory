@@ -1,5 +1,4 @@
-const nodemailer = require('nodemailer');
-require('dotenv').config();
+const dns = require('dns');
 
 // Configuration for Nodemailer
 // In production, use your professional SMTP (SendGrid, Mailgun, AWS SES, etc)
@@ -15,18 +14,17 @@ const transporter = nodemailer.createTransport({
         user: process.env.USUÁRIO_DE_EMAIL || process.env.EMAIL_USER,
         pass: process.env.SENHA_DE_EMAIL || process.env.EMAIL_PASS
     },
-    // Fix for Railway/Cloud connectivity issues
-    family: 4,
-    connectionTimeout: 20000, // 20 seconds
+    // Force IPv4 at the DNS level (Fix for Railway ENETUNREACH)
+    lookup: (hostname, options, callback) => {
+        return dns.lookup(hostname, { family: 4 }, callback);
+    },
+    connectionTimeout: 20000,
     greetingTimeout: 20000,
     socketTimeout: 30000,
     tls: {
-        // Do not fail on invalid certs (common with proxies)
         rejectUnauthorized: false,
-        // Force a stable TLS version
         minVersion: 'TLSv1.2'
     },
-    // Enable detailed debug logging to Railway console
     debug: true,
     logger: true
 });
