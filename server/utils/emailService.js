@@ -44,8 +44,10 @@ const sendVerificationEmail = async (email, username, token) => {
         return { success: true };
     }
 
+    const defaultFrom = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Landing Page Builder" <noreply@seu-dominio.com>';
+
     const mailOptions = {
-        from: process.env['E-MAIL_DE'] || process.env.EMAIL_FROM || '"Landing Page Builder" <noreply@seu-dominio.com>',
+        from: process.env['E-MAIL_DE'] || defaultFrom,
         to: email,
         subject: 'Confirme sua conta - Landing Page Builder',
         html: `
@@ -78,8 +80,10 @@ const sendPasswordResetEmail = async (email, token) => {
     const frontendUrl = (process.env.URL_FRONTEND || process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
     const url = `${frontendUrl}/admin/reset-password/${token}`;
 
+    const defaultFrom = process.env.EMAIL_FROM || process.env.EMAIL_USER || '"Landing Page Builder" <noreply@seu-dominio.com>';
+
     const mailOptions = {
-        from: process.env['E-MAIL_DE'] || process.env.EMAIL_FROM || '"Landing Page Builder" <noreply@seu-dominio.com>',
+        from: process.env['E-MAIL_DE'] || defaultFrom,
         to: email,
         subject: 'Redefinição de Senha - Landing Page Builder',
         html: `
