@@ -19,14 +19,17 @@ const Plans = () => {
             .catch(err => console.error('Error fetching price:', err));
     }, []);
 
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+
     useEffect(() => {
         if (searchParams.get('success')) {
-            alert('Pagamento realizado com sucesso! Seu plano agora é Premium.');
-            // Remove params from URL
-            navigate('/admin/plans', { replace: true });
+            setShowSuccessModal(true);
+            // Remove params from URL but keep the modal open
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, '', newUrl);
         }
         if (searchParams.get('canceled')) {
-            alert('Pagamento cancelado.');
+            alert('Pagamento cancelado.'); // Keep simple alert for cancel or upgrade later
             navigate('/admin/plans', { replace: true });
         }
     }, [searchParams, navigate]);
@@ -150,6 +153,42 @@ const Plans = () => {
 
                 </div>
             </div>
+
+            {/* Success Modal */}
+            {showSuccessModal && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
+                }}>
+                    <div style={{
+                        background: '#fff', borderRadius: '24px', padding: '40px', width: '90%', maxWidth: '400px',
+                        textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                    }}>
+                        <div style={{
+                            width: '80px', height: '80px', background: '#dcfce7', borderRadius: '50%',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px auto'
+                        }}>
+                            <svg className="w-12 h-12 text-green-600" fill="none" stroke="#16a34a" viewBox="0 0 24 24" style={{ width: '48px', height: '48px' }}>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                        <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#0f172a', marginBottom: '8px' }}>Pagamento Aprovado!</h2>
+                        <p style={{ color: '#64748b', marginBottom: '16px' }}>Agora você faz parte do time Premium. Aproveite todos os recursos desbloqueados.</p>
+                        <p style={{ color: '#ef4444', fontSize: '0.875rem', marginBottom: '32px', background: '#fee2e2', padding: '8px', borderRadius: '8px' }}>
+                            <strong>Nota:</strong> Se o status não mudar imediatamente, tente sair e entrar novamente na sua conta.
+                        </p>
+                        <button
+                            onClick={() => setShowSuccessModal(false)}
+                            style={{
+                                width: '100%', background: '#16a34a', color: '#fff', padding: '12px', borderRadius: '12px',
+                                fontWeight: '600', border: 'none', cursor: 'pointer', fontSize: '1rem'
+                            }}
+                        >
+                            Começar Agora
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
