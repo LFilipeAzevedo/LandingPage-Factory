@@ -17,7 +17,8 @@ const sendBrevoEmail = async (toEmail, subject, htmlContent) => {
         return { success: true };
     }
 
-    const senderEmail = process.env.EMAIL_USER || 'LPFactory.Dev@gmail.com';
+    // Força minúsculo para bater com o cadastro no Brevo (Case Sensitive Strict)
+    const senderEmail = (process.env.EMAIL_USER || 'lpfactory.dev@gmail.com').toLowerCase();
     const senderName = 'Landing Page Factory';
 
     const url = 'https://api.brevo.com/v3/smtp/email';
