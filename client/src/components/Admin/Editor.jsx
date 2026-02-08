@@ -1621,7 +1621,6 @@ const Editor = () => {
                         <section className="admin-users-section">
                             <div className="admin-section-header">
                                 <div className="header-title">
-                                    <h2>Gerenciamento de Usuários</h2>
                                     <p className="subtitle">Visualize e controle todos os acessos do sistema</p>
                                 </div>
                                 <div className="search-wrapper">
