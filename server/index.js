@@ -11,13 +11,18 @@ const corsOptions = {
     optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
-app.use(express.json());
+app.use(express.json({
+    verify: (req, res, buf) => {
+        req.rawBody = buf;
+    }
+}));
 
 const authRoutes = require('./routes/auth');
 const contentRoutes = require('./routes/content');
 const uploadRoutes = require('./routes/upload.js');
 const statsRoutes = require('./routes/stats');
 const adminRoutes = require('./routes/admin');
+const paymentRoutes = require('./routes/payment');
 const path = require('path');
 const fs = require('fs');
 const uploadsDir = path.join(__dirname, 'data/uploads');
@@ -31,6 +36,7 @@ app.use('/api/content', contentRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // --- Configuração para Deploy Railway (Servir Frontend) ---
 const distPath = path.join(__dirname, '../client/dist');

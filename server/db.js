@@ -43,13 +43,24 @@ function initDb() {
         // Migration: Ensure reset_token columns exist (for existing DBs)
         db.run("ALTER TABLE users ADD COLUMN reset_token TEXT", (err) => {
             if (err && !err.message.includes("duplicate column name")) {
-                console.error("Migration/Check (reset_token):", err.message);
+                console.log("Migration info:", err.message);
             }
         });
         db.run("ALTER TABLE users ADD COLUMN reset_token_expires DATETIME", (err) => {
             if (err && !err.message.includes("duplicate column name")) {
-                console.error("Migration/Check (reset_token_expires):", err.message);
+                console.log("Migration info:", err.message);
             }
+        });
+
+        // Migration: Stripe Fields
+        db.run("ALTER TABLE users ADD COLUMN stripe_customer_id TEXT", (err) => {
+            if (err && !err.message.includes('duplicate column')) console.log('Migration Stripe Customer:', err.message);
+        });
+        db.run("ALTER TABLE users ADD COLUMN stripe_subscription_id TEXT", (err) => {
+            if (err && !err.message.includes('duplicate column')) console.log('Migration Stripe Sub ID:', err.message);
+        });
+        db.run("ALTER TABLE users ADD COLUMN subscription_status TEXT DEFAULT 'static'", (err) => {
+            if (err && !err.message.includes('duplicate column')) console.log('Migration Stripe Status:', err.message);
         });
 
         // Create Pages Table
