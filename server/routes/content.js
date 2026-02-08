@@ -90,6 +90,11 @@ router.get('/:slug', (req, res) => {
                     content.sectionStyles = {};
                 }
 
+                // 4. Disable Top Bar (Announcement)
+                if (content.topBar) {
+                    content.topBar.enabled = false;
+                }
+
                 // Future: Enforce footer branding for Free tier
                 // if (row.plan_tier === 'static') { ... }
             }
