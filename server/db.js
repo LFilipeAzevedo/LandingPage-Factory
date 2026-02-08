@@ -3,6 +3,8 @@ const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
 
+require('dotenv').config();
+
 // Connect to database (now inside a folder for easier persistence)
 const dataDir = path.join(__dirname, 'data');
 if (!fs.existsSync(dataDir)) {
@@ -33,8 +35,33 @@ function initDb() {
             is_verified BOOLEAN DEFAULT 0,
             is_active BOOLEAN DEFAULT 1,
             verification_token TEXT,
+            reset_token TEXT,
+            reset_token_expires DATETIME,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )`);
+
+        // Migration: Ensure reset_token columns exist (for existing DBs)
+        db.run("ALTER TABLE users ADD COLUMN reset_token TEXT", (err) => {
+            if (err && !err.message.includes("duplicate column name")) {
+                console.log("Migration info:", err.message);
+            }
+        });
+        db.run("ALTER TABLE users ADD COLUMN reset_token_expires DATETIME", (err) => {
+            if (err && !err.message.includes("duplicate column name")) {
+                console.log("Migration info:", err.message);
+            }
+        });
+
+        // Migration: Stripe Fields
+        db.run("ALTER TABLE users ADD COLUMN stripe_customer_id TEXT", (err) => {
+            if (err && !err.message.includes('duplicate column')) console.log('Migration Stripe Customer:', err.message);
+        });
+        db.run("ALTER TABLE users ADD COLUMN stripe_subscription_id TEXT", (err) => {
+            if (err && !err.message.includes('duplicate column')) console.log('Migration Stripe Sub ID:', err.message);
+        });
+        db.run("ALTER TABLE users ADD COLUMN subscription_status TEXT DEFAULT 'static'", (err) => {
+            if (err && !err.message.includes('duplicate column')) console.log('Migration Stripe Status:', err.message);
+        });
 
         // Create Pages Table
         db.run(`CREATE TABLE IF NOT EXISTS pages (
@@ -55,9 +82,14 @@ function initDb() {
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )`);
 
-        // Seed Default User (admin / admin123)
-        const defaultUser = 'admin';
-        const defaultPass = 'admin123';
+        // Seed Default User (from .env)
+        const defaultUser = process.env.ADMIN_USERNAME || 'LuizFactoryAdm';
+        const defaultPass = process.env.ADMIN_PASSWORD;
+
+        if (!defaultPass) {
+            console.warn("⚠️  Aviso: ADMIN_PASSWORD não configurado no .env. Ignorando criação do usuário admin padrão.");
+            return;
+        }
 
         // Cleanup: Remove old placeholder users that were used as templates
         const placeholderUsers = ['premium_user', 'static_user', 'basic_user'];
@@ -76,7 +108,7 @@ function initDb() {
                 db.run("INSERT INTO users (username, password_hash, plan_tier, is_verified) VALUES (?, ?, ?, ?)", [defaultUser, hash, 'adm_server', 1], function (err) {
                     if (err) console.error("Error creating default user:", err);
                     else {
-                        console.log("Default user created: admin / admin123 (Verified)");
+                        console.log("Default user created: LuizFactoryAdm (Verified)");
                         seedPage(this.lastID);
                     }
                 });
@@ -105,9 +137,15 @@ function initDb() {
                         if (err) console.error("Error creating default page:", err);
                         else console.log("Default page content created for user", userId);
                     });
-                } else if (!row.user_id) {
-                    // Update existing row if user_id is missing
-                    db.run("UPDATE pages SET user_id = ? WHERE id = ?", [userId, row.id]);
+                } else {
+                    // Force update the owner of 'home' page to the current Admin User
+                    // This fixes issues where 'home' belongs to an old/deleted user ID on a persisted DB
+                    if (row.user_id !== userId) {
+                        db.run("UPDATE pages SET user_id = ? WHERE id = ?", [userId, row.id], (err) => {
+                            if (err) console.error("Error updating page owner:", err);
+                            else console.log(`Page 'home' ownership transferred to user ${userId}`);
+                        });
+                    }
                 }
             });
         }

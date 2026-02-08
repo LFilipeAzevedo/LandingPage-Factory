@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../../utils/api';
@@ -12,21 +12,54 @@ const Register = () => {
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // Password Strength State
+    const [pwdValidations, setPwdValidations] = useState({
+        length: false,
+        upper: false,
+        lower: false,
+        number: false
+    });
+
     const { login } = useAuth();
     const navigate = useNavigate();
+
+    // Validate password on change
+    useEffect(() => {
+        setPwdValidations({
+            length: password.length >= 8,
+            upper: /[A-Z]/.test(password),
+            lower: /[a-z]/.test(password),
+            number: /\d/.test(password)
+        });
+    }, [password]);
+
+    const isPasswordStrong = Object.values(pwdValidations).every(Boolean);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         setSuccessMessage('');
 
+        // Sanitization (Trim)
+        const cleanUsername = username.trim();
+        const cleanEmail = email.trim();
+
         if (password !== confirmPassword) {
             return setError('As senhas não coincidem.');
         }
 
+        if (!isPasswordStrong) {
+            return setError('A senha não atende aos requisitos de segurança.');
+        }
+
         setLoading(true);
         try {
-            const response = await api.post('/api/auth/register', { username, email, password });
+            const response = await api.post('/api/auth/register', {
+                username: cleanUsername,
+                email: cleanEmail,
+                password
+            });
 
             if (response.data.success) {
                 setSuccessMessage('Conta criada com sucesso! Verifique seu e-mail para ativar sua conta antes de fazer login.');
@@ -84,6 +117,9 @@ const Register = () => {
                                 placeholder="ex: brigadeirosda-maria"
                                 required
                             />
+                            <small style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
+                                Este será o endereço do seu site. Evite espaços e caracteres especiais.
+                            </small>
                         </div>
 
                         <div className="form-group">
@@ -109,6 +145,21 @@ const Register = () => {
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                             />
+                            {/* Password Strength Meter */}
+                            <div style={{ marginTop: '8px', fontSize: '0.75rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
+                                <span style={{ color: pwdValidations.length ? '#10b981' : '#94a3b8' }}>
+                                    {pwdValidations.length ? '✓' : '○'} Mínimo 8 caracteres
+                                </span>
+                                <span style={{ color: pwdValidations.upper ? '#10b981' : '#94a3b8' }}>
+                                    {pwdValidations.upper ? '✓' : '○'} Letra Maiúscula
+                                </span>
+                                <span style={{ color: pwdValidations.lower ? '#10b981' : '#94a3b8' }}>
+                                    {pwdValidations.lower ? '✓' : '○'} Letra Minúscula
+                                </span>
+                                <span style={{ color: pwdValidations.number ? '#10b981' : '#94a3b8' }}>
+                                    {pwdValidations.number ? '✓' : '○'} Número
+                                </span>
+                            </div>
                         </div>
 
                         <div className="form-group">

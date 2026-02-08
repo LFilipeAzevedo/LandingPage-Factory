@@ -37,15 +37,14 @@ body.color-picker-dragging * {
 }
 
 .color-swatch {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    border: 2px solid white;
+    width: 6px;
+    height: 22px;
+    border-radius: 4px;
+    border: none;
     padding: 0;
     cursor: pointer;
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
     pointer-events: none;
-    /* Let container handle click */
 }
 
 .color-hex-label {

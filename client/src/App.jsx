@@ -3,7 +3,9 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './components/Admin/Login';
 import Register from './components/Admin/Register';
 import VerifyEmail from './components/Admin/VerifyEmail';
+import ResetPassword from './components/Admin/ResetPassword';
 import Editor from './components/Admin/Editor';
+import Plans from './components/Admin/Plans';
 import LandingPage from './components/Public/LandingPage'; // Placeholder, will create next
 
 // Protected Route Component
@@ -16,10 +18,6 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/admin/login" />;
   }
 
-  // Prevent users with 'static' plan from accessing the editor
-  if (user.plan_tier === 'static') {
-    return <Navigate to="/" />;
-  }
 
   return children;
 };
@@ -33,9 +31,15 @@ function App() {
           <Route path="/admin/login" element={<Login />} />
           <Route path="/admin/register" element={<Register />} />
           <Route path="/admin/verify-email/:token" element={<VerifyEmail />} />
+          <Route path="/admin/reset-password/:token" element={<ResetPassword />} />
           <Route path="/admin/editor" element={
             <ProtectedRoute>
               <Editor />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/plans" element={
+            <ProtectedRoute>
+              <Plans />
             </ProtectedRoute>
           } />
 

@@ -3,11 +3,14 @@ import api from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import './Editor.css';
-import { LogOut, Save, Layout, Type, Image as ImageIcon, TrendingUp, ShoppingBag, CheckCircle, Plus, Trash2, ShieldCheck, Users, Activity, Globe, Search } from 'lucide-react';
+import { LogOut, Save, Layout, Type, Image as ImageIcon, TrendingUp, ShoppingBag, CheckCircle, Plus, Trash2, ShieldCheck, Users, Activity, Globe, Search, Layers, List, CreditCard } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import ColorPicker from './ColorPicker';
+import RichTextEditor from './RichTextEditor';
+import FontSelector from './FontSelector';
 
 const LockedFeature = ({ title, requiredTier, currentTier, children }) => {
+    const navigate = useNavigate();
     const hasAccess = currentTier === 'adm_server' || (requiredTier
         ? (currentTier === requiredTier || currentTier === 'premium')
         : currentTier === 'premium');
@@ -70,7 +73,7 @@ const LockedFeature = ({ title, requiredTier, currentTier, children }) => {
                         textTransform: 'uppercase',
                         flexShrink: 0
                     }}
-                    onClick={() => window.open('https://sua-url-de-upgrade.com', '_blank')}
+                    onClick={() => navigate('/admin/plans')}
                 >
                     Quero Ser Premium
                 </button>
@@ -81,6 +84,7 @@ const LockedFeature = ({ title, requiredTier, currentTier, children }) => {
 
 const Editor = () => {
     const { logout, user } = useAuth();
+    const userTier = user?.plan_tier || 'basic'; // Fix: Define userTier
     const navigate = useNavigate();
     const [content, setContent] = useState(null);
     const [pageSlug, setPageSlug] = useState('home');
@@ -95,6 +99,7 @@ const Editor = () => {
     const [allUsers, setAllUsers] = useState([]);
     const [loadingUsers, setLoadingUsers] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [activeSection, setActiveSection] = useState('summary'); // 'summary', 'hero', 'about', 'events', 'stations', 'sales', 'custom', 'footer'
 
     // Modern Interaction State
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, userId: null, username: '' });
@@ -199,6 +204,16 @@ const Editor = () => {
         totalVisits: allUsers.reduce((acc, u) => acc + (u.total_visits || 0), 0)
     };
 
+    const calculateMonthlyStats = (dailyData) => {
+        if (!dailyData) return 0;
+        return dailyData.slice(-30).reduce((acc, curr) => acc + (curr.visits || 0), 0);
+    };
+
+    const getChartData = (dailyData, days) => {
+        if (!dailyData) return [];
+        return dailyData.slice(-days);
+    };
+
     const loadContent = async () => {
         try {
             const response = await api.get('/api/content/admin/my-page');
@@ -216,17 +231,23 @@ const Editor = () => {
             if (!data.aboutText) data.aboutText = '';
             if (!data.events) data.events = [];
             if (!data.stations) data.stations = [];
+            if (!data.eventsTitle) data.eventsTitle = 'Nossos Eventos';
+            if (!data.stationsTitle) data.stationsTitle = 'Nossas Estações';
+            if (!data.customSections) data.customSections = [];
 
             // Branding & Section Styles defaults
             const defaultStyles = {
-                aboutBackground: '#be185d',
-                aboutTitleColor: '#1e293b',
-                aboutLabelColor: '#ffffff',
-                aboutTextColor: '#ffffff',
-                eventsBackground: '#0f172a',
-                eventsTitleColor: '#ffffff',
+                aboutBackground: '#f8fafc',
+                aboutTitleColor: '#0f172a',
+                aboutLabelColor: '#64748b',
+                aboutTextColor: '#334155',
+                eventsBackground: '#f8fafc',
+                eventsTitleColor: '#0f172a',
                 stationsBackground: '#f8fafc',
-                stationsTitleColor: '#1e293b'
+                stationsTitleColor: '#0f172a',
+                salesIconColor: '#0f172a',
+                salesCardBackground: '#ffffff',
+                salesCardTextColor: '#0f172a'
             };
 
             if (!data.sectionStyles) {
@@ -241,7 +262,8 @@ const Editor = () => {
             if (!data.aboutImage) data.aboutImage = '';
             if (!data.aboutText) data.aboutText = '';
 
-            if (!data.salesSection) data.salesSection = {
+            // Ensure salesSection structure
+            const defaultSalesSection = {
                 enabled: false,
                 title: "Tudo o que você precisa em um só lugar:",
                 subtitle: "Aqui dentro você aprende o PLANO COMPLETO: Produzir + Vender + Escalar",
@@ -270,7 +292,30 @@ const Editor = () => {
                     checkoutUrl: ""
                 }
             };
-            if (!data.topBar) data.topBar = { enabled: false, text: '🎉 Novidade: Nosso curso premium está com 50% de desconto!', backgroundColor: '#fa4eab', textColor: '#ffffff' };
+
+            if (!data.salesSection) {
+                data.salesSection = defaultSalesSection;
+            } else {
+                // Deep merge/ensure nested properties exist for existing partial data
+                if (!data.salesSection.features) data.salesSection.features = defaultSalesSection.features;
+                if (!data.salesSection.card) data.salesSection.card = defaultSalesSection.card;
+                else {
+                    // Ensure card properties
+                    if (!data.salesSection.card.highlights) data.salesSection.card.highlights = defaultSalesSection.card.highlights;
+                    if (!data.salesSection.card.title) data.salesSection.card.title = defaultSalesSection.card.title;
+                    if (!data.salesSection.card.buttonText) data.salesSection.card.buttonText = defaultSalesSection.card.buttonText;
+                    if (!data.salesSection.card.checkoutUrl) data.salesSection.card.checkoutUrl = '';
+                }
+            }
+
+            // Ensure customSections have items array
+            if (data.customSections) {
+                data.customSections = data.customSections.map(s => ({
+                    ...s,
+                    items: s.items || []
+                }));
+            }
+            if (!data.topBar) data.topBar = { enabled: false, text: '🎉 Novidade: Nosso curso premium está com 50% de desconto!', backgroundColor: '#0f172a', textColor: '#ffffff' };
 
             setContent(data);
         } catch (error) {
@@ -295,16 +340,113 @@ const Editor = () => {
     };
 
     const handleFeatureChange = (index, field, value) => {
-        const newFeatures = [...content.features];
-        newFeatures[index][field] = value;
-        setContent(prev => ({ ...prev, features: newFeatures }));
+        setContent(prev => {
+            const newFeatures = [...(prev.features || [])];
+            newFeatures[index] = { ...newFeatures[index], [field]: value };
+            return { ...prev, features: newFeatures };
+        });
     };
 
     // Generic Helper for List Updates
     const handleListChange = (listName, index, field, value) => {
-        const newList = [...content[listName]];
-        newList[index][field] = value;
-        setContent(prev => ({ ...prev, [listName]: newList }));
+        setContent(prev => {
+            const newList = [...(prev[listName] || [])];
+            newList[index] = { ...newList[index], [field]: value };
+            return { ...prev, [listName]: newList };
+        });
+    };
+
+    // --- CUSTOM SECTIONS LOGIC ---
+    const addCustomSection = (type) => {
+        const id = `section_${Date.now()}`;
+        let defaultValue = {
+            id,
+            type,
+            title: 'Nova Seção',
+            navLabel: 'Novo Link',
+            enabled: true,
+            font: "'Inter', sans-serif",
+            backgroundColor: '#ffffff',
+            titleColor: '#1e293b',
+            textColor: '#475569'
+        };
+
+        if (type === 'text') {
+            defaultValue = { ...defaultValue, content: 'Escreva aqui seu conteúdo rico...', navLabel: 'Texto' };
+        } else if (type === 'venda') {
+            defaultValue = {
+                ...defaultValue,
+                navLabel: 'Venda',
+                subtitle: 'Subtítulo da venda',
+                features: [{ text: 'Recurso 1' }],
+                card: { title: 'O que você leva', currentPrice: '97,00', buttonText: 'Comprar Agora', highlights: ['Acesso Imediato'] }
+            };
+        } else if (type === 'galeria') {
+            defaultValue = { ...defaultValue, navLabel: 'Galeria', items: [] };
+        } else if (type === 'grade') {
+            defaultValue = { ...defaultValue, navLabel: 'Destaques', items: [] };
+        }
+
+        setContent(prev => {
+            const newSections = [...(prev.customSections || []), defaultValue];
+            const newNavLinks = [...(prev.navLinks || []), { label: defaultValue.navLabel, url: `#${id}` }];
+            return {
+                ...prev,
+                customSections: newSections,
+                navLinks: newNavLinks
+            };
+        });
+    };
+
+    const removeCustomSection = (id) => {
+        setContent(prev => {
+            const newSections = (prev.customSections || []).filter(s => s.id !== id);
+            const newNavLinks = (prev.navLinks || []).filter(l => l.url !== `#${id}`);
+            return {
+                ...prev,
+                customSections: newSections,
+                navLinks: newNavLinks
+            };
+        });
+    };
+
+    const updateCustomSection = (id, field, value) => {
+        setContent(prev => {
+            const newSections = (prev.customSections || []).map(s => {
+                if (s.id === id) {
+                    return { ...s, [field]: value };
+                }
+                return s;
+            });
+
+            let newNavLinks = prev.navLinks;
+            if (field === 'navLabel') {
+                newNavLinks = (prev.navLinks || []).map(l => {
+                    if (l.url === `#${id}`) return { ...l, label: value };
+                    return l;
+                });
+            }
+
+            return {
+                ...prev,
+                customSections: newSections,
+                navLinks: newNavLinks
+            };
+        });
+    };
+
+    const handleCustomListChange = (sectionId, index, field, value) => {
+        setContent(prev => {
+            const newSections = (prev.customSections || []).map(s => {
+                if (s.id === sectionId) {
+                    const newList = [...(s.items || [])];
+                    newList[index] = { ...newList[index], [field]: value };
+                    return { ...s, items: newList };
+                }
+                return s;
+            });
+            return { ...prev, customSections: newSections };
+        });
     };
 
     const addItem = (listName, template) => {
@@ -316,6 +458,37 @@ const Editor = () => {
             ...prev,
             [listName]: prev[listName].filter((_, i) => i !== index)
         }));
+    };
+
+    const handleCustomSectionImageUpload = async (e, sectionId) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('image', file);
+        setMessage('Enviando imagem...');
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await api.post('/api/upload', formData, {
+                headers: { 'Content-Type': 'multipart/form-data', 'Authorization': `Bearer ${token}` }
+            });
+            const fullUrl = `${api.defaults.baseURL}${response.data.url}`;
+
+            setContent(prev => {
+                const newSections = prev.customSections.map(s => {
+                    if (s.id === sectionId) {
+                        return { ...s, items: [...(s.items || []), { src: fullUrl, id: Date.now() }] };
+                    }
+                    return s;
+                });
+                return { ...prev, customSections: newSections };
+            });
+            setMessage('Imagem adicionada!');
+        } catch (error) {
+            console.error(error);
+            setMessage('Erro ao enviar imagem.');
+        }
     };
 
     const handleListImageUpload = async (e, listName, index) => {
@@ -335,7 +508,7 @@ const Editor = () => {
                     'Authorization': `Bearer ${token}`
                 }
             });
-            const fullUrl = `${window.location.origin}${response.data.url}`;
+            const fullUrl = `${api.defaults.baseURL}${response.data.url}`;
 
             // Create an image object to check dimensions
             const img = new Image();
@@ -376,7 +549,7 @@ const Editor = () => {
                 }
             });
 
-            const fullUrl = `${window.location.origin}${response.data.url}`;
+            const fullUrl = `${api.defaults.baseURL}${response.data.url}`;
 
             // Handle different fields
             if (field === 'heroImage') {
@@ -418,6 +591,7 @@ const Editor = () => {
     };
 
     if (loading) return <div className="loading">Carregando editor...</div>;
+    if (!content) return <div className="error-message" style={{ padding: '2rem', textAlign: 'center', color: '#ef4444' }}>Erro ao carregar dados do editor. Por favor, recarregue a página.</div>;
 
     const isPremium = user?.plan_tier === 'premium' || user?.plan_tier === 'adm_server';
 
@@ -429,20 +603,94 @@ const Editor = () => {
                     <span className="user-badge">{user?.username}</span>
                 </div>
                 <nav className="sidebar-nav">
-                    <button
-                        className={`nav-item ${activeTab === 'editor' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('editor')}
-                    >
-                        <Layout size={18} /> Landing Page
-                    </button>
+                    {/* Landing Page Group */}
+                    <div className="nav-group">
+                        <div className="nav-group-header">
+                            <Layout size={18} />
+                            <span>Landing Page</span>
+                        </div>
+                        <div className="nav-subitems">
+                            <button
+                                className={`nav-item ${activeTab === 'editor' && activeSection === 'summary' ? 'active' : ''}`}
+                                onClick={() => { setActiveTab('editor'); setActiveSection('summary'); }}
+                            >
+                                <Activity size={16} /> Resumo
+                            </button>
+                            <button
+                                className={`nav-item ${activeTab === 'editor' && activeSection === 'hero' ? 'active' : ''}`}
+                                onClick={() => { setActiveTab('editor'); setActiveSection('hero'); }}
+                            >
+                                <Globe size={16} /> Tela Inicial
+                            </button>
+                            <button
+                                className={`nav-item ${activeTab === 'editor' && activeSection === 'events' ? 'active' : ''}`}
+                                onClick={() => { setActiveTab('editor'); setActiveSection('events'); }}
+                            >
+                                <CheckCircle size={16} /> Cases
+                            </button>
+                            <button
+                                className={`nav-item ${activeTab === 'editor' && activeSection === 'stations' ? 'active' : ''}`}
+                                onClick={() => { setActiveTab('editor'); setActiveSection('stations'); }}
+                            >
+                                <Layers size={16} /> Serviços
+                            </button>
+                            <button
+                                className={`nav-item ${activeTab === 'editor' && activeSection === 'about' ? 'active' : ''}`}
+                                onClick={() => { setActiveTab('editor'); setActiveSection('about'); }}
+                            >
+                                <Users size={16} /> Sobre Você
+                            </button>
+                            <button
+                                className={`nav-item ${activeTab === 'editor' && activeSection === 'sales' ? 'active' : ''}`}
+                                onClick={() => { setActiveTab('editor'); setActiveSection('sales'); }}
+                            >
+                                <ShoppingBag size={16} /> Cursos / Venda
+                            </button>
+                            <button
+                                className={`nav-item ${activeTab === 'editor' && activeSection === 'custom' ? 'active' : ''}`}
+                                onClick={() => { setActiveTab('editor'); setActiveSection('custom'); }}
+                            >
+                                <Plus size={16} /> Módulos Extras
+                            </button>
+                            <button
+                                className={`nav-item ${activeTab === 'editor' && activeSection === 'footer' ? 'active' : ''}`}
+                                onClick={() => { setActiveTab('editor'); setActiveSection('footer'); }}
+                            >
+                                <List size={16} /> Rodapé
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="nav-group" style={{ marginTop: '1rem' }}>
+                        <div className="nav-group-header">
+                            <CreditCard size={18} />
+                            <span>Conta</span>
+                        </div>
+                        <div className="nav-subitems">
+                            <button
+                                className="nav-item"
+                                onClick={() => navigate('/admin/plans')}
+                            >
+                                <ShieldCheck size={16} /> Meu Plano ({user?.plan_tier === 'premium' ? 'Premium' : 'Gratuito'})
+                            </button>
+                        </div>
+                    </div>
 
                     {isSystemAdmin && (
-                        <button
-                            className={`nav-item ${activeTab === 'users' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('users')}
-                        >
-                            <TrendingUp size={18} /> Gestão de Usuários
-                        </button>
+                        <div className="nav-group" style={{ marginTop: '1rem' }}>
+                            <div className="nav-group-header">
+                                <TrendingUp size={18} />
+                                <span>Administração</span>
+                            </div>
+                            <div className="nav-subitems">
+                                <button
+                                    className={`nav-item ${activeTab === 'users' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('users')}
+                                >
+                                    <Users size={16} /> Gestão de Usuários
+                                </button>
+                            </div>
+                        </div>
                     )}
                 </nav>
                 <div className="sidebar-footer">
@@ -477,923 +725,1011 @@ const Editor = () => {
                 {message && <div className={`message ${message.includes('Erro') || message.includes('falhou') ? 'error' : 'success'}`}>{message}</div>}
 
                 <div className={`editor-form ${activeTab === 'users' ? 'full-width' : ''}`}>
-                    {activeTab === 'users' ? (
-                        <section className="admin-users-section">
-                            {/* Quick Stats Dashboard */}
-                            <div className="stats-grid">
-                                <div className="stat-card-mini gradient-indigo">
-                                    <div className="stat-card-icon">
-                                        <Users size={24} />
-                                    </div>
-                                    <div className="stat-card-info">
-                                        <span className="stat-label">Total de Usuários</span>
-                                        <span className="stat-value">{userStats.total}</span>
-                                    </div>
-                                </div>
-                                <div className="stat-card-mini gradient-emerald">
-                                    <div className="stat-card-icon">
-                                        <Activity size={24} />
-                                    </div>
-                                    <div className="stat-card-info">
-                                        <span className="stat-label">Contas Ativas</span>
-                                        <span className="stat-value">{userStats.active}</span>
-                                    </div>
-                                </div>
-                                <div className="stat-card-mini gradient-amber">
-                                    <div className="stat-card-icon">
-                                        <Globe size={24} />
-                                    </div>
-                                    <div className="stat-card-info">
-                                        <span className="stat-label">Tráfego Total</span>
-                                        <span className="stat-value">{userStats.totalVisits}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="form-section full-width" style={{ position: 'relative' }}>
-                                <div className="admin-section-header">
-                                    <div className="header-title">
-                                        <h2>Gerenciamento de Usuários</h2>
-                                        <p className="subtitle">Visualize e controle todos os acessos do sistema</p>
-                                    </div>
-                                    <div className="search-wrapper">
-                                        <Search size={18} className="search-icon" />
-                                        <input
-                                            type="text"
-                                            placeholder="Buscar por usuário ou e-mail..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="search-input-premium"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div style={{ overflowX: 'auto' }}>
-                                    <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse', color: '#1e293b' }}>
-                                        <thead>
-                                            <tr style={{ textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>
-                                                <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Usuário</th>
-                                                <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>E-mail</th>
-                                                <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Plano</th>
-                                                <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cadastro</th>
-                                                <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Visitas</th>
-                                                <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
-                                                <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ações</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {filteredUsers.map(u => (
-                                                <tr key={u.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                                    <td style={{ padding: '12px', fontWeight: 'bold' }}>{u.username}</td>
-                                                    <td style={{ padding: '12px' }}>{u.email}</td>
-                                                    <td style={{ padding: '12px' }}>
-                                                        <select
-                                                            value={u.plan_tier}
-                                                            onChange={(e) => handleUpdateUserTier(u.id, e.target.value)}
-                                                            className="input"
-                                                            style={{ padding: '4px', width: 'auto' }}
-                                                        >
-                                                            <option value="static">Static</option>
-                                                            <option value="basic">Basic</option>
-                                                            <option value="premium">Premium</option>
-                                                            <option value="adm_server">Super Admin</option>
-                                                        </select>
-                                                    </td>
-                                                    <td style={{ padding: '12px', fontSize: '0.9rem', color: '#64748b' }}>{u.date_formatted}</td>
-                                                    <td style={{ padding: '12px', fontWeight: 'bold', color: '#2563eb' }}>{u.total_visits}</td>
-                                                    <td style={{ padding: '12px' }}>
-                                                        <span style={{
-                                                            padding: '4px 8px',
-                                                            borderRadius: '12px',
-                                                            fontSize: '0.75rem',
-                                                            background: u.is_active ? '#dcfce7' : '#fee2e2',
-                                                            color: u.is_active ? '#166534' : '#991b1b'
-                                                        }}>
-                                                            {u.is_active ? 'Ativo' : 'Inativo'}
-                                                        </span>
-                                                    </td>
-                                                    <td style={{ padding: '12px' }}>
-                                                        <button
-                                                            onClick={() => handleToggleUserStatus(u.id, u.is_active)}
-                                                            className="btn action-btn"
-                                                            style={{
-                                                                padding: '4px 8px',
-                                                                fontSize: '0.75rem',
-                                                                background: u.is_active ? '#ef4444' : '#22c55e',
-                                                                color: 'white',
-                                                                border: 'none',
-                                                                borderRadius: '4px',
-                                                                cursor: 'pointer',
-                                                                marginRight: '8px'
-                                                            }}
-                                                        >
-                                                            {u.is_active ? 'Desativar' : 'Ativar'}
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDeleteUser(u.id, u.username)}
-                                                            className="btn action-btn"
-                                                            title="Excluir Usuário"
-                                                            style={{
-                                                                padding: '4px 8px',
-                                                                fontSize: '0.75rem',
-                                                                background: '#f1f5f9',
-                                                                color: '#ef4444',
-                                                                border: '1px solid #fee2e2',
-                                                                borderRadius: '4px',
-                                                                cursor: 'pointer',
-                                                                display: 'inline-flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'center'
-                                                            }}
-                                                        >
-                                                            <Trash2 size={14} />
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                            {filteredUsers.length === 0 && !loadingUsers && (
-                                                <tr>
-                                                    <td colSpan="7" style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>
-                                                        {searchTerm ? `Nenhum usuário encontrado para "${searchTerm}"` : 'Nenhum usuário encontrado no sistema.'}
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </section>
-                    ) : (
+                    {activeTab === 'editor' ? (
                         <>
-                            <LockedFeature title="Painel de Métricas Avançadas" currentTier={user?.plan_tier}>
-                                <section className="form-section metrics-section" style={{ border: 'none', background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)', color: 'white', marginBottom: '2rem' }}>
-                                    <h3 style={{ color: 'white', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <Layout size={18} /> Resumo de Visitas
+                            {activeSection === 'summary' && (
+                                <LockedFeature requiredTier="premium" currentTier={user?.plan_tier} title="Dashboard de Performance">
+                                    <div className="dashboard-container" style={{ padding: '1rem' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                                            <div>
+                                                <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1e293b', marginBottom: '0.2rem' }}>Dashboard de Performance</h2>
+                                                <p style={{ color: '#64748b', fontSize: '0.9rem' }}>Acompanhe o crescimento da sua Landing Page.</p>
+                                            </div>
+                                            <div className="stats-toggle" style={{ background: '#f1f5f9', padding: '4px', borderRadius: '8px' }}>
+                                                <button
+                                                    className={`toggle-btn ${statsRange === 7 ? 'active' : ''}`}
+                                                    onClick={() => setStatsRange(7)}
+                                                    style={{ padding: '6px 12px', border: 'none', background: statsRange === 7 ? '#fff' : 'transparent', borderRadius: '6px', cursor: 'pointer', fontWeight: statsRange === 7 ? 'bold' : 'normal', boxShadow: statsRange === 7 ? '0 1px 2px rgba(0,0,0,0.1)' : 'none', color: statsRange === 7 ? '#0f172a' : '#64748b' }}
+                                                >
+                                                    7 dias
+                                                </button>
+                                                <button
+                                                    className={`toggle-btn ${statsRange === 30 ? 'active' : ''}`}
+                                                    onClick={() => setStatsRange(30)}
+                                                    style={{ padding: '6px 12px', border: 'none', background: statsRange === 30 ? '#fff' : 'transparent', borderRadius: '6px', cursor: 'pointer', fontWeight: statsRange === 30 ? 'bold' : 'normal', boxShadow: statsRange === 30 ? '0 1px 2px rgba(0,0,0,0.1)' : 'none', color: statsRange === 30 ? '#0f172a' : '#64748b' }}
+                                                >
+                                                    30 dias
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div style={{ display: 'flex', gap: '4px', background: 'rgba(0,0,0,0.2)', padding: '2px', borderRadius: '6px' }}>
-                                            <button
-                                                onClick={() => setStatsRange(7)}
-                                                style={{
-                                                    padding: '4px 8px',
-                                                    fontSize: '0.7rem',
-                                                    border: 'none',
-                                                    borderRadius: '4px',
-                                                    background: statsRange === 7 ? 'rgba(255,255,255,0.2)' : 'transparent',
-                                                    color: 'white',
-                                                    cursor: 'pointer'
-                                                }}
-                                            >7d</button>
-                                            <button
-                                                onClick={() => setStatsRange(30)}
-                                                style={{
-                                                    padding: '4px 8px',
-                                                    fontSize: '0.7rem',
-                                                    border: 'none',
-                                                    borderRadius: '4px',
-                                                    background: statsRange === 30 ? 'rgba(255,255,255,0.2)' : 'transparent',
-                                                    color: 'white',
-                                                    cursor: 'pointer'
-                                                }}
-                                            >30d</button>
-                                        </div>
-                                    </h3>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
-                                        <div style={{ background: 'rgba(255,255,255,0.1)', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
-                                            <div style={{ fontSize: '0.8rem', opacity: 0.8, marginBottom: '4px' }}>Total de Acessos</div>
-                                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.total}</div>
-                                        </div>
-                                        <div style={{ background: 'rgba(255,255,255,0.1)', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
-                                            <div style={{ fontSize: '0.8rem', opacity: 0.8, marginBottom: '4px' }}>Últimas 24h</div>
-                                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#4ade80' }}>{stats.today}</div>
-                                        </div>
-                                        <div style={{ background: 'rgba(255,255,255,0.1)', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
-                                            <div style={{ fontSize: '0.8rem', opacity: 0.8, marginBottom: '4px' }}>Últimos 7 dias</div>
-                                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.week}</div>
-                                        </div>
-                                        <div style={{ background: 'rgba(255,255,255,0.1)', padding: '1rem', borderRadius: '8px', textAlign: 'center', border: '1px solid rgba(74, 222, 128, 0.2)' }}>
-                                            <div style={{ fontSize: '0.8rem', opacity: 0.8, marginBottom: '4px' }}>Taxa de Conversão</div>
-                                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#4ade80' }}>0.0% <span style={{ fontSize: '0.6rem', verticalAlign: 'middle', opacity: 0.6 }}>(BETA)</span></div>
-                                        </div>
-                                    </div>
 
-                                    {/* Chart Area */}
-                                    {stats.daily && stats.daily.length > 0 && (
-                                        <div style={{ marginTop: '2rem', height: '200px', width: '100%', background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '8px' }}>
-                                            <h4 style={{ color: 'white', marginTop: 0, marginBottom: '1rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                <TrendingUp size={14} /> Tendência ({statsRange} dias)
-                                            </h4>
-                                            <ResponsiveContainer width="100%" height="80%">
-                                                <AreaChart data={stats.daily.slice(-statsRange)}>
-                                                    <defs>
-                                                        <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="5%" stopColor="#4ade80" stopOpacity={0.8} />
-                                                            <stop offset="95%" stopColor="#4ade80" stopOpacity={0} />
-                                                        </linearGradient>
-                                                    </defs>
-                                                    <XAxis
-                                                        dataKey="date"
-                                                        stroke="rgba(255,255,255,0.3)"
-                                                        fontSize={10}
-                                                        tickLine={false}
-                                                        axisLine={false}
-                                                    />
-                                                    <YAxis hide />
-                                                    <Tooltip
-                                                        contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '12px' }}
-                                                        itemStyle={{ color: '#4ade80' }}
-                                                    />
-                                                    <Area
-                                                        type="monotone"
-                                                        dataKey="count"
-                                                        stroke="#4ade80"
-                                                        fillOpacity={1}
-                                                        fill="url(#colorCount)"
-                                                    />
-                                                </AreaChart>
-                                            </ResponsiveContainer>
-                                        </div>
-                                    )}
-
-                                    {/* Recent Visits Table */}
-                                    {stats.recentVisits && stats.recentVisits.length > 0 && (
-                                        <div style={{ marginTop: '1.5rem', background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '8px' }}>
-                                            <h4 style={{ color: 'white', marginTop: 0, marginBottom: '0.8rem', fontSize: '0.9rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
-                                                Últimos Acessos
-                                            </h4>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                {stats.recentVisits.map((visit, idx) => (
-                                                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', opacity: 0.8 }}>
-                                                        <span>Visitante na Página</span>
-                                                        <span style={{ color: '#4ade80' }}>{visit.time}</span>
+                                        <div className="kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+                                            <div className="kpi-card" style={{ background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', padding: '1.5rem', borderRadius: '16px', color: 'white', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.2)' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                    <div>
+                                                        <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>Total de Acessos</span>
+                                                        <h3 style={{ fontSize: '2rem', margin: '0.5rem 0 0 0' }}>{stats.total}</h3>
                                                     </div>
-                                                ))}
+                                                    <div style={{ background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '8px' }}>
+                                                        <Globe size={20} color="white" />
+                                                    </div>
+                                                </div>
+                                                <div style={{ fontSize: '0.8rem', opacity: 0.8, marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    <TrendingUp size={14} /> Desde o início
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
-                                </section>
-                            </LockedFeature>
 
-                            {/* Global Settings Section (Top Bar) */}
-                            <LockedFeature requiredTier="premium" currentTier={user?.plan_tier}>
-                                <section className="form-section">
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            <div style={{ background: '#fef3c7', padding: '8px', borderRadius: '8px', color: '#d97706' }}>
-                                                <Plus size={20} />
+                                            <div className="kpi-card" style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                    <div>
+                                                        <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Acessos Hoje</span>
+                                                        <h3 style={{ fontSize: '2rem', margin: '0.5rem 0 0 0', color: '#0f172a' }}>{stats.today}</h3>
+                                                    </div>
+                                                    <div style={{ background: '#ecfdf5', padding: '8px', borderRadius: '8px' }}>
+                                                        <Activity size={20} color="#10b981" />
+                                                    </div>
+                                                </div>
+                                                <div style={{ fontSize: '0.8rem', color: '#10b981', marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}>
+                                                    <CheckCircle size={14} /> Atualizado agora
+                                                </div>
                                             </div>
-                                            <h3 style={{ margin: 0 }}>Barra de Aviso (Destaque no Topo)</h3>
+
+                                            <div className="kpi-card" style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                    <div>
+                                                        <span style={{ fontSize: '0.85rem', color: '#64748b' }}>{statsRange === 7 ? 'Últimos 7 dias' : 'Últimos 30 dias'}</span>
+                                                        <h3 style={{ fontSize: '2rem', margin: '0.5rem 0 0 0', color: '#0f172a' }}>
+                                                            {statsRange === 7 ? stats.week : calculateMonthlyStats(stats.daily)}
+                                                        </h3>
+                                                    </div>
+                                                    <div style={{ background: '#fffbeb', padding: '8px', borderRadius: '8px' }}>
+                                                        <TrendingUp size={20} color="#f59e0b" />
+                                                    </div>
+                                                </div>
+                                                <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '1rem' }}>
+                                                    Média diária: {Math.round((statsRange === 7 ? stats.week : calculateMonthlyStats(stats.daily)) / statsRange)}
+                                                </div>
+                                            </div>
+
+                                            <div className="kpi-card" style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                    <div>
+                                                        <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Taxa de Conversão</span>
+                                                        <h3 style={{ fontSize: '1.8rem', margin: '0.5rem 0 0 0', color: '#0f172a' }}>0.0%</h3>
+                                                    </div>
+                                                    <div style={{ background: '#f1f5f9', padding: '8px', borderRadius: '8px' }}>
+                                                        <ShieldCheck size={20} color="#64748b" />
+                                                    </div>
+                                                </div>
+                                                <div style={{ fontSize: '0.8rem', color: '#6366f1', marginTop: '1rem', fontWeight: 'bold' }}>
+                                                    EM BREVE
+                                                </div>
+                                            </div>
                                         </div>
-                                        <label className="switch">
-                                            <input
-                                                type="checkbox"
-                                                checked={content.topBar?.enabled}
-                                                onChange={(e) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, enabled: e.target.checked } }))}
-                                            />
-                                            <span className="slider round"></span>
-                                            <span style={{ marginLeft: '45px', fontSize: '0.8rem', fontWeight: 'bold', color: content.topBar?.enabled ? '#d97706' : '#666' }}>
-                                                {content.topBar?.enabled ? 'ATIVADA' : 'DESATIVADA'}
-                                            </span>
-                                        </label>
+
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                                            <div className="chart-section" style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0', minHeight: '400px' }}>
+                                                <h4 style={{ margin: '0 0 1.5rem 0', color: '#1e293b' }}>Tendência de Acessos</h4>
+                                                <div style={{ width: '100%', height: '320px' }}>
+                                                    <ResponsiveContainer>
+                                                        <AreaChart data={getChartData(stats.daily, statsRange)}>
+                                                            <defs>
+                                                                <linearGradient id="colorVisits" x1="0" y1="0" x2="0" y2="1">
+                                                                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                                                                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                                                                </linearGradient>
+                                                            </defs>
+                                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                                            <XAxis
+                                                                dataKey="date"
+                                                                axisLine={false}
+                                                                tickLine={false}
+                                                                tick={{ fill: '#94a3b8', fontSize: 12 }}
+                                                                dy={10}
+                                                            />
+                                                            <YAxis
+                                                                axisLine={false}
+                                                                tickLine={false}
+                                                                tick={{ fill: '#94a3b8', fontSize: 12 }}
+                                                            />
+                                                            <Tooltip
+                                                                contentStyle={{
+                                                                    backgroundColor: '#1e293b',
+                                                                    border: 'none',
+                                                                    borderRadius: '8px',
+                                                                    color: '#fff',
+                                                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                                                                }}
+                                                                itemStyle={{ color: '#fff' }}
+                                                                cursor={{ stroke: '#6366f1', strokeWidth: 1 }}
+                                                            />
+                                                            <Area
+                                                                type="monotone"
+                                                                dataKey="visits"
+                                                                stroke="#6366f1"
+                                                                strokeWidth={3}
+                                                                fillOpacity={1}
+                                                                fill="url(#colorVisits)"
+                                                            />
+                                                        </AreaChart>
+                                                    </ResponsiveContainer>
+                                                </div>
+                                            </div>
+
+                                            <div className="recent-activity" style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0', height: '400px', overflowY: 'auto' }}>
+                                                <h4 style={{ margin: '0 0 1rem 0', color: '#1e293b' }}>Últimas Visitas</h4>
+
+                                                {stats.recentVisits && stats.recentVisits.length > 0 ? (
+                                                    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                                                        {stats.recentVisits.map((visit, idx) => (
+                                                            <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 0', borderBottom: idx !== stats.recentVisits.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+                                                                <div style={{ background: '#f8fafc', padding: '8px', borderRadius: '50%' }}>
+                                                                    <Users size={16} color="#64748b" />
+                                                                </div>
+                                                                <div>
+                                                                    <span style={{ display: 'block', fontSize: '0.85rem', color: '#334155', fontWeight: '500' }}>Novo Visitante</span>
+                                                                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{visit.time}</span>
+                                                                </div>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                ) : (
+                                                    <div style={{ textAlign: 'center', color: '#94a3b8', marginTop: '2rem' }}>
+                                                        <Globe size={24} style={{ marginBottom: '0.5rem', opacity: 0.5 }} />
+                                                        <p style={{ fontSize: '0.9rem' }}>Nenhuma visita recente.</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
+                                </LockedFeature>
+                            )}
 
-                                    {content.topBar?.enabled && (
-                                        <div style={{ animation: 'fadeIn 0.3s ease-out', padding: '1rem', background: '#fffbeb', borderRadius: '12px', border: '1px solid #fde68a' }}>
+
+
+                            {activeSection === 'hero' && (
+                                <>
+                                    <LockedFeature requiredTier="premium" currentTier={user?.plan_tier}>
+                                        <section className="form-section">
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <div style={{ background: '#fef3c7', padding: '8px', borderRadius: '8px', color: '#d97706' }}>
+                                                        <Plus size={20} />
+                                                    </div>
+                                                    <h3 style={{ margin: 0 }}>Barra de Aviso (Topo)</h3>
+                                                </div>
+                                                <label className="switch">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={content.topBar?.enabled}
+                                                        onChange={(e) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, enabled: e.target.checked } }))}
+                                                    />
+                                                    <span className="slider round"></span>
+                                                </label>
+                                            </div>
+
+                                            {content.topBar?.enabled && (
+                                                <div style={{ padding: '1rem', background: '#fffbeb', borderRadius: '12px', border: '1px solid #fde68a' }}>
+                                                    <div className="form-group">
+                                                        <label>Texto</label>
+                                                        <input
+                                                            value={content.topBar.text}
+                                                            onChange={(e) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, text: e.target.value } }))}
+                                                            className="input"
+                                                        />
+                                                    </div>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+                                                        <ColorPicker
+                                                            label="Fundo"
+                                                            color={content.topBar.backgroundColor}
+                                                            onChange={(val) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, backgroundColor: val } }))}
+                                                        />
+                                                        <ColorPicker
+                                                            label="Texto"
+                                                            color={content.topBar.textColor}
+                                                            onChange={(val) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, textColor: val } }))}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </section>
+                                    </LockedFeature>
+
+                                    <section className="form-section">
+                                        <h3><Type size={18} /> Conteúdo Hero</h3>
+                                        <div className="form-group">
+                                            <label>Título Principal</label>
+                                            <input name="heroTitle" value={content.heroTitle} onChange={handleChange} className="input" />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Subtítulo</label>
+                                            <textarea name="heroSubtitle" value={content.heroSubtitle} onChange={handleChange} className="input textarea" />
+                                        </div>
+                                        <div className="form-group">
+                                            <label><ImageIcon size={18} /> Imagem de Fundo</label>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) => handleImageUpload(e, 'heroImage')}
+                                                className="input"
+                                                disabled={uploading}
+                                            />
+                                            {content.heroImage && (
+                                                <div style={{ marginTop: '1rem' }}>
+                                                    <img src={content.heroImage} alt="Preview" className="image-preview" style={{ height: '150px', objectFit: 'cover' }} />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </section>
+
+                                    <LockedFeature title="Identidade da Marca" currentTier={user?.plan_tier}>
+                                        <section className="form-section">
+                                            <h3><ImageIcon size={18} /> Logotipo</h3>
                                             <div className="form-group">
-                                                <label>Texto do Aviso</label>
                                                 <input
-                                                    value={content.topBar.text}
-                                                    onChange={(e) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, text: e.target.value } }))}
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={(e) => handleImageUpload(e, 'logo')}
                                                     className="input"
-                                                    placeholder="Ex: 🎉 Novidade: Nosso curso premium..."
+                                                    disabled={uploading}
+                                                />
+                                                {content.logo && (
+                                                    <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: '#e2e8f0', borderRadius: '4px', display: 'inline-block' }}>
+                                                        <img src={content.logo} alt="Logo" style={{ height: '40px' }} />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </section>
+                                    </LockedFeature>
+                                </>
+                            )}
+
+                            {activeSection === 'about' && (
+                                <>
+                                    <section className="form-section">
+                                        <h3><Users size={18} /> Dados do Expert</h3>
+                                        <div className="form-group">
+                                            <label>Rótulo Superior</label>
+                                            <input name="aboutLabel" value={content.aboutLabel} onChange={handleChange} className="input" />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Nome / Título</label>
+                                            <input name="aboutTitle" value={content.aboutTitle} onChange={handleChange} className="input" />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Biografia</label>
+                                            <textarea name="aboutText" value={content.aboutText} onChange={handleChange} className="input textarea" style={{ height: '150px' }} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Foto de Perfil {['static', 'basic'].includes(user?.plan_tier) && <span style={{ fontSize: '0.7em', color: '#f59e0b' }}>(Premium)</span>}</label>
+                                            {!['static', 'basic'].includes(user?.plan_tier) ? (
+                                                <>
+                                                    <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'aboutImage')} className="input" />
+                                                    {content.aboutImage && (
+                                                        <img src={content.aboutImage} alt="About" className="image-preview" style={{ height: '100px', width: '100px', objectFit: 'cover', borderRadius: '50%', marginTop: '1rem' }} />
+                                                    )}
+                                                </>
+                                            ) : (
+                                                <div style={{ padding: '10px', background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: '6px', color: '#64748b', fontSize: '0.85rem' }}>
+                                                    Upload de imagem disponível apenas no Plano Ouro.
+                                                </div>
+                                            )}
+                                        </div>
+                                    </section>
+
+                                    <section className="form-section">
+                                        <h3>Cores da Seção {['static', 'basic'].includes(user?.plan_tier) && <span style={{ fontSize: '0.7em', color: '#f59e0b' }}>(Premium)</span>}</h3>
+                                        {!['static', 'basic'].includes(user?.plan_tier) ? (
+                                            <div className="features-grid">
+                                                <ColorPicker
+                                                    label="Fundo"
+                                                    color={content.sectionStyles?.aboutBackground || '#f8fafc'}
+                                                    onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, aboutBackground: val } }))}
+                                                />
+                                                <ColorPicker
+                                                    label="Rótulo"
+                                                    color={content.sectionStyles?.aboutLabelColor || '#64748b'}
+                                                    onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, aboutLabelColor: val } }))}
+                                                />
+                                                <ColorPicker
+                                                    label="Título"
+                                                    color={content.sectionStyles?.aboutTitleColor || '#0f172a'}
+                                                    onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, aboutTitleColor: val } }))}
+                                                />
+                                                <ColorPicker
+                                                    label="Texto"
+                                                    color={content.sectionStyles?.aboutTextColor || '#334155'}
+                                                    onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, aboutTextColor: val } }))}
                                                 />
                                             </div>
-                                            <div style={{ marginBottom: '1rem' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                                    <label style={{ fontSize: '0.8rem' }}>Fundo</label>
-                                                    <label style={{ fontSize: '0.8rem' }}>Texto</label>
-                                                </div>
-                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))', gap: '0.75rem' }}>
-                                                    <ColorPicker
-                                                        label="Fundo"
-                                                        color={content.topBar.backgroundColor}
-                                                        onChange={(val) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, backgroundColor: val } }))}
-                                                    />
-                                                    <ColorPicker
-                                                        label="Texto"
-                                                        color={content.topBar.textColor}
-                                                        onChange={(val) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, textColor: val } }))}
-                                                    />
-                                                </div>
+                                        ) : (
+                                            <div style={{ padding: '1rem', background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: '6px', color: '#64748b', fontSize: '0.9rem', textAlign: 'center' }}>
+                                                <p>Personalização de cores disponível apenas no Plano Ouro.</p>
+                                                <button className="btn-secondary" style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>Fazer Upgrade</button>
                                             </div>
-                                            <div style={{
-                                                marginTop: '1rem',
-                                                padding: '10px',
-                                                borderRadius: '6px',
-                                                backgroundColor: content.topBar.backgroundColor,
-                                                color: content.topBar.textColor,
-                                                textAlign: 'center',
-                                                fontWeight: 'bold',
-                                                fontSize: '0.85rem'
-                                            }}>
-                                                Prévia: {content.topBar.text}
-                                            </div>
-                                        </div>
-                                    )}
-                                </section>
-                            </LockedFeature>
+                                        )}
+                                    </section>
 
-                            <section className="form-section">
-                                <h3><Type size={18} /> Hero Section</h3>
-                                <div className="form-group">
-                                    <label>Título Principal</label>
-                                    <input name="heroTitle" value={content.heroTitle} onChange={handleChange} className="input" />
-                                </div>
-                                <div className="form-group">
-                                    <label>Subtítulo</label>
-                                    <textarea name="heroSubtitle" value={content.heroSubtitle} onChange={handleChange} className="input textarea" />
-                                </div>
+                                </>
+                            )}
 
-                                <div className="form-group">
-                                    <label><ImageIcon size={18} /> Imagem de Fundo (Hero)</label>
-                                    <p style={{ fontSize: '0.8rem', color: '#666', margin: '0 0 0.5rem 0' }}>
-                                        <strong>Dica:</strong> Para fundo de tela cheia, use imagens horizontais de <strong>ALTA RESOLUÇÃO</strong>.<br />
-                                        • Recomendado: <strong>1920x1080 px</strong> (Evite resoluções baixas como 512px)<br />
-                                        <a href="https://www.birme.net/?width=1920&height=1080" target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'underline', marginTop: '2px', display: 'inline-block', fontSize: '0.75rem' }}>
-                                            ➜ Ajustar e Enquadrar no BIRME (Mantenha 1920 de largura)
-                                        </a>
-                                    </p>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(e) => handleImageUpload(e, 'heroImage')}
-                                        className="input"
-                                        disabled={uploading}
-                                    />
-                                    {uploading && <p style={{ fontSize: '0.9rem', color: 'var(--primary-600)' }}>Enviando imagem...</p>}
-
-                                    {content.heroImage && (
-                                        <div style={{ marginTop: '1rem' }}>
-                                            <p style={{ fontSize: '0.8rem', marginBottom: '0.5rem' }}>Prévia:</p>
-                                            <img src={content.heroImage} alt="Preview" className="image-preview"
-                                                style={{
-                                                    objectPosition: 'center',
-                                                    objectFit: 'cover'
-                                                }}
+                            {activeSection === 'events' && (
+                                <section className="form-section">
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                        <div className="form-group" style={{ marginBottom: 0, flex: 1 }}>
+                                            <label>Título da Seção</label>
+                                            <input
+                                                value={content.eventsTitle || 'Cases de Sucesso'}
+                                                onChange={(e) => setContent(prev => ({ ...prev, eventsTitle: e.target.value }))}
+                                                className="input"
                                             />
                                         </div>
-                                    )}
-                                </div>
+                                        <button onClick={() => addItem('events', { image: '', description: '', imageFit: 'contain' })} className="btn btn-secondary" style={{ marginLeft: '1rem' }}>
+                                            + Novo Item
+                                        </button>
+                                    </div>
 
-                                <div style={{ marginTop: '0.5rem', textAlign: 'center', fontSize: '0.8rem', color: '#666' }}>
-                                    Ajuste manual não é mais necessário com o uso do <strong>BIRME</strong>.
-                                </div>
-                            </section>
-
-                            <LockedFeature title="Personalização Visual" currentTier={user?.plan_tier}>
-                                <section className="form-section">
-                                    <h3><ImageIcon size={18} /> Identidade Visual</h3>
-
-                                    {/* Logo Upload */}
-                                    <div className="form-group">
-                                        <label>Logo da Empresa</label>
-                                        <p style={{ fontSize: '0.8rem', color: '#666', margin: '0 0 0.5rem 0' }}>
-                                            <strong>Dica:</strong> Use imagens com fundo transparente (PNG) para um melhor acabamento.<br />
-                                            • Recomendado: altura de <strong>80px a 120px</strong><br />
-                                            <a href="https://www.birme.net/" target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'underline', marginTop: '2px', display: 'inline-block', fontSize: '0.75rem' }}>
-                                                ➜ Ajustar Logo no BIRME
-                                            </a>
-                                        </p>
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={(e) => handleImageUpload(e, 'logo')}
-                                            className="input"
-                                            disabled={uploading}
-                                        />
-                                        {content.logo && (
-                                            <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: '#ccc', borderRadius: '4px', display: 'inline-block' }}>
-                                                <img src={content.logo} alt="Logo Preview" style={{ height: '40px', display: 'block' }} />
+                                    <div className="form-group" style={{ marginBottom: '2rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px' }}>
+                                        <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem' }}>Aparência {['static', 'basic'].includes(user?.plan_tier) && <span style={{ fontSize: '0.7em', color: '#f59e0b' }}>(Premium)</span>}</h4>
+                                        {!['static', 'basic'].includes(user?.plan_tier) ? (
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                                <ColorPicker
+                                                    label="Fundo"
+                                                    color={content.sectionStyles?.eventsBackground || '#f8fafc'}
+                                                    onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, eventsBackground: val } }))}
+                                                />
+                                                <ColorPicker
+                                                    label="Texto"
+                                                    color={content.sectionStyles?.eventsTitleColor || '#0f172a'}
+                                                    onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, eventsTitleColor: val } }))}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div style={{ padding: '10px', background: '#e2e8f0', borderRadius: '6px', color: '#64748b', fontSize: '0.85rem', textAlign: 'center' }}>
+                                                Personalização de cores disponível apenas no Plano Ouro.
                                             </div>
                                         )}
                                     </div>
 
-                                    {/* Color Pickers & Preview */}
-                                    <div className="form-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-                                        {/* Generic Helper Component for Style Group */}
-                                        {['About', 'Events', 'Stations', 'Sales', 'SalesCard', 'Footer'].map((section) => {
-                                            const lower = section.toLowerCase();
-                                            const bgKey = (section === 'SalesCard') ? 'salesCardBackground' : `${lower}Background`;
-                                            const titleKey = (section === 'SalesCard') ? 'salesCardTextColor' : `${lower}TitleColor`;
-                                            const iconKey = (section === 'Sales') ? 'salesIconColor' : (section === 'SalesCard' ? 'salesCardIconColor' : null);
-
-                                            // Default colors based on section name
-                                            const defaultBG = (section === 'Footer' || section === 'Events') ? '#0f172a' : (section === 'SalesCard' ? '#fa4eab' : '#ffffff');
-                                            const defaultText = (section === 'Footer' || section === 'Events' || section === 'SalesCard') ? '#ffffff' : '#1f2937';
-                                            const defaultIcon = (section === 'Sales') ? '#fa4eab' : '#ffd43b';
-
-                                            const bgVal = content.sectionStyles?.[bgKey] || defaultBG;
-                                            const titleVal = content.sectionStyles?.[titleKey] || defaultText;
-                                            const iconVal = iconKey ? (content.sectionStyles?.[iconKey] || defaultIcon) : null;
-
-                                            return (
-                                                <div key={section} style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                                                    <h4 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '0.9rem', color: '#64748b' }}>
-                                                        Seção "{section === 'About' ? 'Seção Mentora' : section === 'Events' ? 'Eventos' : section === 'Stations' ? 'Estações' : section === 'Sales' ? 'Vendas' : section === 'SalesCard' ? 'Capa do Card' : 'Rodapé'}"
-                                                    </h4>
-
-                                                    <div style={{ marginBottom: '1rem' }}>
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                                            <label style={{ fontSize: '0.8rem' }}>Fundo</label>
-                                                            <label style={{ fontSize: '0.8rem' }}>Texto (Geral)</label>
-                                                            {iconKey && <label style={{ fontSize: '0.8rem' }}>Ícones</label>}
-                                                        </div>
-                                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))', gap: '0.75rem' }}>
-                                                            <ColorPicker
-                                                                label="Fundo"
-                                                                color={bgVal}
-                                                                onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, [bgKey]: val } }))}
-                                                            />
-                                                            <ColorPicker
-                                                                label="Texto"
-                                                                color={titleVal}
-                                                                onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, [titleKey]: val } }))}
-                                                            />
-                                                            {section === 'About' && (
-                                                                <>
-                                                                    <ColorPicker
-                                                                        label="Rótulo"
-                                                                        color={content.sectionStyles.aboutLabelColor || '#ffffff'}
-                                                                        onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, aboutLabelColor: val } }))}
-                                                                    />
-                                                                    <ColorPicker
-                                                                        label="Cor Texto"
-                                                                        color={content.sectionStyles.aboutTextColor || '#ffffff'}
-                                                                        onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, aboutTextColor: val } }))}
-                                                                    />
-                                                                </>
-                                                            )}
-                                                            {iconKey && (
-                                                                <ColorPicker
-                                                                    label="Ícones"
-                                                                    color={iconVal}
-                                                                    onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, [iconKey]: val } }))}
-                                                                />
-                                                            )}
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Live Preview Box */}
-                                                    <div style={{
-                                                        backgroundColor: bgVal,
-                                                        padding: '1rem',
-                                                        borderRadius: '4px',
-                                                        border: '1px solid #ccc',
-                                                        textAlign: 'center',
-                                                        transition: 'all 0.3s ease'
-                                                    }}>
-                                                        <span style={{
-                                                            color: titleVal,
-                                                            fontSize: '1rem',
-                                                            fontWeight: 'bold',
-                                                            display: 'block'
-                                                        }}>
-                                                            {section === 'Footer' ? 'Texto do Footer' : 'Título Exemplo'}
-                                                        </span>
-                                                    </div>
+                                    <div className="features-grid">
+                                        {content.events && content.events.map((event, index) => (
+                                            <div key={index} className="feature-card-edit">
+                                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                    <h4>Item {index + 1}</h4>
+                                                    <button onClick={() => removeItem('events', index)} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}><Trash2 size={14} /></button>
                                                 </div>
-                                            );
-                                        })}
+                                                <div className="form-group">
+                                                    <label>Imagem</label>
+                                                    <input type="file" accept="image/*" onChange={(e) => handleListImageUpload(e, 'events', index)} className="input" />
+                                                    {event.image && <img src={event.image} alt="Preview" className="image-preview" style={{ height: '80px', objectFit: 'contain' }} />}
+                                                </div>
+                                                <div className="form-group">
+                                                    <label>Descrição</label>
+                                                    <textarea
+                                                        value={event.description}
+                                                        onChange={(e) => handleListChange('events', index, 'description', e.target.value)}
+                                                        className="input textarea-sm"
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 </section>
-                            </LockedFeature>
+                            )}
 
-                            {/* Sales Section (Courses/Ebooks) */}
-                            <LockedFeature requiredTier="premium" currentTier={user?.plan_tier}>
+                            {activeSection === 'stations' && (
                                 <section className="form-section">
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            <div style={{ background: '#fce7f3', padding: '8px', borderRadius: '8px', color: '#db2777' }}>
-                                                <ShoppingBag size={20} />
-                                            </div>
-                                            <h3 style={{ margin: 0 }}>Vendas (Cursos, E-books, Infoprodutos)</h3>
-                                        </div>
-                                        <label className="switch">
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                        <div className="form-group" style={{ marginBottom: 0, flex: 1 }}>
+                                            <label>Título da Seção</label>
                                             <input
-                                                type="checkbox"
-                                                checked={content.salesSection?.enabled}
-                                                onChange={(e) => setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, enabled: e.target.checked } }))}
+                                                value={content.stationsTitle || 'Nossos Serviços'}
+                                                onChange={(e) => setContent(prev => ({ ...prev, stationsTitle: e.target.value }))}
+                                                className="input"
                                             />
-                                            <span className="slider round"></span>
-                                            <span style={{ marginLeft: '45px', fontSize: '0.8rem', fontWeight: 'bold', color: content.salesSection?.enabled ? '#db2777' : '#666' }}>
-                                                {content.salesSection?.enabled ? 'ATIVADA' : 'DESATIVADA'}
-                                            </span>
-                                        </label>
+                                        </div>
+                                        <button onClick={() => addItem('stations', { image: '', title: '', description: '', imageFit: 'contain' })} className="btn btn-secondary" style={{ marginLeft: '1rem' }}>
+                                            + Novo Serviço
+                                        </button>
                                     </div>
 
-                                    {content.salesSection?.enabled && (
-                                        <div style={{ animation: 'fadeIn 0.3s ease-out', padding: '1rem', background: '#fff5f8', borderRadius: '12px', border: '1px solid #fbcfe8' }}>
-                                            <div className="form-group">
-                                                <label>Título Chamativo (Esquerda)</label>
-                                                <input
-                                                    value={content.salesSection.title}
-                                                    onChange={(e) => setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, title: e.target.value } }))}
-                                                    className="input"
-                                                    placeholder="Ex: Tudo o que você precisa em um só lugar:"
+                                    <div className="form-group" style={{ marginBottom: '2rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px' }}>
+                                        <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem' }}>Aparência {['static', 'basic'].includes(user?.plan_tier) && <span style={{ fontSize: '0.7em', color: '#f59e0b' }}>(Premium)</span>}</h4>
+                                        {!['static', 'basic'].includes(user?.plan_tier) ? (
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                                <ColorPicker
+                                                    label="Fundo"
+                                                    color={content.sectionStyles?.stationsBackground || '#f8fafc'}
+                                                    onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, stationsBackground: val } }))}
+                                                />
+                                                <ColorPicker
+                                                    label="Texto"
+                                                    color={content.sectionStyles?.stationsTitleColor || '#0f172a'}
+                                                    onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, stationsTitleColor: val } }))}
                                                 />
                                             </div>
-                                            <div className="form-group">
-                                                <label>Subtítulo de Apoio</label>
-                                                <textarea
-                                                    value={content.salesSection.subtitle}
-                                                    onChange={(e) => setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, subtitle: e.target.value } }))}
-                                                    className="input textarea"
-                                                    placeholder="Descreva o que seu aluno irá aprender..."
-                                                    style={{ height: '80px', overflow: 'hidden' }}
-                                                />
+                                        ) : (
+                                            <div style={{ padding: '10px', background: '#e2e8f0', borderRadius: '6px', color: '#64748b', fontSize: '0.85rem', textAlign: 'center' }}>
+                                                Personalização de cores disponível apenas no Plano Ouro.
                                             </div>
+                                        )}
+                                    </div>
 
-                                            <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
-                                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '0.8rem', color: '#64748b' }}>
-                                                    <Plus size={14} /> Benefícios / Diferenciais
-                                                </label>
-                                                {content.salesSection.features.map((feature, idx) => (
-                                                    <div key={idx} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                                                        <input
-                                                            value={feature.text}
-                                                            onChange={(e) => {
-                                                                const newFeatures = [...content.salesSection.features];
-                                                                newFeatures[idx].text = e.target.value;
-                                                                setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, features: newFeatures } }));
-                                                            }}
-                                                            className="input"
-                                                            placeholder="Ex: 7 Receitas Premium"
-                                                        />
-                                                        <button
-                                                            onClick={() => {
-                                                                const newFeatures = content.salesSection.features.filter((_, i) => i !== idx);
-                                                                setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, features: newFeatures } }));
-                                                            }}
-                                                            style={{ padding: '0 12px', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
-                                                        >
-                                                            <Trash2 size={16} />
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                                <button
-                                                    onClick={() => setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, features: [...prev.salesSection.features, { text: '' }] } }))}
-                                                    className="btn-secondary"
-                                                    style={{ width: '100%', fontSize: '0.8rem', padding: '8px' }}
-                                                >+ Adicionar Diferencial</button>
-                                            </div>
-
-                                            <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                                                <h4 style={{ margin: '0 0 1rem 0', color: '#1e293b', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <ShoppingBag size={18} /> Configurações do Card de Preço
-                                                </h4>
-
+                                    <div className="features-grid">
+                                        {content.stations && content.stations.map((station, index) => (
+                                            <div key={index} className="feature-card-edit">
+                                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                    <h4>Serviço {index + 1}</h4>
+                                                    <button onClick={() => removeItem('stations', index)} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}><Trash2 size={14} /></button>
+                                                </div>
                                                 <div className="form-group">
-                                                    <label>Chamada do Card (Ex: O Curso te dá:)</label>
+                                                    <label>Ícone / Imagem</label>
+                                                    <input type="file" accept="image/*" onChange={(e) => handleListImageUpload(e, 'stations', index)} className="input" />
+                                                    {station.image && <img src={station.image} alt="Preview" className="image-preview" style={{ height: '80px', objectFit: 'contain' }} />}
+                                                </div>
+                                                <div className="form-group">
+                                                    <label>Título</label>
                                                     <input
-                                                        value={content.salesSection.card.title}
-                                                        onChange={(e) => setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, card: { ...prev.salesSection.card, title: e.target.value } } }))}
+                                                        value={station.title}
+                                                        onChange={(e) => handleListChange('stations', index, 'title', e.target.value)}
                                                         className="input"
                                                     />
                                                 </div>
-
                                                 <div className="form-group">
-                                                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}>
-                                                        <CheckCircle size={14} /> Itens de Confirmação (Checklist)
-                                                    </label>
-                                                    {content.salesSection.card.highlights.map((h, idx) => (
+                                                    <label>Descrição</label>
+                                                    <textarea
+                                                        value={station.description}
+                                                        onChange={(e) => handleListChange('stations', index, 'description', e.target.value)}
+                                                        className="input textarea-sm"
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+
+                            )}
+
+                            {activeSection === 'sales' && (
+                                <LockedFeature requiredTier="premium" currentTier={user?.plan_tier}>
+                                    <section className="form-section">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <div style={{ background: '#f1f5f9', padding: '8px', borderRadius: '8px', color: '#0f172a' }}>
+                                                    <ShoppingBag size={20} />
+                                                </div>
+                                                <h3 style={{ margin: 0 }}>Vendas (Cursos, E-books)</h3>
+                                            </div>
+                                            <label className="switch">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={content.salesSection?.enabled}
+                                                    onChange={(e) => setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, enabled: e.target.checked } }))}
+                                                />
+                                                <span className="slider round"></span>
+                                            </label>
+                                        </div>
+
+                                        {content.salesSection?.enabled && (
+                                            <>
+                                                <div className="form-group">
+                                                    <label>Título Chamativo</label>
+                                                    <input
+                                                        value={content.salesSection?.title || ''}
+                                                        onChange={(e) => setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, title: e.target.value } }))}
+                                                        className="input"
+                                                    />
+                                                </div>
+                                                <div className="form-group">
+                                                    <label>Subtítulo de Apoio</label>
+                                                    <textarea
+                                                        value={content.salesSection?.subtitle || ''}
+                                                        onChange={(e) => setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, subtitle: e.target.value } }))}
+                                                        className="input textarea"
+                                                        style={{ height: '80px' }}
+                                                    />
+                                                </div>
+
+                                                <div style={{ margin: '1.5rem 0' }}>
+                                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Benefícios</label>
+                                                    {(content.salesSection?.features || []).map((feature, idx) => (
                                                         <div key={idx} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                                                             <input
-                                                                value={h}
+                                                                value={feature.text || ''}
                                                                 onChange={(e) => {
-                                                                    const newH = [...content.salesSection.card.highlights];
-                                                                    newH[idx] = e.target.value;
-                                                                    setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, card: { ...prev.salesSection.card, highlights: newH } } }));
+                                                                    const newFeatures = [...(content.salesSection?.features || [])];
+                                                                    newFeatures[idx] = { ...newFeatures[idx], text: e.target.value };
+                                                                    setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, features: newFeatures } }));
                                                                 }}
                                                                 className="input"
                                                             />
                                                             <button
                                                                 onClick={() => {
-                                                                    const newH = content.salesSection.card.highlights.filter((_, i) => i !== idx);
-                                                                    setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, card: { ...prev.salesSection.card, highlights: newH } } }));
+                                                                    const newFeatures = (content.salesSection?.features || []).filter((_, i) => i !== idx);
+                                                                    setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, features: newFeatures } }));
                                                                 }}
-                                                                style={{ padding: '0 10px', background: '#f1f5f9', color: '#64748b', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
-                                                            >X</button>
+                                                                style={{ padding: '0 12px', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
                                                         </div>
                                                     ))}
                                                     <button
-                                                        onClick={() => setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, card: { ...prev.salesSection.card, highlights: [...prev.salesSection.card.highlights, ''] } } }))}
-                                                        style={{ width: '100%', padding: '6px', background: 'transparent', border: '1px dashed #cbd5e1', borderRadius: '6px', color: '#64748b', fontSize: '0.75rem', cursor: 'pointer' }}
-                                                    >+ Adicionar Item ao Checklist</button>
+                                                        onClick={() => setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, features: [...(prev.salesSection?.features || []), { text: '' }] } }))}
+                                                        className="btn-secondary"
+                                                        style={{ width: '100%', fontSize: '0.8rem', padding: '8px' }}
+                                                    >+ Adicionar Diferencial</button>
                                                 </div>
 
-                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-                                                    <div className="form-group">
-                                                        <label>Preço "DE" (R$)</label>
-                                                        <input
-                                                            value={content.salesSection.card.oldPrice}
-                                                            onChange={(e) => {
-                                                                const masked = formatCurrency(e.target.value);
-                                                                setContent(prev => ({
-                                                                    ...prev,
-                                                                    salesSection: {
-                                                                        ...prev.salesSection,
-                                                                        card: { ...prev.salesSection.card, oldPrice: masked }
-                                                                    }
-                                                                }));
-                                                            }}
-                                                            className="input"
-                                                            placeholder="00,00"
+                                                <div className="form-group" style={{ marginBottom: '2rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px' }}>
+                                                    <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem' }}>Aparência da Seção</h4>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                                        <ColorPicker
+                                                            label="Fundo"
+                                                            color={content.sectionStyles?.salesBackground || '#ffffff'}
+                                                            onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, salesBackground: val } }))}
                                                         />
-                                                    </div>
-                                                    <div className="form-group">
-                                                        <label>Preço "POR" (R$)</label>
-                                                        <input
-                                                            value={content.salesSection.card.currentPrice}
-                                                            onChange={(e) => {
-                                                                const masked = formatCurrency(e.target.value);
-                                                                setContent(prev => ({
-                                                                    ...prev,
-                                                                    salesSection: {
-                                                                        ...prev.salesSection,
-                                                                        card: { ...prev.salesSection.card, currentPrice: masked }
-                                                                    }
-                                                                }));
-                                                            }}
-                                                            className="input"
-                                                            placeholder="00,00"
-                                                            style={{ fontWeight: 'bold' }}
+                                                        <ColorPicker
+                                                            label="Ícone"
+                                                            color={content.sectionStyles?.salesIconColor || '#0f172a'}
+                                                            onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, salesIconColor: val } }))}
                                                         />
                                                     </div>
                                                 </div>
 
-                                                <div className="form-group">
-                                                    <label>Texto de Parcelas </label>
-                                                    <input
-                                                        value={content.salesSection.card.installmentInfo}
-                                                        onChange={(e) => setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, card: { ...prev.salesSection.card, installmentInfo: e.target.value } } }))}
-                                                        className="input"
-                                                    />
-                                                </div>
+                                                <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                                    <h4 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <ShoppingBag size={18} /> Configurações do Card de Preço
+                                                    </h4>
+                                                    <div className="form-group">
+                                                        <label>Cores do Card</label>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                                            <ColorPicker
+                                                                label="Fundo Card"
+                                                                color={content.sectionStyles?.salesCardBackground || '#ffffff'}
+                                                                onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, salesCardBackground: val } }))}
+                                                            />
+                                                            <ColorPicker
+                                                                label="Texto Card"
+                                                                color={content.sectionStyles?.salesCardTextColor || '#0f172a'}
+                                                                onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, salesCardTextColor: val } }))}
+                                                            />
+                                                        </div>
+                                                    </div>
 
-                                                <div className="form-group">
-                                                    <label>Texto do Botão de Compra</label>
-                                                    <input
-                                                        value={content.salesSection.card.buttonText}
-                                                        onChange={(e) => setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, card: { ...prev.salesSection.card, buttonText: e.target.value } } }))}
-                                                        className="input"
-                                                        style={{ background: '#ecfdf5', borderColor: '#6ee7b7' }}
-                                                    />
-                                                </div>
+                                                    <div className="form-group">
+                                                        <label>Título do Card</label>
+                                                        <input
+                                                            value={content.salesSection?.card?.title || ''}
+                                                            onChange={(e) => setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, card: { ...prev.salesSection.card, title: e.target.value } } }))}
+                                                            className="input"
+                                                        />
+                                                    </div>
 
-                                                <div className="form-group">
-                                                    <label>⚠️ Link da Página de Pagamento (Hotmart, Kiwify, etc)</label>
-                                                    <input
-                                                        value={content.salesSection.card.checkoutUrl}
-                                                        onChange={(e) => setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, card: { ...prev.salesSection.card, checkoutUrl: e.target.value } } }))}
-                                                        className="input"
-                                                        placeholder="https://..."
-                                                    />
+                                                    <div className="form-group">
+                                                        <label>Itens do Checklist</label>
+                                                        {(content.salesSection?.card?.highlights || []).map((h, idx) => (
+                                                            <div key={idx} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                                                                <input
+                                                                    value={h || ''}
+                                                                    onChange={(e) => {
+                                                                        const newH = [...(content.salesSection?.card?.highlights || [])];
+                                                                        newH[idx] = e.target.value;
+                                                                        setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, card: { ...prev.salesSection.card, highlights: newH } } }));
+                                                                    }}
+                                                                    className="input"
+                                                                />
+                                                                <button onClick={() => {
+                                                                    const newH = (content.salesSection?.card?.highlights || []).filter((_, i) => i !== idx);
+                                                                    setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, card: { ...prev.salesSection.card, highlights: newH } } }));
+                                                                }} style={{ padding: '0 10px', background: '#f1f5f9', color: '#64748b', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>X</button>
+                                                            </div>
+                                                        ))}
+                                                        <button onClick={() => setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, card: { ...prev.salesSection.card, highlights: [...(prev.salesSection?.card?.highlights || []), ''] } } }))} style={{ width: '100%', padding: '6px', background: 'transparent', border: '1px dashed #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem' }}>+ Adicionar Item</button>
+                                                    </div>
+
+                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                                        <div className="form-group">
+                                                            <label>Preço DE</label>
+                                                            <input
+                                                                value={content.salesSection?.card?.oldPrice || ''}
+                                                                onChange={(e) => setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, card: { ...prev.salesSection.card, oldPrice: formatCurrency(e.target.value) } } }))}
+                                                                className="input"
+                                                            />
+                                                        </div>
+                                                        <div className="form-group">
+                                                            <label>Preço POR</label>
+                                                            <input
+                                                                value={content.salesSection?.card?.currentPrice || ''}
+                                                                onChange={(e) => setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, card: { ...prev.salesSection.card, currentPrice: formatCurrency(e.target.value) } } }))}
+                                                                className="input"
+                                                                style={{ fontWeight: 'bold' }}
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="form-group">
+                                                        <label>Botão de Ação</label>
+                                                        <input
+                                                            value={content.salesSection?.card?.buttonText || ''}
+                                                            onChange={(e) => setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, card: { ...prev.salesSection.card, buttonText: e.target.value } } }))}
+                                                            className="input"
+                                                            style={{ background: '#ecfdf5', borderColor: '#6ee7b7' }}
+                                                        />
+                                                    </div>
+                                                    <div className="form-group">
+                                                        <label>Link de Checkout</label>
+                                                        <input
+                                                            value={content.salesSection?.card?.checkoutUrl || ''}
+                                                            onChange={(e) => setContent(prev => ({ ...prev, salesSection: { ...prev.salesSection, card: { ...prev.salesSection.card, checkoutUrl: e.target.value } } }))}
+                                                            className="input"
+                                                            placeholder="https://..."
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
+                                    </section>
+                                </LockedFeature>
+                            )}
+
+                            {activeSection === 'custom' && (
+                                <LockedFeature requiredTier="premium" currentTier={user?.plan_tier} title="Módulos Extras">
+                                    <>
+                                        <section className="form-section dynamic-factory-section" style={{ border: '2px dashed #cbd5e1', background: '#f8fafc' }}>
+                                            <div style={{ textAlign: 'center', padding: '1.5rem' }}>
+                                                <h3 style={{ color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                                    <Layers size={22} /> Fábrica de Módulos
+                                                </h3>
+                                                <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1.5rem' }}>
+                                                    Adicione blocos extras para expandir sua página.
+                                                </p>
+                                                <div className="factory-buttons-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.8rem' }}>
+                                                    <button onClick={() => addCustomSection('text')} className="btn btn-secondary" style={{ width: '100%', fontSize: '0.8rem', background: 'white' }}><Type size={16} /> Texto Rico</button>
+                                                    <button onClick={() => addCustomSection('galeria')} className="btn btn-secondary" style={{ width: '100%', fontSize: '0.8rem', background: 'white' }}><ImageIcon size={16} /> Galeria</button>
+                                                    <button onClick={() => addCustomSection('grade')} className="btn btn-secondary" style={{ width: '100%', fontSize: '0.8rem', background: 'white' }}><Layout size={16} /> Grade</button>
                                                 </div>
                                             </div>
-                                        </div>
-                                    )}
-                                </section>
-                            </LockedFeature>
+                                        </section>
 
-                            <section className="form-section">
-                                <h3>Menu Superior (Links)</h3>
-                                {content.navLinks.map((link, index) => (
-                                    <div key={index} className="form-group" style={{ marginBottom: '10px', paddingBottom: '10px', borderBottom: '1px dashed #eee' }}>
-                                        <label>{link.label}</label>
+                                        {content.customSections && content.customSections.map((section) => (
+                                            <section key={section.id} id={`edit-${section.id}`} className="form-section custom-section-edit" style={{ borderLeft: '4px solid #cbd5e1' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid #f1f5f9' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                        <div style={{ background: '#f1f5f9', padding: '8px', borderRadius: '8px', color: '#0f172a' }}>
+                                                            {section.type === 'text' && <Type size={18} />}
+                                                            {section.type === 'galeria' && <ImageIcon size={18} />}
+                                                            {section.type === 'grade' && <List size={18} />}
+                                                            {section.type === 'venda' && <ShoppingBag size={18} />}
+                                                        </div>
+                                                        <div>
+                                                            <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{section.title}</h3>
+                                                            <span style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase' }}>Módulo: {section.type}</span>
+                                                        </div>
+                                                    </div>
+                                                    <button onClick={() => removeCustomSection(section.id)} style={{ padding: '8px 12px', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                                                        <Trash2 size={14} /> Excluir
+                                                    </button>
+                                                </div>
+
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                                                    <div className="form-group">
+                                                        <label>Nome no Menu</label>
+                                                        <input
+                                                            value={section.navLabel}
+                                                            onChange={(e) => updateCustomSection(section.id, 'navLabel', e.target.value)}
+                                                            className="input"
+                                                        />
+                                                    </div>
+                                                    <div className="form-group">
+                                                        <label>Título na Página</label>
+                                                        <input
+                                                            value={section.title}
+                                                            onChange={(e) => updateCustomSection(section.id, 'title', e.target.value)}
+                                                            className="input"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', marginBottom: '1.5rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                                                    <div className="form-group">
+                                                        <label style={{ fontSize: '0.75rem', color: '#64748b' }}>Fonte</label>
+                                                        <FontSelector
+                                                            selectedFont={section.font}
+                                                            onSelect={(font) => updateCustomSection(section.id, 'font', font)}
+                                                        />
+                                                    </div>
+                                                    <div className="form-group">
+                                                        <label style={{ fontSize: '0.75rem', color: '#64748b' }}>Fundo</label>
+                                                        <ColorPicker
+                                                            color={section.backgroundColor || '#ffffff'}
+                                                            onChange={(color) => updateCustomSection(section.id, 'backgroundColor', color)}
+                                                        />
+                                                    </div>
+                                                    <div className="form-group">
+                                                        <label style={{ fontSize: '0.75rem', color: '#64748b' }}>Título</label>
+                                                        <ColorPicker
+                                                            color={section.titleColor || '#1e293b'}
+                                                            onChange={(color) => updateCustomSection(section.id, 'titleColor', color)}
+                                                        />
+                                                    </div>
+                                                    <div className="form-group">
+                                                        <label style={{ fontSize: '0.75rem', color: '#64748b' }}>Texto</label>
+                                                        <ColorPicker
+                                                            color={section.textColor || '#475569'}
+                                                            onChange={(color) => updateCustomSection(section.id, 'textColor', color)}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {section.type === 'text' && (
+                                                    <div className="form-group">
+                                                        <label>Conteúdo</label>
+                                                        <RichTextEditor
+                                                            value={section.content}
+                                                            onChange={(html) => updateCustomSection(section.id, 'content', html)}
+                                                            textColor={section.textColor}
+                                                        />
+                                                    </div>
+                                                )}
+
+                                                {section.type === 'galeria' && (
+                                                    <div className="form-group">
+                                                        <label>Imagens da Galeria</label>
+                                                        <div className="gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '10px' }}>
+                                                            {(section.items || []).map((item, idx) => (
+                                                                <div key={idx} style={{ position: 'relative', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+                                                                    <img src={item.src || 'https://via.placeholder.com/150'} alt="Item" style={{ width: '100%', height: '100px', objectFit: 'cover' }} />
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            const newItems = section.items.filter((_, i) => i !== idx);
+                                                                            updateCustomSection(section.id, 'items', newItems);
+                                                                        }}
+                                                                        style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                    >
+                                                                        <Trash2 size={14} color="#ef4444" />
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+                                                            <label className="add-gallery-item" style={{ border: '2px dashed #cbd5e1', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', height: '100px', background: '#f8fafc' }}>
+                                                                <input
+                                                                    type="file"
+                                                                    accept="image/*"
+                                                                    onChange={(e) => handleCustomSectionImageUpload(e, section.id)}
+                                                                    style={{ display: 'none' }}
+                                                                />
+                                                                <Plus size={24} color="#94a3b8" />
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {section.type === 'grade' && (
+                                                    <div className="form-group">
+                                                        <label>Itens da Grade</label>
+                                                        {(section.items || []).map((item, idx) => (
+                                                            <div key={idx} style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #e2e8f0' }}>
+                                                                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            const newItems = section.items.filter((_, i) => i !== idx);
+                                                                            updateCustomSection(section.id, 'items', newItems);
+                                                                        }}
+                                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
+                                                                    >
+                                                                        <Trash2 size={16} />
+                                                                    </button>
+                                                                </div>
+                                                                <div className="form-group">
+                                                                    <label style={{ fontSize: '0.8rem' }}>Título do Item</label>
+                                                                    <input
+                                                                        value={item.title || ''}
+                                                                        onChange={(e) => handleCustomListChange(section.id, idx, 'title', e.target.value)}
+                                                                        className="input"
+                                                                    />
+                                                                </div>
+                                                                <div className="form-group">
+                                                                    <label style={{ fontSize: '0.8rem' }}>Descrição</label>
+                                                                    <textarea
+                                                                        value={item.description || ''}
+                                                                        onChange={(e) => handleCustomListChange(section.id, idx, 'description', e.target.value)}
+                                                                        className="input textarea-sm"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                        <button
+                                                            onClick={() => {
+                                                                const newItem = { title: 'Novo Item', description: 'Descrição...', icon: 'CheckCircle' };
+                                                                const newItems = [...(section.items || []), newItem];
+                                                                updateCustomSection(section.id, 'items', newItems);
+                                                            }}
+                                                            className="btn-secondary"
+                                                            style={{ width: '100%', fontSize: '0.8rem' }}
+                                                        >
+                                                            + Adicionar Item
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </section>
+                                        ))}
+                                    </>
+                                </LockedFeature>
+                            )}
+
+                            {activeSection === 'footer' && (
+                                <section className="form-section">
+                                    <h3>Rodapé & Contato</h3>
+                                    <div className="form-group">
+                                        <label>Texto do Rodapé</label>
+                                        <input name="footerText" value={content.footerText} onChange={handleChange} className="input" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Instagram URL</label>
                                         <input
-                                            value={link.url}
-                                            placeholder="URL (ex: https://... ou #secao)"
+                                            value={content.socials.instagram}
+                                            onChange={(e) => setContent(prev => ({ ...prev, socials: { ...prev.socials, instagram: e.target.value } }))}
+                                            className="input"
+                                            placeholder="https://instagram.com/..."
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>WhatsApp</label>
+                                        <input
+                                            value={content.socials.whatsapp}
                                             onChange={(e) => {
-                                                const newLinks = [...content.navLinks];
-                                                newLinks[index].url = e.target.value;
-                                                setContent(prev => ({ ...prev, navLinks: newLinks }));
+                                                let val = e.target.value.replace(/\D/g, '');
+                                                if (val.length > 11) val = val.slice(0, 11);
+                                                if (val.length > 2) val = `(${val.slice(0, 2)}) ${val.slice(2)}`;
+                                                if (val.length > 7) val = `${val.slice(0, 9)}-${val.slice(9)}`;
+                                                setContent(prev => ({ ...prev, socials: { ...prev.socials, whatsapp: val } }))
                                             }}
                                             className="input"
+                                            placeholder="(XX) XXXXX-XXXX"
                                         />
                                     </div>
-                                ))}
-                            </section>
 
-                            <LockedFeature title="Seção Mentora" currentTier={user?.plan_tier}>
-                                <section className="form-section">
-                                    <h3><Type size={18} /> Sobre Você</h3>
-                                    <div className="form-group">
-                                        <label>Rótulo Superior</label>
-                                        <input
-                                            name="aboutLabel"
-                                            value={content.aboutLabel}
-                                            onChange={handleChange}
-                                            className="input"
-                                            placeholder="Conheça sobre você"
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Nome / Título </label>
-                                        <input
-                                            name="aboutTitle"
-                                            value={content.aboutTitle}
-                                            onChange={handleChange}
-                                            className="input"
-                                            placeholder="Seu Nome"
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Sua História / Descrição</label>
-                                        <textarea
-                                            name="aboutText"
-                                            value={content.aboutText}
-                                            onChange={handleChange}
-                                            className="input textarea"
-                                            style={{ height: '150px' }}
-                                            placeholder="Conte sua trajetória..."
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label><ImageIcon size={18} /> Foto</label>
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={(e) => handleImageUpload(e, 'aboutImage')}
-                                            className="input"
-                                        />
-                                        {content.aboutImage && (
-                                            <div style={{ marginTop: '1rem' }}>
-                                                <img src={content.aboutImage} alt="Mentor Preview" className="image-preview" style={{ height: '150px', objectFit: 'cover', borderRadius: '8px' }} />
-                                            </div>
-                                        )}
+                                    <div className="form-group" style={{ marginBottom: '2rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px', marginTop: '2rem' }}>
+                                        <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem' }}>Aparência do Rodapé</h4>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                            <ColorPicker
+                                                label="Fundo"
+                                                color={content.sectionStyles?.footerBackground || '#0f172a'}
+                                                onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, footerBackground: val } }))}
+                                            />
+                                            <ColorPicker
+                                                label="Texto"
+                                                color={content.sectionStyles?.footerTitleColor || '#ffffff'}
+                                                onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, footerTitleColor: val } }))}
+                                            />
+                                        </div>
                                     </div>
                                 </section>
-                            </LockedFeature>
-
-                            <section className="form-section">
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                    <div>
-                                        <h3>Eventos (Carrossel)</h3>
-                                        <p style={{ fontSize: '0.8rem', color: '#666', margin: 0 }}>
-                                            <strong>Dica:</strong> Para melhor qualidade e enquadramento total, redimensione suas fotos antes de enviar.<br />
-                                            • Paisagem: <strong>600x400 px</strong><br />
-                                            • Retrato: <strong>300x400 px</strong><br />
-                                            <a href="https://www.birme.net/?width=600&height=400" target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'underline', marginTop: '4px', display: 'inline-block', fontSize: '0.75rem' }}>
-                                                ➜ Ajustar e Enquadrar no BIRME (Sem deformar)
-                                            </a>
-                                        </p>
-                                    </div>
-                                    <button onClick={() => addItem('events', { image: '', description: '', imageFit: 'contain' })} className="btn btn-secondary" style={{ fontSize: '0.8rem' }}>
-                                        + Adicionar Evento
-                                    </button>
-                                </div>
-                                <div className="features-grid">
-                                    {content.events && content.events.map((event, index) => (
-                                        <div key={index} className="feature-card-edit">
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <h4>Evento {index + 1}</h4>
-                                                <button onClick={() => removeItem('events', index)} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}>Remover</button>
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Imagem</label>
-                                                <input type="file" accept="image/*" onChange={(e) => handleListImageUpload(e, 'events', index)} className="input" />
-                                                {event.image && (
-                                                    <div style={{ marginTop: '0.5rem' }}>
-                                                        <img
-                                                            src={event.image}
-                                                            alt="Preview"
-                                                            className="image-preview"
-                                                            style={{
-                                                                height: '100px',
-                                                                objectFit: 'contain',
-                                                                objectPosition: 'center'
-                                                            }}
-                                                        />
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div style={{ padding: '0.5rem', background: '#f8fafc', borderRadius: '4px', fontSize: '0.75rem', color: '#64748b', border: '1px dashed #cbd5e1', textAlign: 'center', marginBottom: '1rem' }}>
-                                                Enquadramento manual removido. Use o link do <strong>BIRME</strong> acima para preparar a imagem.
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Descrição Curta</label>
-                                                <textarea
-                                                    value={event.description}
-                                                    onChange={(e) => handleListChange('events', index, 'description', e.target.value)}
-                                                    className="input textarea-sm"
-                                                />
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </section>
-
-                            <section className="form-section">
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                    <div>
-                                        <h3>Estações</h3>
-                                        <p style={{ fontSize: '0.8rem', color: '#666', margin: 0 }}>
-                                            <strong>Dica:</strong> Para melhor qualidade e enquadramento total, redimensione suas fotos antes de enviar.<br />
-                                            • Paisagem: <strong>600x400 px</strong><br />
-                                            • Retrato: <strong>300x400 px</strong><br />
-                                            <a href="https://www.birme.net/?width=600&height=400" target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'underline', marginTop: '4px', display: 'inline-block', fontSize: '0.75rem' }}>
-                                                ➜ Ajustar e Enquadrar no BIRME (Sem deformar)
-                                            </a>
-                                        </p>
-                                    </div>
-                                    <button onClick={() => addItem('stations', { image: '', title: '', description: '', imageFit: 'contain' })} className="btn btn-secondary" style={{ fontSize: '0.8rem' }}>
-                                        + Adicionar Estação
-                                    </button>
-                                </div>
-                                <div className="features-grid">
-                                    {content.stations && content.stations.map((station, index) => (
-                                        <div key={index} className="feature-card-edit">
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <h4>Estação {index + 1}</h4>
-                                                <button onClick={() => removeItem('stations', index)} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}>Remover</button>
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Imagem</label>
-                                                <input type="file" accept="image/*" onChange={(e) => handleListImageUpload(e, 'stations', index)} className="input" />
-                                                {station.image && (
-                                                    <div style={{ marginTop: '0.5rem' }}>
-                                                        <img
-                                                            src={station.image}
-                                                            alt="Preview"
-                                                            className="image-preview"
-                                                            style={{
-                                                                height: '100px',
-                                                                objectFit: 'contain',
-                                                                objectPosition: 'center'
-                                                            }}
-                                                        />
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div style={{ padding: '0.5rem', background: '#f8fafc', borderRadius: '4px', fontSize: '0.75rem', color: '#64748b', border: '1px dashed #cbd5e1', textAlign: 'center', marginBottom: '1rem' }}>
-                                                Enquadramento manual removido. Use o link do <strong>BIRME</strong> acima para preparar a imagem.
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Título</label>
-                                                <input
-                                                    value={station.title}
-                                                    onChange={(e) => handleListChange('stations', index, 'title', e.target.value)}
-                                                    className="input"
-                                                />
-                                            </div>
-                                            <div className="form-group">
-                                                <label>Descrição</label>
-                                                <textarea
-                                                    value={station.description}
-                                                    onChange={(e) => handleListChange('stations', index, 'description', e.target.value)}
-                                                    className="input textarea-sm"
-                                                />
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </section>
-
-                            <section className="form-section">
-                                <h3>Rodapé & Redes Sociais</h3>
-                                <div className="form-group">
-                                    <label>Texto do Footer</label>
-                                    <input name="footerText" value={content.footerText} onChange={handleChange} className="input" />
-                                </div>
-                                <div className="form-group">
-                                    <label>Instagram (URL)</label>
-                                    <input
-                                        value={content.socials.instagram}
-                                        onChange={(e) => setContent(prev => ({ ...prev, socials: { ...prev.socials, instagram: e.target.value } }))}
-                                        className="input"
-                                        placeholder="https://instagram.com/..."
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Contato (WhatsApp)</label>
-                                    <input
-                                        value={content.socials.whatsapp}
-                                        onChange={(e) => {
-                                            let val = e.target.value.replace(/\D/g, ''); // Remove non-digits
-                                            if (val.length > 11) val = val.slice(0, 11); // Limit length
-
-                                            // Apply mask (XX) XXXXX-XXXX
-                                            if (val.length > 2) val = `(${val.slice(0, 2)}) ${val.slice(2)}`;
-                                            if (val.length > 7) val = `${val.slice(0, 9)}-${val.slice(9)}`;
-
-                                            setContent(prev => ({ ...prev, socials: { ...prev.socials, whatsapp: val } }))
-                                        }}
-                                        className="input"
-                                        placeholder="(XX) XXXXX-XXXX"
-                                    />
-                                </div>
-                            </section>
+                            )}
                         </>
+                    ) : (
+                        <section className="admin-users-section">
+                            <div className="admin-section-header">
+                                <div className="header-title">
+                                    <h2>Gerenciamento de Usuários</h2>
+                                    <p className="subtitle">Visualize e controle todos os acessos do sistema</p>
+                                </div>
+                                <div className="search-wrapper">
+                                    <Search size={18} className="search-icon" />
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar por usuário ou e-mail..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="search-input-premium"
+                                    />
+                                </div>
+                            </div>
+
+                            <div style={{ overflowX: 'auto' }}>
+                                <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse', color: '#1e293b' }}>
+                                    <thead>
+                                        <tr style={{ textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>
+                                            <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Usuário</th>
+                                            <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>E-mail</th>
+                                            <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Plano</th>
+                                            <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cadastro</th>
+                                            <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Visitas</th>
+                                            <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
+                                            <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filteredUsers.map(u => (
+                                            <tr key={u.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                                <td style={{ padding: '12px', fontWeight: 'bold' }}>{u.username}</td>
+                                                <td style={{ padding: '12px' }}>{u.email}</td>
+                                                <td style={{ padding: '12px' }}>
+                                                    <select
+                                                        value={u.plan_tier}
+                                                        onChange={(e) => handleUpdateUserTier(u.id, e.target.value)}
+                                                        className="input"
+                                                        style={{ padding: '4px', width: 'auto' }}
+                                                    >
+                                                        <option value="static">Static</option>
+                                                        <option value="basic">Basic</option>
+                                                        <option value="premium">Premium</option>
+                                                        <option value="adm_server">Super Admin</option>
+                                                    </select>
+                                                </td>
+                                                <td style={{ padding: '12px', fontSize: '0.9rem', color: '#64748b' }}>{u.date_formatted}</td>
+                                                <td style={{ padding: '12px', fontWeight: 'bold', color: '#2563eb' }}>{u.total_visits}</td>
+                                                <td style={{ padding: '12px' }}>
+                                                    <span style={{
+                                                        padding: '4px 8px',
+                                                        borderRadius: '12px',
+                                                        fontSize: '0.75rem',
+                                                        background: u.is_active ? '#dcfce7' : '#fee2e2',
+                                                        color: u.is_active ? '#166534' : '#991b1b'
+                                                    }}>
+                                                        {u.is_active ? 'Ativo' : 'Inativo'}
+                                                    </span>
+                                                </td>
+                                                <td style={{ padding: '12px' }}>
+                                                    <button
+                                                        onClick={() => handleToggleUserStatus(u.id, u.is_active)}
+                                                        className="btn action-btn"
+                                                        style={{
+                                                            padding: '4px 8px',
+                                                            fontSize: '0.75rem',
+                                                            background: u.is_active ? '#ef4444' : '#22c55e',
+                                                            color: 'white',
+                                                            border: 'none',
+                                                            borderRadius: '4px',
+                                                            cursor: 'pointer',
+                                                            marginRight: '8px'
+                                                        }}
+                                                    >
+                                                        {u.is_active ? 'Desativar' : 'Ativar'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteUser(u.id, u.username)}
+                                                        className="btn action-btn"
+                                                        title="Excluir Usuário"
+                                                        style={{
+                                                            padding: '4px 8px',
+                                                            fontSize: '0.75rem',
+                                                            background: '#f1f5f9',
+                                                            color: '#ef4444',
+                                                            border: '1px solid #fee2e2',
+                                                            borderRadius: '4px',
+                                                            cursor: 'pointer',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center'
+                                                        }}
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {filteredUsers.length === 0 && !loadingUsers && (
+                                            <tr>
+                                                <td colSpan="7" style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>
+                                                    {searchTerm ? `Nenhum usuário encontrado para "${searchTerm}"` : 'Nenhum usuário encontrado no sistema.'}
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
                     )}
                 </div >
             </main >

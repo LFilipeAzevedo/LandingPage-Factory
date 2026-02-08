@@ -6,7 +6,7 @@ const { TIER_LIST } = require('../config/plans');
 const router = express.Router();
 const SECRET_KEY = process.env.JWT_SECRET || 'super_secret_key_123';
 
-console.log('✅ [ADMIN-ROUTE] Carregando rotas administrativas...');
+
 
 // Health check for admin routes
 router.get('/ping', (req, res) => res.json({ status: 'admin-api-online' }));
@@ -32,7 +32,7 @@ function verifyAdmin(req, res, next) {
 
 // List all users
 router.get('/users', verifyAdmin, (req, res) => {
-    console.log(`[DEBUG] Admin ${req.userId} solicitou lista de usuários`);
+
     db.all(`
         SELECT u.id, u.username, u.email, u.plan_tier, u.is_active, 
         strftime('%d/%m/%Y', u.created_at) as date_formatted,
