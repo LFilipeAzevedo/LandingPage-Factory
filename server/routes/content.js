@@ -23,7 +23,16 @@ function verifyToken(req, res, next) {
 // Get Page Content (Public)
 router.get('/:slug', (req, res) => {
     const slug = req.params.slug;
-    db.get("SELECT content, user_id FROM pages WHERE slug = ?", [slug], (err, row) => {
+
+    // Join with users to get plan_tier
+    const query = `
+        SELECT p.content, p.user_id, u.plan_tier 
+        FROM pages p 
+        JOIN users u ON p.user_id = u.id 
+        WHERE p.slug = ?
+    `;
+
+    db.get(query, [slug], (err, row) => {
         if (err) return res.status(500).json({ error: 'Database error' });
         if (!row) return res.status(404).json({ error: 'Page not found' });
 
@@ -57,8 +66,22 @@ router.get('/:slug', (req, res) => {
         }
 
         try {
-            res.json(JSON.parse(row.content));
+            let content = JSON.parse(row.content);
+
+            // --- PLAN ENFORCEMENT & SANITIZATION ---
+            // If user is NOT Premium, disable Premium features (Non-Destructive)
+            if (row.plan_tier !== 'premium') {
+                if (content.salesSection) {
+                    content.salesSection.enabled = false;
+                }
+                // Future: Enforce footer branding for Free tier
+                // if (row.plan_tier === 'static') { ... }
+            }
+            // ---------------------------------------
+
+            res.json(content);
         } catch (e) {
+            console.error(e);
             res.status(500).json({ error: 'Error parsing content' });
         }
     });
