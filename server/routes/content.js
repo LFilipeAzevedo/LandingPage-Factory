@@ -84,15 +84,30 @@ router.get('/:slug', (req, res) => {
                 }
 
                 // 3. Reset Premium Styles (Custom Colors/Fonts)
-                // We keep basic structure but remove overrides
+                // Enforce readable defaults (High Contrast) instead of broken white-on-white
                 if (content.sectionStyles) {
-                    // Reset to defaults or empty to force fallback
-                    content.sectionStyles = {};
+                    content.sectionStyles = {
+                        aboutBackground: '#f8fafc',
+                        aboutTitleColor: '#0f172a',
+                        aboutLabelColor: '#64748b',
+                        aboutTextColor: '#334155',
+                        eventsBackground: '#f8fafc',
+                        eventsTitleColor: '#0f172a',
+                        stationsBackground: '#f8fafc',
+                        stationsTitleColor: '#0f172a',
+                        footerBackground: '#0f172a',
+                        footerTitleColor: '#cbd5e1'
+                    };
                 }
 
                 // 4. Disable Top Bar (Announcement)
                 if (content.topBar) {
                     content.topBar.enabled = false;
+                }
+
+                // 5. Remove Premium Images (Profile/About)
+                if (content.aboutImage) {
+                    content.aboutImage = "";
                 }
 
                 // Future: Enforce footer branding for Free tier
