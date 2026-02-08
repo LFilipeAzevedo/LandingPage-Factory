@@ -10,6 +10,15 @@ const Plans = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
 
+    const [priceData, setPriceData] = useState(null);
+
+    useEffect(() => {
+        // Fetch price from backend (connected to Stripe)
+        api.get('/api/payment/price-details')
+            .then(res => setPriceData(res.data))
+            .catch(err => console.error('Error fetching price:', err));
+    }, []);
+
     useEffect(() => {
         if (searchParams.get('success')) {
             alert('Pagamento realizado com sucesso! Seu plano agora é Premium.');
@@ -53,6 +62,14 @@ const Plans = () => {
 
     const isPremium = user?.plan_tier === 'premium';
 
+    // Format currency
+    const formattedPrice = priceData
+        ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: priceData.currency || 'BRL' }).format(priceData.amount)
+        : 'R$ ...';
+
+    const intervalMap = { month: 'mês', year: 'ano' };
+    const interval = priceData?.interval ? intervalMap[priceData.interval] || 'mês' : 'mês';
+
     return (
         <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '40px 20px', fontFamily: 'Inter, sans-serif' }}>
             <div style={{ maxWidth: '900px', margin: '0 auto' }}>
@@ -77,7 +94,7 @@ const Plans = () => {
                         opacity: isPremium ? 0.7 : 1
                     }}>
                         <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#334155' }}>Plano Gratuito</h3>
-                        <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#0f172a', margin: '16px 0' }}>R$ 0<span style={{ fontSize: '1rem', color: '#64748b', fontWeight: '400' }}>/mês</span></div>
+                        <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#0f172a', margin: '16px 0' }}>R$ 0<span style={{ fontSize: '1rem', color: '#64748b', fontWeight: '400' }}>/{interval}</span></div>
                         <ul style={{ listStyle: 'none', padding: 0, margin: '24px 0', color: '#475569', lineHeight: '2' }}>
                             <li>✅ Editor Básico</li>
                             <li>✅ 1 Landing Page</li>
@@ -100,8 +117,8 @@ const Plans = () => {
                         {isPremium && <div style={{ position: 'absolute', top: 0, right: 0, background: '#2563eb', color: '#fff', padding: '4px 12px', fontSize: '0.75rem', fontWeight: 'bold', borderBottomLeftRadius: '8px' }}>ATIVO</div>}
 
                         <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#2563eb' }}>Plano Premium</h3>
-                        <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#0f172a', margin: '16px 0' }}>R$ 29,90<span style={{ fontSize: '1rem', color: '#64748b', fontWeight: '400' }}>/mês</span></div>
-                        <p style={{ color: '#64748b', fontSize: '0.875rem' }}>Cobrado anualmente ou R$ 39,90 mensal.</p>
+                        <div style={{ fontSize: '2.5rem', fontWeight: '800', color: '#0f172a', margin: '16px 0' }}>{formattedPrice}<span style={{ fontSize: '1rem', color: '#64748b', fontWeight: '400' }}>/{interval}</span></div>
+                        <p style={{ color: '#64748b', fontSize: '0.875rem' }}>Cobrança recorrente. Cancele quando quiser.</p>
 
                         <ul style={{ listStyle: 'none', padding: 0, margin: '24px 0', color: '#334155', lineHeight: '2' }}>
                             <li>✅ <strong>Editor Completo</strong></li>
