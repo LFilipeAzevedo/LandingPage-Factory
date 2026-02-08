@@ -79,7 +79,7 @@ const Plans = () => {
                     <p style={{ color: '#64748b', fontSize: '1.1rem', marginBottom: '32px' }}>Desbloqueie todo o potencial do Landing Page Factory.</p>
 
                     {/* Toggle Switch */}
-                    <div style={{ display: 'inline-flex', background: '#e2e8f0', padding: '4px', borderRadius: 'full', position: 'relative' }}>
+                    <div style={{ display: 'inline-flex', background: 'transparent', padding: '4px', borderRadius: '9999px', position: 'relative' }}>
                         <button
                             onClick={() => setBillingInterval('monthly')}
                             style={{
