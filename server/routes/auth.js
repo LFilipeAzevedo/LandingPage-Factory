@@ -56,10 +56,10 @@ router.post('/register', (req, res) => {
     if (username) username = username.trim();
     if (email) email = email.trim();
 
-    console.log('📝 Tentativa de registro:', { username, email });
+
 
     if (!username || !password || !email) {
-        console.log('❌ Campos obrigatórios faltando');
+
         return res.status(400).json({ error: 'Username, password and email are required' });
     }
 
@@ -70,7 +70,7 @@ router.post('/register', (req, res) => {
             return res.status(500).json({ error: 'Database error' });
         }
         if (existingUser) {
-            console.log('❌ Usuário ou e-mail já existe');
+
             return res.status(400).json({ error: 'Username or email already taken' });
         }
 
@@ -84,7 +84,7 @@ router.post('/register', (req, res) => {
                     console.error('❌ Erro ao criar usuário:', err.message);
                     return res.status(500).json({ error: 'Error creating user: ' + err.message });
                 }
-                console.log('✅ Usuário criado com ID:', this.lastID);
+
 
                 const userId = this.lastID;
                 const defaultSlug = username.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Math.floor(Math.random() * 1000);
@@ -106,7 +106,7 @@ router.post('/register', (req, res) => {
                         console.error('❌ Erro ao criar página:', err.message);
                         return res.status(500).json({ error: 'Error creating initial page: ' + err.message });
                     }
-                    console.log('✅ Página criada com slug:', defaultSlug);
+
 
                     // Send Verification Email (Asynchronous)
                     sendVerificationEmail(email, username, verificationToken).then(emailResult => {
@@ -119,7 +119,7 @@ router.post('/register', (req, res) => {
                         console.error('🔥 Erro fatal no envio de e-mail:', err);
                     });
 
-                    console.log('✅ Registro concluído com sucesso (Resposta enviada)');
+
 
                     res.status(201).json({
                         success: true,

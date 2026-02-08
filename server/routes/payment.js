@@ -25,7 +25,7 @@ router.post('/create-checkout-session', authenticateToken, async (req, res) => {
                 const userEmail = user.email;
                 const origin = req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5173';
 
-                console.log(`💳 Iniciando Checkout para ${userEmail} (ID: ${userId})`);
+                // Checkout initiated
 
                 const session = await stripe.checkout.sessions.create({
                     payment_method_types: ['card'],
@@ -154,7 +154,7 @@ router.post('/webhook', async (req, res) => {
             break;
 
         default:
-            console.log(`Unhandled event type ${event.type}`);
+        // Silently ignore other event types
     }
 
     // Return a 200 response to acknowledge receipt of the event
