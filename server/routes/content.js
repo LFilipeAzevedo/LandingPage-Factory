@@ -23,7 +23,16 @@ function verifyToken(req, res, next) {
 // Get Page Content (Public)
 router.get('/:slug', (req, res) => {
     const slug = req.params.slug;
-    db.get("SELECT content, user_id FROM pages WHERE slug = ?", [slug], (err, row) => {
+
+    // Join with users to get plan_tier
+    const query = `
+        SELECT p.content, p.user_id, u.plan_tier 
+        FROM pages p 
+        JOIN users u ON p.user_id = u.id 
+        WHERE p.slug = ?
+    `;
+
+    db.get(query, [slug], (err, row) => {
         if (err) return res.status(500).json({ error: 'Database error' });
         if (!row) return res.status(404).json({ error: 'Page not found' });
 
@@ -56,9 +65,59 @@ router.get('/:slug', (req, res) => {
             });
         }
 
+
+
         try {
-            res.json(JSON.parse(row.content));
+            let content = JSON.parse(row.content);
+
+            // --- PLAN ENFORCEMENT & SANITIZATION ---
+            // If user is NOT Premium, disable Premium features (Non-Destructive)
+            if (row.plan_tier !== 'premium') {
+                // 1. Disable Sales Section
+                if (content.salesSection) {
+                    content.salesSection.enabled = false;
+                }
+
+                // 2. Clear Custom Sections (Módulos Extras)
+                if (content.customSections && content.customSections.length > 0) {
+                    content.customSections = [];
+                }
+
+                // 3. Reset Premium Styles (Custom Colors/Fonts)
+                // Enforce readable defaults (High Contrast) instead of broken white-on-white
+                if (content.sectionStyles) {
+                    content.sectionStyles = {
+                        aboutBackground: '#f8fafc',
+                        aboutTitleColor: '#0f172a',
+                        aboutLabelColor: '#64748b',
+                        aboutTextColor: '#334155',
+                        eventsBackground: '#f8fafc',
+                        eventsTitleColor: '#0f172a',
+                        stationsBackground: '#f8fafc',
+                        stationsTitleColor: '#0f172a',
+                        footerBackground: '#0f172a',
+                        footerTitleColor: '#cbd5e1'
+                    };
+                }
+
+                // 4. Disable Top Bar (Announcement)
+                if (content.topBar) {
+                    content.topBar.enabled = false;
+                }
+
+                // 5. Remove Premium Images (Profile/About)
+                if (content.aboutImage) {
+                    content.aboutImage = "";
+                }
+
+                // Future: Enforce footer branding for Free tier
+                // if (row.plan_tier === 'static') { ... }
+            }
+            // ---------------------------------------
+
+            res.json(content);
         } catch (e) {
+            console.error(e);
             res.status(500).json({ error: 'Error parsing content' });
         }
     });
