@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../utils/api';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
 
@@ -23,15 +24,10 @@ const Login = () => {
         }
         setIsResetting(true);
         try {
-            const response = await fetch('http://localhost:3001/api/auth/forgot-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: forgotEmail })
-            });
-            const data = await response.json();
-            setForgotMessage(data.message || 'Se o e-mail existir, enviamos um link.');
+            const response = await api.post('/api/auth/forgot-password', { email: forgotEmail });
+            setForgotMessage(response.data.message || 'Se o e-mail existir, enviamos um link.');
         } catch (error) {
-            setForgotMessage('Ocorreu um erro ao tentar enviar o e-mail.');
+            setForgotMessage(error.response?.data?.message || 'Ocorreu um erro ao tentar enviar o e-mail.');
         } finally {
             setIsResetting(false);
         }
