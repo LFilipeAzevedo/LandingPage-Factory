@@ -1570,407 +1570,418 @@ const Editor = () => {
                                                         />
                                                     </div>
                                                 )}
-
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                                    <label>Imagens da Galeria</label>
-                                                    <div style={{ textAlign: 'right' }}>
-                                                        <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold' }}>
-                                                            Recomendado: 600x400px (Paisagem)
-                                                        </div>
-                                                        <a href="https://bulkresizephotos.com/pt" target="_blank" rel="noreferrer" style={{ fontSize: '0.7rem', color: '#2563eb' }}>Redimensionador</a>
-                                                    </div>
-                                                </div>
-                                                <div className="gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '15px' }}>
-                                                    {(section.items || []).map((item, idx) => (
-                                                        <div key={idx} style={{ position: 'relative', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', background: 'white', padding: '5px' }}>
-                                                            <div style={{ position: 'relative', width: '100%', height: '100px', borderRadius: '8px', overflow: 'hidden', background: '#f1f5f9' }}>
-                                                                <img
-                                                                    src={item.src || 'https://via.placeholder.com/150'}
-                                                                    alt="Item"
-                                                                    style={{
-                                                                        width: '100%',
-                                                                        height: '100%',
-                                                                        objectFit: 'cover',
-                                                                        objectPosition: `${item.posX || 50}% ${item.posY || 50}%`
-                                                                    }}
-                                                                />
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.preventDefault();
-                                                                        const newItems = section.items.filter((_, i) => i !== idx);
-                                                                        updateCustomSection(section.id, 'items', newItems);
-                                                                    }}
-                                                                    style={{
-                                                                        position: 'absolute',
-                                                                        top: 5,
-                                                                        right: 5,
-                                                                        background: '#ef4444',
-                                                                        color: 'white',
-                                                                        border: '2px solid white',
-                                                                        borderRadius: '50%',
-                                                                        width: '28px',
-                                                                        height: '28px',
-                                                                        cursor: 'pointer',
-                                                                        display: 'flex',
-                                                                        alignItems: 'center',
-                                                                        justifyContent: 'center',
-                                                                        boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
-                                                                        zIndex: 10
-                                                                    }}
-                                                                    title="Remover foto"
-                                                                >
-                                                                    <Trash2 size={12} />
-                                                                </button>
+                                                {section.type === 'galeria' && (
+                                                    <div className="form-group">
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                                            <label>Imagens da Galeria</label>
+                                                            <div style={{ textAlign: 'right' }}>
+                                                                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold' }}>
+                                                                    Recomendado: 600x400px (Paisagem)
+                                                                </div>
+                                                                <a href="https://bulkresizephotos.com/pt" target="_blank" rel="noreferrer" style={{ fontSize: '0.7rem', color: '#2563eb' }}>Redimensionador</a>
                                                             </div>
+                                                        </div>
+                                                        <div className="gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '15px' }}>
+                                                            {(section.items || []).map((item, idx) => (
+                                                                <div key={idx} style={{ position: 'relative', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', background: 'white', padding: '5px' }}>
+                                                                    <div style={{ position: 'relative', width: '100%', height: '100px', borderRadius: '8px', overflow: 'hidden', background: '#f1f5f9' }}>
+                                                                        <img
+                                                                            src={item.src || 'https://via.placeholder.com/150'}
+                                                                            alt="Item"
+                                                                            style={{
+                                                                                width: '100%',
+                                                                                height: '100%',
+                                                                                objectFit: 'cover',
+                                                                                objectPosition: `${item.posX || 50}% ${item.posY || 50}%`
+                                                                            }}
+                                                                        />
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.preventDefault();
+                                                                                const newItems = section.items.filter((_, i) => i !== idx);
+                                                                                updateCustomSection(section.id, 'items', newItems);
+                                                                            }}
+                                                                            style={{
+                                                                                position: 'absolute',
+                                                                                top: 5,
+                                                                                right: 5,
+                                                                                background: '#ef4444',
+                                                                                color: 'white',
+                                                                                border: '2px solid white',
+                                                                                borderRadius: '50%',
+                                                                                width: '28px',
+                                                                                height: '28px',
+                                                                                cursor: 'pointer',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                justifyContent: 'center',
+                                                                                boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+                                                                                zIndex: 10
+                                                                            }}
+                                                                            title="Remover foto"
+                                                                        >
+                                                                            <Trash2 size={12} />
+                                                                        </button>
+                                                                    </div>
 
-                                                            <div style={{ padding: '8px 5px 0 5px' }}>
-                                                                <label style={{ fontSize: '0.65rem', color: '#94a3b8', display: 'block', marginBottom: '2px' }}>Ajustar Enquadramento (Arraste)</label>
-                                                                <div style={{ display: 'flex', gap: '5px' }}>
-                                                                    <input
-                                                                        type="range" min="0" max="100"
-                                                                        value={item.posX || 50}
-                                                                        onChange={(e) => {
-                                                                            const newItems = [...section.items];
-                                                                            newItems[idx] = { ...newItems[idx], posX: e.target.value };
+                                                                    <div style={{ padding: '8px 5px 0 5px' }}>
+                                                                        <label style={{ fontSize: '0.65rem', color: '#94a3b8', display: 'block', marginBottom: '2px' }}>Ajustar Enquadramento (Arraste)</label>
+                                                                        <div style={{ display: 'flex', gap: '5px' }}>
+                                                                            <input
+                                                                                type="range" min="0" max="100"
+                                                                                value={item.posX || 50}
+                                                                                onChange={(e) => {
+                                                                                    const newItems = [...section.items];
+                                                                                    newItems[idx] = { ...newItems[idx], posX: e.target.value };
+                                                                                    updateCustomSection(section.id, 'items', newItems);
+                                                                                }}
+                                                                                style={{ width: '100%', height: '4px', cursor: 'pointer' }}
+                                                                                title="Horizontal"
+                                                                            />
+                                                                            <input
+                                                                                type="range" min="0" max="100"
+                                                                                value={item.posY || 50}
+                                                                                onChange={(e) => {
+                                                                                    const newItems = [...section.items];
+                                                                                    newItems[idx] = { ...newItems[idx], posY: e.target.value };
+                                                                                    updateCustomSection(section.id, 'items', newItems);
+                                                                                }}
+                                                                                style={{ width: '100%', height: '4px', cursor: 'pointer', transform: 'rotate(0deg)' }}
+                                                                                title="Vertical"
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                            <label className="add-gallery-item" style={{ border: '2px dashed #cbd5e1', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', height: '100px', background: '#f8fafc' }}>
+                                                                <input
+                                                                    type="file"
+                                                                    accept="image/*"
+                                                                    onChange={(e) => handleCustomSectionImageUpload(e, section.id)}
+                                                                    style={{ display: 'none' }}
+                                                                />
+                                                                <Plus size={24} color="#94a3b8" />
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {section.type === 'grade' && (
+                                                    <div className="form-group">
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                                            <label>Itens da Grade (Destaques)</label>
+                                                            <div style={{ textAlign: 'right' }}>
+                                                                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold' }}>
+                                                                    Retrato: 400x550px | Paisagem: 600x400px
+                                                                </div>
+                                                                <a href="https://bulkresizephotos.com/pt" target="_blank" rel="noreferrer" style={{ fontSize: '0.7rem', color: '#2563eb' }}>Redimensionador</a>
+                                                            </div>
+                                                        </div>
+                                                        {(section.items || []).map((item, idx) => (
+                                                            <div key={idx} style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', marginBottom: '1rem', border: '1px solid #e2e8f0' }}>
+                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                                                                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flex: 1 }}>
+                                                                        <div className="item-image-upload" style={{ width: '100px', height: '120px', position: 'relative', background: 'white', borderRadius: '10px', overflow: 'hidden', cursor: 'pointer', border: '1px solid #cbd5e1' }}>
+                                                                            {item.image ? (
+                                                                                <img
+                                                                                    src={item.image}
+                                                                                    alt="Preview"
+                                                                                    style={{
+                                                                                        width: '100%',
+                                                                                        height: '100%',
+                                                                                        objectFit: 'cover',
+                                                                                        objectPosition: `${item.posX || 50}% ${item.posY || 50}%`
+                                                                                    }}
+                                                                                />
+                                                                            ) : (
+                                                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><ImageIcon size={24} color="#64748b" /></div>
+                                                                            )}
+                                                                            <input
+                                                                                type="file"
+                                                                                accept="image/*"
+                                                                                onChange={(e) => handleCustomGradeImageUpload(e, section.id, idx)}
+                                                                                style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                                            />
+                                                                        </div>
+
+                                                                        {item.image && (
+                                                                            <div style={{ flex: 1 }}>
+                                                                                <label style={{ fontSize: '0.7rem', color: '#64748b', display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Enquadramento (Foco)</label>
+                                                                                <div style={{ marginBottom: '10px' }}>
+                                                                                    <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>Horizontal ({item.posX || 50}%)</span>
+                                                                                    <input
+                                                                                        type="range" min="0" max="100"
+                                                                                        value={item.posX || 50}
+                                                                                        onChange={(e) => handleCustomListChange(section.id, idx, 'posX', e.target.value)}
+                                                                                        style={{ width: '100%', height: '6px', cursor: 'pointer', display: 'block' }}
+                                                                                    />
+                                                                                </div>
+                                                                                <div>
+                                                                                    <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>Vertical ({item.posY || 50}%)</span>
+                                                                                    <input
+                                                                                        type="range" min="0" max="100"
+                                                                                        value={item.posY || 50}
+                                                                                        onChange={(e) => handleCustomListChange(section.id, idx, 'posY', e.target.value)}
+                                                                                        style={{ width: '100%', height: '6px', cursor: 'pointer', display: 'block' }}
+                                                                                    />
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault();
+                                                                            const newItems = section.items.filter((_, i) => i !== idx);
                                                                             updateCustomSection(section.id, 'items', newItems);
                                                                         }}
-                                                                        style={{ width: '100%', height: '4px', cursor: 'pointer' }}
-                                                                        title="Horizontal"
+                                                                        style={{
+                                                                            background: '#ef4444',
+                                                                            border: '2px solid white',
+                                                                            padding: '10px',
+                                                                            borderRadius: '10px',
+                                                                            cursor: 'pointer',
+                                                                            color: 'white',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            justifyContent: 'center',
+                                                                            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)',
+                                                                            transition: 'all 0.2s',
+                                                                            zIndex: 10
+                                                                        }}
+                                                                        title="Excluir Item"
+                                                                    >
+                                                                        <Trash2 size={20} />
+                                                                    </button>
+                                                                </div>
+                                                                <div className="form-group">
+                                                                    <label style={{ fontSize: '0.8rem' }}>Título do Item</label>
+                                                                    <input
+                                                                        value={item.title || ''}
+                                                                        onChange={(e) => handleCustomListChange(section.id, idx, 'title', e.target.value)}
+                                                                        className="input"
                                                                     />
-                                                                    <input
-                                                                        type="range" min="0" max="100"
-                                                                        value={item.posY || 50}
-                                                                        onChange={(e) => {
-                                                                            const newItems = [...section.items];
-                                                                            newItems[idx] = { ...newItems[idx], posY: e.target.value };
-                                                                            updateCustomSection(section.id, 'items', newItems);
-                                                                        }}
-                                                                        style={{ width: '100%', height: '4px', cursor: 'pointer', transform: 'rotate(0deg)' }}
-                                                                        title="Vertical"
+                                                                </div>
+                                                                <div className="form-group">
+                                                                    <label style={{ fontSize: '0.8rem' }}>Descrição</label>
+                                                                    <textarea
+                                                                        value={item.description || ''}
+                                                                        onChange={(e) => handleCustomListChange(section.id, idx, 'description', e.target.value)}
+                                                                        className="input textarea-sm"
                                                                     />
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                    ))}
-                                                    <label className="add-gallery-item" style={{ border: '2px dashed #cbd5e1', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', height: '100px', background: '#f8fafc' }}>
-                                                        <input
-                                                            type="file"
-                                                            accept="image/*"
-                                                            onChange={(e) => handleCustomSectionImageUpload(e, section.id)}
-                                                            style={{ display: 'none' }}
-                                                        />
-                                                        <Plus size={24} color="#94a3b8" />
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        )}
+                                                        ))}
+                                                        <button
+                                                            onClick={() => {
+                                                                const newItem = { title: 'Novo Item', description: 'Descrição...', icon: 'CheckCircle', image: '' };
+                                                                const newItems = [...(section.items || []), newItem];
+                                                                updateCustomSection(section.id, 'items', newItems);
+                                                            }}
+                                                            className="btn-secondary"
+                                                            style={{ width: '100%', fontSize: '0.8rem' }}
+                                                        >
+                                                            + Adicionar Item à Grade
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </section>
+                                        ))}
+                                    </>
+                                </LockedFeature>
+                            )}
 
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                            <label>Itens da Grade (Destaques)</label>
-                                            <div style={{ textAlign: 'right' }}>
-                                                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold' }}>
-                                                    Retrato: 400x550px | Paisagem: 600x400px
-                                                </div>
-                                                <a href="https://bulkresizephotos.com/pt" target="_blank" rel="noreferrer" style={{ fontSize: '0.7rem', color: '#2563eb' }}>Redimensionador</a>
+                            {
+                                activeSection === 'footer' && (
+                                    <section className="form-section">
+                                        <h3>Rodapé & Contato</h3>
+                                        <div className="form-group">
+                                            <label>Texto do Rodapé</label>
+                                            <input name="footerText" value={content.footerText} onChange={handleChange} className="input" />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Instagram URL</label>
+                                            <input
+                                                value={content.socials.instagram}
+                                                onChange={(e) => setContent(prev => ({ ...prev, socials: { ...prev.socials, instagram: e.target.value } }))}
+                                                className="input"
+                                                placeholder="https://instagram.com/..."
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>WhatsApp</label>
+                                            <input
+                                                value={content.socials.whatsapp}
+                                                onChange={(e) => {
+                                                    let val = e.target.value.replace(/\D/g, '');
+                                                    if (val.length > 11) val = val.slice(0, 11);
+                                                    if (val.length > 2) val = `(${val.slice(0, 2)}) ${val.slice(2)}`;
+                                                    if (val.length > 7) val = `${val.slice(0, 9)}-${val.slice(9)}`;
+                                                    setContent(prev => ({ ...prev, socials: { ...prev.socials, whatsapp: val } }))
+                                                }}
+                                                className="input"
+                                                placeholder="(XX) XXXXX-XXXX"
+                                            />
+                                        </div>
+
+                                        <div className="form-group" style={{ marginBottom: '2rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px', marginTop: '2rem' }}>
+                                            <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem' }}>Aparência do Rodapé</h4>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                                <ColorPicker
+                                                    label="Fundo"
+                                                    color={content.sectionStyles?.footerBackground || '#0f172a'}
+                                                    onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, footerBackground: val } }))}
+                                                />
+                                                <ColorPicker
+                                                    label="Texto"
+                                                    color={content.sectionStyles?.footerTitleColor || '#ffffff'}
+                                                    onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, footerTitleColor: val } }))}
+                                                />
                                             </div>
                                         </div>
-                                        {(section.items || []).map((item, idx) => (
-                                            <div key={idx} style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', marginBottom: '1rem', border: '1px solid #e2e8f0' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                                                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flex: 1 }}>
-                                                        <div className="item-image-upload" style={{ width: '100px', height: '120px', position: 'relative', background: 'white', borderRadius: '10px', overflow: 'hidden', cursor: 'pointer', border: '1px solid #cbd5e1' }}>
-                                                            {item.image ? (
-                                                                <img
-                                                                    src={item.image}
-                                                                    alt="Preview"
-                                                                    style={{
-                                                                        width: '100%',
-                                                                        height: '100%',
-                                                                        objectFit: 'cover',
-                                                                        objectPosition: `${item.posX || 50}% ${item.posY || 50}%`
-                                                                    }}
-                                                                />
-                                                            ) : (
-                                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><ImageIcon size={24} color="#64748b" /></div>
-                                                            )}
-                                                            <input
-                                                                type="file"
-                                                                accept="image/*"
-                                                                onChange={(e) => handleCustomGradeImageUpload(e, section.id, idx)}
-                                                                style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
-                                                            />
-                                                        </div>
-
-                                                        {item.image && (
-                                                            <div style={{ flex: 1 }}>
-                                                                <label style={{ fontSize: '0.7rem', color: '#64748b', display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Enquadramento (Foco)</label>
-                                                                <div style={{ marginBottom: '10px' }}>
-                                                                    <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>Horizontal ({item.posX || 50}%)</span>
-                                                                    <input
-                                                                        type="range" min="0" max="100"
-                                                                        value={item.posX || 50}
-                                                                        onChange={(e) => handleCustomListChange(section.id, idx, 'posX', e.target.value)}
-                                                                        style={{ width: '100%', height: '6px', cursor: 'pointer', display: 'block' }}
-                                                                    />
-                                                                </div>
-                                                                <div>
-                                                                    <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>Vertical ({item.posY || 50}%)</span>
-                                                                    <input
-                                                                        type="range" min="0" max="100"
-                                                                        value={item.posY || 50}
-                                                                        onChange={(e) => handleCustomListChange(section.id, idx, 'posY', e.target.value)}
-                                                                        style={{ width: '100%', height: '6px', cursor: 'pointer', display: 'block' }}
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            const newItems = section.items.filter((_, i) => i !== idx);
-                                                            updateCustomSection(section.id, 'items', newItems);
-                                                        }}
-                                                        style={{
-                                                            background: '#ef4444',
-                                                            border: '2px solid white',
-                                                            padding: '10px',
-                                                            borderRadius: '10px',
-                                                            cursor: 'pointer',
-                                                            color: 'white',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)',
-                                                            transition: 'all 0.2s',
-                                                            zIndex: 10
-                                                        }}
-                                                        title="Excluir Item"
-                                                    >
-                                                        <Trash2 size={20} />
-                                                    </button>
-                                                </div>
-                                                <div className="form-group">
-                                                    <label style={{ fontSize: '0.8rem' }}>Título do Item</label>
-                                                    <input
-                                                        value={item.title || ''}
-                                                        onChange={(e) => handleCustomListChange(section.id, idx, 'title', e.target.value)}
-                                                        className="input"
-                                                    />
-                                                </div>
-                                                <div className="form-group">
-                                                    <label style={{ fontSize: '0.8rem' }}>Descrição</label>
-                                                    <textarea
-                                                        value={item.description || ''}
-                                                        onChange={(e) => handleCustomListChange(section.id, idx, 'description', e.target.value)}
-                                                        className="input textarea-sm"
-                                                    />
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </button>
+                                    </section>
+                                )
+                            }
+                        </>
+                    ) : (
+                        <section className="admin-users-section">
+                            <div className="admin-section-header">
+                                <div className="header-title">
+                                    <p className="subtitle">Visualize e controle todos os acessos do sistema</p>
                                 </div>
-                            )}
-                        </div>
-                </section>
-                    ))}
-            </>
-        </LockedFeature>
-    )
-}
+                                <div className="search-wrapper">
+                                    <Search size={18} className="search-icon" />
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar por usuário ou e-mail..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="search-input-premium"
+                                    />
+                                </div>
+                            </div>
 
-{
-    activeSection === 'footer' && (
-        <section className="form-section">
-            <h3>Rodapé & Contato</h3>
-            <div className="form-group">
-                <label>Texto do Rodapé</label>
-                <input name="footerText" value={content.footerText} onChange={handleChange} className="input" />
-            </div>
-            <div className="form-group">
-                <label>Instagram URL</label>
-                <input
-                    value={content.socials.instagram}
-                    onChange={(e) => setContent(prev => ({ ...prev, socials: { ...prev.socials, instagram: e.target.value } }))}
-                    className="input"
-                    placeholder="https://instagram.com/..."
-                />
-            </div>
-            <div className="form-group">
-                <label>WhatsApp</label>
-                <input
-                    value={content.socials.whatsapp}
-                    onChange={(e) => {
-                        let val = e.target.value.replace(/\D/g, '');
-                        if (val.length > 11) val = val.slice(0, 11);
-                        if (val.length > 2) val = `(${val.slice(0, 2)}) ${val.slice(2)}`;
-                        if (val.length > 7) val = `${val.slice(0, 9)}-${val.slice(9)}`;
-                        setContent(prev => ({ ...prev, socials: { ...prev.socials, whatsapp: val } }))
-                    }}
-                    className="input"
-                    placeholder="(XX) XXXXX-XXXX"
-                />
-            </div>
-
-            <div className="form-group" style={{ marginBottom: '2rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px', marginTop: '2rem' }}>
-                <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem' }}>Aparência do Rodapé</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <ColorPicker
-                        label="Fundo"
-                        color={content.sectionStyles?.footerBackground || '#0f172a'}
-                        onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, footerBackground: val } }))}
-                    />
-                    <ColorPicker
-                        label="Texto"
-                        color={content.sectionStyles?.footerTitleColor || '#ffffff'}
-                        onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, footerTitleColor: val } }))}
-                    />
-                </div>
-            </div>
-        </section>
-    )
-}
-        </>
-    ) : (
-    <section className="admin-users-section">
-        <div className="admin-section-header">
-            <div className="header-title">
-                <p className="subtitle">Visualize e controle todos os acessos do sistema</p>
-            </div>
-            <div className="search-wrapper">
-                <Search size={18} className="search-icon" />
-                <input
-                    type="text"
-                    placeholder="Buscar por usuário ou e-mail..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="search-input-premium"
-                />
-            </div>
-        </div>
-
-        <div style={{ overflowX: 'auto' }}>
-            <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse', color: '#1e293b' }}>
-                <thead>
-                    <tr style={{ textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>
-                        <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Usuário</th>
-                        <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>E-mail</th>
-                        <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Plano</th>
-                        <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cadastro</th>
-                        <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Visitas</th>
-                        <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
-                        <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {filteredUsers.map(u => (
-                        <tr key={u.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                            <td style={{ padding: '12px', fontWeight: 'bold' }}>{u.username}</td>
-                            <td style={{ padding: '12px' }}>{u.email}</td>
-                            <td style={{ padding: '12px' }}>
-                                <select
-                                    value={u.plan_tier}
-                                    onChange={(e) => handleUpdateUserTier(u.id, e.target.value)}
-                                    className="input"
-                                    style={{ padding: '4px', width: 'auto' }}
-                                >
-                                    <option value="static">Static</option>
-                                    <option value="basic">Basic</option>
-                                    <option value="premium">Premium</option>
-                                    <option value="adm_server">Super Admin</option>
-                                </select>
-                            </td>
-                            <td style={{ padding: '12px', fontSize: '0.9rem', color: '#64748b' }}>{u.date_formatted}</td>
-                            <td style={{ padding: '12px', fontWeight: 'bold', color: '#2563eb' }}>{u.total_visits}</td>
-                            <td style={{ padding: '12px' }}>
-                                <span style={{
-                                    padding: '4px 8px',
-                                    borderRadius: '12px',
-                                    fontSize: '0.75rem',
-                                    background: u.is_active ? '#dcfce7' : '#fee2e2',
-                                    color: u.is_active ? '#166534' : '#991b1b'
-                                }}>
-                                    {u.is_active ? 'Ativo' : 'Inativo'}
-                                </span>
-                            </td>
-                            <td style={{ padding: '12px' }}>
-                                <button
-                                    onClick={() => handleToggleUserStatus(u.id, u.is_active)}
-                                    className="btn action-btn"
-                                    style={{
-                                        padding: '4px 8px',
-                                        fontSize: '0.75rem',
-                                        background: u.is_active ? '#ef4444' : '#22c55e',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '4px',
-                                        cursor: 'pointer',
-                                        marginRight: '8px'
-                                    }}
-                                >
-                                    {u.is_active ? 'Desativar' : 'Ativar'}
-                                </button>
-                                <button
-                                    onClick={() => handleDeleteUser(u.id, u.username)}
-                                    className="btn action-btn"
-                                    title="Excluir Usuário"
-                                    style={{
-                                        padding: '4px 8px',
-                                        fontSize: '0.75rem',
-                                        background: '#f1f5f9',
-                                        color: '#ef4444',
-                                        border: '1px solid #fee2e2',
-                                        borderRadius: '4px',
-                                        cursor: 'pointer',
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
-                                    }}
-                                >
-                                    <Trash2 size={14} />
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                    {filteredUsers.length === 0 && !loadingUsers && (
-                        <tr>
-                            <td colSpan="7" style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>
-                                {searchTerm ? `Nenhum usuário encontrado para "${searchTerm}"` : 'Nenhum usuário encontrado no sistema.'}
-                            </td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>
-        </div>
-    </section>
-)
-}
-        </div >
+                            <div style={{ overflowX: 'auto' }}>
+                                <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse', color: '#1e293b' }}>
+                                    <thead>
+                                        <tr style={{ textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>
+                                            <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Usuário</th>
+                                            <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>E-mail</th>
+                                            <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Plano</th>
+                                            <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cadastro</th>
+                                            <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Visitas</th>
+                                            <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
+                                            <th style={{ padding: '15px 12px', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filteredUsers.map(u => (
+                                            <tr key={u.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                                <td style={{ padding: '12px', fontWeight: 'bold' }}>{u.username}</td>
+                                                <td style={{ padding: '12px' }}>{u.email}</td>
+                                                <td style={{ padding: '12px' }}>
+                                                    <select
+                                                        value={u.plan_tier}
+                                                        onChange={(e) => handleUpdateUserTier(u.id, e.target.value)}
+                                                        className="input"
+                                                        style={{ padding: '4px', width: 'auto' }}
+                                                    >
+                                                        <option value="static">Static</option>
+                                                        <option value="basic">Basic</option>
+                                                        <option value="premium">Premium</option>
+                                                        <option value="adm_server">Super Admin</option>
+                                                    </select>
+                                                </td>
+                                                <td style={{ padding: '12px', fontSize: '0.9rem', color: '#64748b' }}>{u.date_formatted}</td>
+                                                <td style={{ padding: '12px', fontWeight: 'bold', color: '#2563eb' }}>{u.total_visits}</td>
+                                                <td style={{ padding: '12px' }}>
+                                                    <span style={{
+                                                        padding: '4px 8px',
+                                                        borderRadius: '12px',
+                                                        fontSize: '0.75rem',
+                                                        background: u.is_active ? '#dcfce7' : '#fee2e2',
+                                                        color: u.is_active ? '#166534' : '#991b1b'
+                                                    }}>
+                                                        {u.is_active ? 'Ativo' : 'Inativo'}
+                                                    </span>
+                                                </td>
+                                                <td style={{ padding: '12px' }}>
+                                                    <button
+                                                        onClick={() => handleToggleUserStatus(u.id, u.is_active)}
+                                                        className="btn action-btn"
+                                                        style={{
+                                                            padding: '4px 8px',
+                                                            fontSize: '0.75rem',
+                                                            background: u.is_active ? '#ef4444' : '#22c55e',
+                                                            color: 'white',
+                                                            border: 'none',
+                                                            borderRadius: '4px',
+                                                            cursor: 'pointer',
+                                                            marginRight: '8px'
+                                                        }}
+                                                    >
+                                                        {u.is_active ? 'Desativar' : 'Ativar'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteUser(u.id, u.username)}
+                                                        className="btn action-btn"
+                                                        title="Excluir Usuário"
+                                                        style={{
+                                                            padding: '4px 8px',
+                                                            fontSize: '0.75rem',
+                                                            background: '#f1f5f9',
+                                                            color: '#ef4444',
+                                                            border: '1px solid #fee2e2',
+                                                            borderRadius: '4px',
+                                                            cursor: 'pointer',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center'
+                                                        }}
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {filteredUsers.length === 0 && !loadingUsers && (
+                                            <tr>
+                                                <td colSpan="7" style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>
+                                                    {searchTerm ? `Nenhum usuário encontrado para "${searchTerm}"` : 'Nenhum usuário encontrado no sistema.'}
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    )
+                    }
+                </div >
             </main >
-    {/* UI Modals & Toasts */ }
-{
-    confirmModal.isOpen && (
-        <div className="modal-overlay">
-            <div className="modal-content">
-                <h3>Confirmar Exclusão</h3>
-                <p>TEM CERTEZA? Isso excluirá permanentemente a conta de <strong>"{confirmModal.username}"</strong> e TODAS as suas páginas. Esta ação não pode ser desfeita.</p>
-                <div className="modal-actions">
-                    <button onClick={() => setConfirmModal({ isOpen: false, userId: null, username: '' })} className="btn btn-secondary">Cancelar</button>
-                    <button onClick={executeDelete} className="btn" style={{ background: '#ef4444', color: 'white', border: 'none' }}>Sim, Excluir</button>
-                </div>
-            </div>
-        </div>
-    )
-}
+            {/* UI Modals & Toasts */}
+            {
+                confirmModal.isOpen && (
+                    <div className="modal-overlay">
+                        <div className="modal-content">
+                            <h3>Confirmar Exclusão</h3>
+                            <p>TEM CERTEZA? Isso excluirá permanentemente a conta de <strong>"{confirmModal.username}"</strong> e TODAS as suas páginas. Esta ação não pode ser desfeita.</p>
+                            <div className="modal-actions">
+                                <button onClick={() => setConfirmModal({ isOpen: false, userId: null, username: '' })} className="btn btn-secondary">Cancelar</button>
+                                <button onClick={executeDelete} className="btn" style={{ background: '#ef4444', color: 'white', border: 'none' }}>Sim, Excluir</button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
 
-<div className="toast-container">
-    {toasts.map(toast => (
-        <div key={toast.id} className={`toast ${toast.type}`}>
-            {toast.type === 'success' ? <CheckCircle size={20} color="var(--success)" /> : <ShieldCheck size={20} color="var(--error)" />}
-            <span>{toast.msg}</span>
-        </div>
-    ))}
-</div>
+            <div className="toast-container">
+                {toasts.map(toast => (
+                    <div key={toast.id} className={`toast ${toast.type}`}>
+                        {toast.type === 'success' ? <CheckCircle size={20} color="var(--success)" /> : <ShieldCheck size={20} color="var(--error)" />}
+                        <span>{toast.msg}</span>
+                    </div>
+                ))}
+            </div>
         </div >
     );
 };
