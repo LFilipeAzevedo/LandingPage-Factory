@@ -10,6 +10,7 @@ import RichTextEditor from './RichTextEditor';
 import FontSelector from './FontSelector';
 
 const LockedFeature = ({ title, requiredTier, currentTier, children }) => {
+    const navigate = useNavigate();
     const hasAccess = currentTier === 'adm_server' || (requiredTier
         ? (currentTier === requiredTier || currentTier === 'premium')
         : currentTier === 'premium');
@@ -72,7 +73,7 @@ const LockedFeature = ({ title, requiredTier, currentTier, children }) => {
                         textTransform: 'uppercase',
                         flexShrink: 0
                     }}
-                    onClick={() => window.open('https://sua-url-de-upgrade.com', '_blank')}
+                    onClick={() => navigate('/admin/plans')}
                 >
                     Quero Ser Premium
                 </button>
