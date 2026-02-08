@@ -38,7 +38,6 @@ function initDb() {
             reset_token TEXT,
             reset_token_expires DATETIME,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )`);
 
         // Migration: Ensure reset_token columns exist (for existing DBs)
