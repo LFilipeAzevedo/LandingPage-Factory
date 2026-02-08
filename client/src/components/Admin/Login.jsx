@@ -37,7 +37,7 @@ const Login = () => {
         e.preventDefault();
         setError('');
 
-        const result = await login(username, password);
+        const result = await login(username.trim(), password);
         if (result.success) {
             navigate('/admin/editor');
         } else {
@@ -55,7 +55,7 @@ const Login = () => {
 
                 <form onSubmit={handleSubmit} className="login-form">
                     <div className="form-group">
-                        <label htmlFor="username">Usuário</label>
+                        <label htmlFor="username">Usuário ou E-mail</label>
                         <input
                             type="text"
                             id="username"

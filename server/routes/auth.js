@@ -10,13 +10,16 @@ const router = express.Router();
 const SECRET_KEY = process.env.JWT_SECRET || 'super_secret_key_123';
 
 router.post('/login', (req, res) => {
-    const { username, password } = req.body;
+    let { username, password } = req.body;
+
+    // Sanitization
+    if (username) username = username.trim();
 
     if (!username || !password) {
         return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    db.get("SELECT * FROM users WHERE username = ?", [username], (err, user) => {
+    db.get("SELECT * FROM users WHERE username = ? OR email = ?", [username, username], (err, user) => {
         if (err) return res.status(500).json({ error: 'Database error' });
         if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
@@ -47,7 +50,12 @@ router.post('/login', (req, res) => {
 });
 
 router.post('/register', (req, res) => {
-    const { username, password, email } = req.body;
+    let { username, password, email } = req.body;
+
+    // Sanitization
+    if (username) username = username.trim();
+    if (email) email = email.trim();
+
     console.log('📝 Tentativa de registro:', { username, email });
 
     if (!username || !password || !email) {
