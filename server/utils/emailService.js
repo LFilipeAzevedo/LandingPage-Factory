@@ -61,60 +61,110 @@ const sendBrevoEmail = async (toEmail, subject, htmlContent) => {
     }
 };
 
+const getEmailTemplate = (title, bodyContent, actionUrl, actionText) => {
+    const currentYear = new Date().getFullYear();
+
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${title}</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #334155;">
+        
+        <!-- Main Container -->
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f1f5f9; padding: 40px 0;">
+            <tr>
+                <td align="center">
+                    
+                    <!-- Content Card -->
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); overflow: hidden; margin: 0 auto; max-width: 90%;">
+                        
+                        <!-- Header / Logo -->
+                        <tr>
+                            <td style="background-color: #1e293b; padding: 30px; text-align: center;">
+                                <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">Landing Page Factory</h1>
+                            </td>
+                        </tr>
+
+                        <!-- Body Content -->
+                        <tr>
+                            <td style="padding: 40px 30px;">
+                                <h2 style="margin-top: 0; margin-bottom: 20px; color: #0f172a; font-size: 20px; font-weight: 600;">${title}</h2>
+                                
+                                <div style="font-size: 16px; line-height: 1.6; color: #475569;">
+                                    ${bodyContent}
+                                </div>
+
+                                <!-- Action Button -->
+                                ${actionUrl ? `
+                                <div style="text-align: center; margin-top: 35px; margin-bottom: 10px;">
+                                    <a href="${actionUrl}" style="background-color: #2563eb; color: #ffffff; display: inline-block; padding: 14px 32px; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 6px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">
+                                        ${actionText}
+                                    </a>
+                                </div>
+                                <p style="margin-top: 30px; font-size: 13px; color: #94a3b8; text-align: center;">
+                                    Ou cole este link no navegador: <br>
+                                    <a href="${actionUrl}" style="color: #2563eb; word-break: break-all;">${actionUrl}</a>
+                                </p>
+                                ` : ''}
+                            </td>
+                        </tr>
+
+                        <!-- Footer -->
+                        <tr>
+                            <td style="background-color: #f8fafc; padding: 20px 30px; text-align: center; border-top: 1px solid #e2e8f0;">
+                                <p style="margin: 0; font-size: 13px; color: #64748b;">
+                                    &copy; ${currentYear} Landing Page Factory. Todos os direitos reservados.
+                                </p>
+                                <p style="margin: 10px 0 0; font-size: 12px; color: #94a3b8;">
+                                    Você recebeu este e-mail porque se cadastrou ou solicitou uma ação em nossa plataforma.
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+
+                </td>
+            </tr>
+        </table>
+    
+    </body>
+    </html>
+    `;
+};
+
 const sendVerificationEmail = async (email, username, token) => {
     const frontendUrl = (process.env.URL_FRONTEND || process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
     const url = `${frontendUrl}/admin/verify-email/${token}`;
 
-    const html = `
-        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155;">
-            <div style="text-align: center; padding: 20px 0;">
-                <h2 style="color: #1e293b; margin-bottom: 10px;">Bem-vindo ao Landing Page Factory!</h2>
-                <p style="font-size: 16px; line-height: 1.5;">Olá, <strong>${username}</strong>. Estamos felizes em tê-lo conosco.</p>
-            </div>
-            
-            <div style="background-color: #f8fafc; padding: 30px; border-radius: 8px; text-align: center; border: 1px solid #e2e8f0;">
-                <p style="margin-bottom: 25px; font-size: 15px;">Para garantir a segurança da sua conta e acessar todos os recursos, por favor, confirme seu endereço de e-mail.</p>
-                <a href="${url}" style="background-color: #2563eb; color: white; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block; font-size: 14px;">
-                    Confirmar Meu E-mail
-                </a>
-                <p style="margin-top: 25px; font-size: 13px; color: #64748b;">Se o botão não funcionar, copie e cole o link abaixo no seu navegador:<br><a href="${url}" style="color: #2563eb;">${url}</a></p>
-            </div>
-            
-            <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #94a3b8;">
-                <p>Se você não criou esta conta, nenhuma ação é necessária.</p>
-            </div>
-        </div>
+    const body = `
+        <p>Olá, <strong>${username}</strong>!</p>
+        <p>Seja muito bem-vindo. Estamos empolgados em ter você conosco.</p>
+        <p>Para garantir a segurança da sua conta e liberar todos os recursos, por favor, clique no botão abaixo para confirmar seu endereço de e-mail.</p>
     `;
 
-    return await sendBrevoEmail(email, 'Confirme sua conta - Landing Page Factory', html);
+    const html = getEmailTemplate('Confirme seu E-mail', body, url, 'Confirmar Minha Conta');
+    return await sendBrevoEmail(email, 'Bem-vindo ao Landing Page Factory', html);
 };
 
 const sendPasswordResetEmail = async (email, token) => {
     const frontendUrl = (process.env.URL_FRONTEND || process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
     const url = `${frontendUrl}/admin/reset-password/${token}`;
 
-    const html = `
-        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155;">
-            <div style="text-align: center; padding: 20px 0;">
-                <h2 style="color: #1e293b; margin-bottom: 10px;">Redefinição de Senha</h2>
-                <p style="font-size: 16px;">Recebemos uma solicitação para alterar sua senha.</p>
-            </div>
-
-            <div style="background-color: #f8fafc; padding: 30px; border-radius: 8px; text-align: center; border: 1px solid #e2e8f0;">
-                <p style="margin-bottom: 25px; font-size: 15px;">Clique no botão abaixo para criar uma nova senha segura:</p>
-                <a href="${url}" style="background-color: #2563eb; color: white; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block; font-size: 14px;">
-                    Redefinir Minha Senha
-                </a>
-                <p style="margin-top: 25px; font-size: 13px; color: #64748b;">Este link é válido por 1 hora.</p>
-            </div>
-
-            <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #94a3b8;">
-                <p>Se você não solicitou esta alteração, ignore este e-mail. Sua senha permanecerá a mesma.</p>
-            </div>
-        </div>
+    const body = `
+        <p>Recebemos uma solicitação para redefinir a senha da sua conta.</p>
+        <p>Se foi você quem solicitou, clique no botão abaixo para criar uma nova senha segura.</p>
+        <p style="padding: 12px; background-color: #fff1f2; border-left: 4px solid #f43f5e; color: #be123c; margin-top: 20px; font-size: 14px;">
+            <strong>Importante:</strong> Este link expira em 1 hora por motivos de segurança.
+        </p>
     `;
 
-    return await sendBrevoEmail(email, 'Instruções para Redefinição de Senha', html);
+    const html = getEmailTemplate('Redefinição de Senha', body, url, 'Redefinir Minha Senha');
+    return await sendBrevoEmail(email, 'Instruções de Segurança', html);
 };
+
+module.exports = { sendVerificationEmail, sendPasswordResetEmail };
 
 module.exports = { sendVerificationEmail, sendPasswordResetEmail };
