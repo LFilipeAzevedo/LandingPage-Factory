@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import './Login.css'; // Reusing Login styles for consistency
+import api from '../../utils/api';
+import './Login.css';
 
 const ResetPassword = () => {
     const { token } = useParams();
@@ -10,6 +11,26 @@ const ResetPassword = () => {
     const [message, setMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Password Strength State
+    const [pwdValidations, setPwdValidations] = useState({
+        length: false,
+        upper: false,
+        lower: false,
+        number: false
+    });
+
+    // Validate password on change
+    useEffect(() => {
+        setPwdValidations({
+            length: password.length >= 8,
+            upper: /[A-Z]/.test(password),
+            lower: /[a-z]/.test(password),
+            number: /\d/.test(password)
+        });
+    }, [password]);
+
+    const isPasswordStrong = Object.values(pwdValidations).every(Boolean);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -18,8 +39,8 @@ const ResetPassword = () => {
             return;
         }
 
-        if (password.length < 6) {
-            setMessage('A senha deve ter pelo menos 6 caracteres.');
+        if (!isPasswordStrong) {
+            setMessage('A senha não atende aos requisitos de segurança.');
             return;
         }
 
@@ -27,23 +48,17 @@ const ResetPassword = () => {
         setMessage('');
 
         try {
-            const response = await fetch('http://localhost:3001/api/auth/reset-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token, newPassword: password })
-            });
+            const response = await api.post('/api/auth/reset-password', { token, newPassword: password });
 
-            const data = await response.json();
-
-            if (response.ok) {
+            if (response.data.success) {
                 setMessage('Senha redefinida com sucesso! Redirecionando...');
                 setTimeout(() => navigate('/admin/login'), 3000);
             } else {
-                setMessage(data.error || 'Erro ao redefinir senha.');
+                setMessage(response.data.error || 'Erro ao redefinir senha.');
                 setIsSubmitting(false);
             }
         } catch (error) {
-            setMessage('Erro de conexão. Tente novamente.');
+            setMessage(error.response?.data?.error || 'Erro ao conectar com o servidor.');
             setIsSubmitting(false);
         }
     };
@@ -75,6 +90,21 @@ const ResetPassword = () => {
                             onChange={(e) => setPassword(e.target.value)}
                             required
                         />
+                        {/* Password Strength Meter */}
+                        <div style={{ marginTop: '8px', fontSize: '0.75rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
+                            <span style={{ color: pwdValidations.length ? '#10b981' : '#94a3b8' }}>
+                                {pwdValidations.length ? '✓' : '○'} Mínimo 8 caracteres
+                            </span>
+                            <span style={{ color: pwdValidations.upper ? '#10b981' : '#94a3b8' }}>
+                                {pwdValidations.upper ? '✓' : '○'} Letra Maiúscula
+                            </span>
+                            <span style={{ color: pwdValidations.lower ? '#10b981' : '#94a3b8' }}>
+                                {pwdValidations.lower ? '✓' : '○'} Letra Minúscula
+                            </span>
+                            <span style={{ color: pwdValidations.number ? '#10b981' : '#94a3b8' }}>
+                                {pwdValidations.number ? '✓' : '○'} Número
+                            </span>
+                        </div>
                     </div>
 
                     <div className="form-group">

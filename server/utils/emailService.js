@@ -66,15 +66,23 @@ const sendVerificationEmail = async (email, username, token) => {
     const url = `${frontendUrl}/admin/verify-email/${token}`;
 
     const html = `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-            <h2 style="color: #106a94ff;">Bem-vindo, ${username}!</h2>
-            <p>Obrigado por se cadastrar. Confirme seu e-mail clicando abaixo:</p>
-            <div style="text-align: center; margin: 30px 0;">
-                <a href="${url}" style="background-color: #109426ff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
-                    CONFIRMAR CONTA
-                </a>
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155;">
+            <div style="text-align: center; padding: 20px 0;">
+                <h2 style="color: #1e293b; margin-bottom: 10px;">Bem-vindo ao Landing Page Factory!</h2>
+                <p style="font-size: 16px; line-height: 1.5;">Olá, <strong>${username}</strong>. Estamos felizes em tê-lo conosco.</p>
             </div>
-            <p style="font-size: 0.8rem; color: #666;">Se você não criou esta conta, ignore este e-mail.</p>
+            
+            <div style="background-color: #f8fafc; padding: 30px; border-radius: 8px; text-align: center; border: 1px solid #e2e8f0;">
+                <p style="margin-bottom: 25px; font-size: 15px;">Para garantir a segurança da sua conta e acessar todos os recursos, por favor, confirme seu endereço de e-mail.</p>
+                <a href="${url}" style="background-color: #2563eb; color: white; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block; font-size: 14px;">
+                    Confirmar Meu E-mail
+                </a>
+                <p style="margin-top: 25px; font-size: 13px; color: #64748b;">Se o botão não funcionar, copie e cole o link abaixo no seu navegador:<br><a href="${url}" style="color: #2563eb;">${url}</a></p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #94a3b8;">
+                <p>Se você não criou esta conta, nenhuma ação é necessária.</p>
+            </div>
         </div>
     `;
 
@@ -86,19 +94,27 @@ const sendPasswordResetEmail = async (email, token) => {
     const url = `${frontendUrl}/admin/reset-password/${token}`;
 
     const html = `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-            <h2 style="color: #fa4eab;">Redefinição de Senha</h2>
-            <p>Clique abaixo para redefinir sua senha:</p>
-            <div style="text-align: center; margin: 30px 0;">
-                <a href="${url}" style="background-color: #fa4eab; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
-                    REDEFINIR SENHA
-                </a>
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155;">
+            <div style="text-align: center; padding: 20px 0;">
+                <h2 style="color: #1e293b; margin-bottom: 10px;">Redefinição de Senha</h2>
+                <p style="font-size: 16px;">Recebemos uma solicitação para alterar sua senha.</p>
             </div>
-            <p style="font-size: 0.8rem; color: #666;">Link válido por 1 hora.</p>
+
+            <div style="background-color: #f8fafc; padding: 30px; border-radius: 8px; text-align: center; border: 1px solid #e2e8f0;">
+                <p style="margin-bottom: 25px; font-size: 15px;">Clique no botão abaixo para criar uma nova senha segura:</p>
+                <a href="${url}" style="background-color: #2563eb; color: white; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block; font-size: 14px;">
+                    Redefinir Minha Senha
+                </a>
+                <p style="margin-top: 25px; font-size: 13px; color: #64748b;">Este link é válido por 1 hora.</p>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #94a3b8;">
+                <p>Se você não solicitou esta alteração, ignore este e-mail. Sua senha permanecerá a mesma.</p>
+            </div>
         </div>
     `;
 
-    return await sendBrevoEmail(email, 'Redefinição de Senha', html);
+    return await sendBrevoEmail(email, 'Instruções para Redefinição de Senha', html);
 };
 
 module.exports = { sendVerificationEmail, sendPasswordResetEmail };
