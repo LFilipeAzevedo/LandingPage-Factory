@@ -65,15 +65,31 @@ router.get('/:slug', (req, res) => {
             });
         }
 
+
+
         try {
             let content = JSON.parse(row.content);
 
             // --- PLAN ENFORCEMENT & SANITIZATION ---
             // If user is NOT Premium, disable Premium features (Non-Destructive)
             if (row.plan_tier !== 'premium') {
+                // 1. Disable Sales Section
                 if (content.salesSection) {
                     content.salesSection.enabled = false;
                 }
+
+                // 2. Clear Custom Sections (Módulos Extras)
+                if (content.customSections && content.customSections.length > 0) {
+                    content.customSections = [];
+                }
+
+                // 3. Reset Premium Styles (Custom Colors/Fonts)
+                // We keep basic structure but remove overrides
+                if (content.sectionStyles) {
+                    // Reset to defaults or empty to force fallback
+                    content.sectionStyles = {};
+                }
+
                 // Future: Enforce footer branding for Free tier
                 // if (row.plan_tier === 'static') { ... }
             }
