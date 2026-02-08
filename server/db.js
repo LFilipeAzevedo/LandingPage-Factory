@@ -38,7 +38,20 @@ function initDb() {
             reset_token TEXT,
             reset_token_expires DATETIME,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )`);
+
+        // Migration: Ensure reset_token columns exist (for existing DBs)
+        db.run("ALTER TABLE users ADD COLUMN reset_token TEXT", (err) => {
+            if (err && !err.message.includes("duplicate column name")) {
+                console.error("Migration/Check (reset_token):", err.message);
+            }
+        });
+        db.run("ALTER TABLE users ADD COLUMN reset_token_expires DATETIME", (err) => {
+            if (err && !err.message.includes("duplicate column name")) {
+                console.error("Migration/Check (reset_token_expires):", err.message);
+            }
+        });
 
         // Create Pages Table
         db.run(`CREATE TABLE IF NOT EXISTS pages (
