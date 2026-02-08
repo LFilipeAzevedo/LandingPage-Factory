@@ -475,16 +475,33 @@ const Editor = () => {
             });
             const fullUrl = `${api.defaults.baseURL}${response.data.url}`;
 
-            setContent(prev => {
-                const newSections = prev.customSections.map(s => {
-                    if (s.id === sectionId) {
-                        return { ...s, items: [...(s.items || []), { src: fullUrl, id: Date.now() }] };
-                    }
-                    return s;
+            // Create an image object to check dimensions
+            const img = new Image();
+            img.onload = () => {
+                const orientation = img.width > img.height ? 'landscape' : 'portrait';
+
+                setContent(prev => {
+                    const newSections = prev.customSections.map(s => {
+                        if (s.id === sectionId) {
+                            return {
+                                ...s,
+                                imageFit: s.imageFit || 'cover',
+                                items: [...(s.items || []), {
+                                    src: fullUrl,
+                                    id: Date.now(),
+                                    orientation,
+                                    posX: 50,
+                                    posY: 50
+                                }]
+                            };
+                        }
+                        return s;
+                    });
+                    return { ...prev, customSections: newSections };
                 });
-                return { ...prev, customSections: newSections };
-            });
-            setMessage('Imagem adicionada!');
+                setMessage(`Imagem adicionada! (${orientation === 'landscape' ? 'Paisagem' : 'Retrato'})`);
+            };
+            img.src = fullUrl;
         } catch (error) {
             console.error(error);
             setMessage('Erro ao enviar imagem.');
@@ -1469,6 +1486,13 @@ const Editor = () => {
                                                         <Trash2 size={14} /> Excluir
                                                     </button>
                                                 </div>
+
+                                                {section.type === 'grade' && (
+                                                    <div style={{ background: '#f0f9ff', padding: '10px 15px', borderRadius: '8px', border: '1px solid #bae6fd', marginBottom: '1.5rem', fontSize: '0.85rem', color: '#0369a1', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <Activity size={16} />
+                                                        <span><strong>Nota:</strong> Os cartões desta grade são brancos. O texto interno é fixado em cores escuras para manter o contraste, ignorando as cores globais da seção.</span>
+                                                    </div>
+                                                )}
 
                                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
                                                     <div className="form-group">
