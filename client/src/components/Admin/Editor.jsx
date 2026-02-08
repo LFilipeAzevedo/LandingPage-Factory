@@ -3,7 +3,7 @@ import api from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import './Editor.css';
-import { LogOut, Save, Layout, Type, Image as ImageIcon, TrendingUp, ShoppingBag, CheckCircle, Plus, Trash2, ShieldCheck, Users, Activity, Globe, Search, Layers, List } from 'lucide-react';
+import { LogOut, Save, Layout, Type, Image as ImageIcon, TrendingUp, ShoppingBag, CheckCircle, Plus, Trash2, ShieldCheck, Users, Activity, Globe, Search, Layers, List, CreditCard } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import ColorPicker from './ColorPicker';
 import RichTextEditor from './RichTextEditor';
@@ -656,6 +656,21 @@ const Editor = () => {
                                 onClick={() => { setActiveTab('editor'); setActiveSection('footer'); }}
                             >
                                 <List size={16} /> Rodapé
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="nav-group" style={{ marginTop: '1rem' }}>
+                        <div className="nav-group-header">
+                            <CreditCard size={18} />
+                            <span>Conta</span>
+                        </div>
+                        <div className="nav-subitems">
+                            <button
+                                className="nav-item"
+                                onClick={() => navigate('/admin/plans')}
+                            >
+                                <ShieldCheck size={16} /> Meu Plano ({user?.plan_tier === 'premium' ? 'Premium' : 'Gratuito'})
                             </button>
                         </div>
                     </div>

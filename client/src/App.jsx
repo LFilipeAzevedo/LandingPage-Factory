@@ -5,6 +5,7 @@ import Register from './components/Admin/Register';
 import VerifyEmail from './components/Admin/VerifyEmail';
 import ResetPassword from './components/Admin/ResetPassword';
 import Editor from './components/Admin/Editor';
+import Plans from './components/Admin/Plans';
 import LandingPage from './components/Public/LandingPage'; // Placeholder, will create next
 
 // Protected Route Component
@@ -34,6 +35,11 @@ function App() {
           <Route path="/admin/editor" element={
             <ProtectedRoute>
               <Editor />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/plans" element={
+            <ProtectedRoute>
+              <Plans />
             </ProtectedRoute>
           } />
 
