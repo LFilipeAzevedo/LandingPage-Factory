@@ -7,31 +7,53 @@ const { authenticateToken } = require('../middleware/auth'); // Assuming you hav
 // 1. Create Checkout Session
 router.post('/create-checkout-session', authenticateToken, async (req, res) => {
     try {
+        if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PRICE_ID_PREMIUM) {
+            console.error('❌ Missing Stripe Configuration:', {
+                hasSecret: !!process.env.STRIPE_SECRET_KEY,
+                hasPriceId: !!process.env.STRIPE_PRICE_ID_PREMIUM
+            });
+            return res.status(500).json({ error: 'Server misconfigured: Missing Stripe Keys' });
+        }
+
         const userId = req.user.id;
-        const userEmail = req.user.email;
 
-        // Create params for Stripe
-        const session = await stripe.checkout.sessions.create({
-            payment_method_types: ['card'],
-            customer_email: userEmail,
-            line_items: [
-                {
-                    price: process.env.STRIPE_PRICE_ID_PREMIUM, // Defined in .env
-                    quantity: 1,
-                },
-            ],
-            mode: 'subscription',
-            success_url: `${process.env.URL_FRONTEND || 'http://localhost:5173'}/admin/plans?success=true`,
-            cancel_url: `${process.env.URL_FRONTEND || 'http://localhost:5173'}/admin/plans?canceled=true`,
-            metadata: {
-                userId: userId.toString() // Passed to webhook to identify user
+        // Fetch user from DB to ensure we have the email (not present in JWT)
+        db.get('SELECT email FROM users WHERE id = ?', [userId], async (err, user) => {
+            if (err || !user) {
+                console.error('❌ Database error or user not found:', err);
+                return res.status(500).json({ error: 'User not found in database.' });
             }
-        });
 
-        res.json({ url: session.url });
+            const userEmail = user.email;
+
+            // Dynamic URL (Production safe)
+            const origin = req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5173';
+
+            console.log(`💳 Iniciando Checkout para ${userEmail} (ID: ${userId})`);
+
+            // Create params for Stripe
+            const session = await stripe.checkout.sessions.create({
+                payment_method_types: ['card'],
+                customer_email: userEmail,
+                line_items: [
+                    {
+                        price: process.env.STRIPE_PRICE_ID_PREMIUM,
+                        quantity: 1,
+                    },
+                ],
+                mode: 'subscription',
+                success_url: `${origin}/admin/plans?success=true`,
+                cancel_url: `${origin}/admin/plans?canceled=true`,
+                metadata: {
+                    userId: userId.toString()
+                }
+            });
+
+            res.json({ url: session.url });
+        });
     } catch (error) {
-        console.error('Stripe Checkout Error:', error);
-        res.status(500).json({ error: 'Failed to create checkout session' });
+        console.error('❌ Stripe Checkout Error:', error.type, error.raw ? error.raw.message : error.message);
+        res.status(500).json({ error: error.raw ? error.raw.message : 'Failed to create checkout session' });
     }
 });
 

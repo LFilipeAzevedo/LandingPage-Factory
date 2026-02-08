@@ -31,7 +31,8 @@ const Plans = () => {
             }
         } catch (error) {
             console.error('Error creating checkout session:', error);
-            alert('Erro ao iniciar pagamento. Tente novamente.');
+            const msg = error.response?.data?.error || 'Erro ao iniciar pagamento. Tente novamente.';
+            alert(msg);
             setLoading(false);
         }
     };
