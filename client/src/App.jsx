@@ -17,10 +17,6 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/admin/login" />;
   }
 
-  // Prevent users with 'static' plan from accessing the editor
-  if (user.plan_tier === 'static') {
-    return <Navigate to="/" />;
-  }
 
   return children;
 };
