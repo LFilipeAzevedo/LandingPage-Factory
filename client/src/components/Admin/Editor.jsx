@@ -491,6 +491,44 @@ const Editor = () => {
         }
     };
 
+    const handleCustomGradeImageUpload = async (e, sectionId, index) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('image', file);
+        setMessage('Enviando imagem...');
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await api.post('/api/upload', formData, {
+                headers: { 'Content-Type': 'multipart/form-data', 'Authorization': `Bearer ${token}` }
+            });
+            const fullUrl = `${api.defaults.baseURL}${response.data.url}`;
+
+            const img = new Image();
+            img.onload = () => {
+                const orientation = img.width > img.height ? 'landscape' : 'portrait';
+                setContent(prev => {
+                    const newSections = prev.customSections.map(s => {
+                        if (s.id === sectionId) {
+                            const newItems = [...(s.items || [])];
+                            newItems[index] = { ...newItems[index], image: fullUrl, orientation };
+                            return { ...s, items: newItems };
+                        }
+                        return s;
+                    });
+                    return { ...prev, customSections: newSections };
+                });
+                setMessage(`Imagem enviada! Detectado: ${orientation === 'landscape' ? 'Paisagem' : 'Retrato'}`);
+            };
+            img.src = fullUrl;
+        } catch (error) {
+            console.error(error);
+            setMessage('Erro ao enviar imagem.');
+        }
+    };
+
     const handleListImageUpload = async (e, listName, index) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -1067,7 +1105,12 @@ const Editor = () => {
                                 <section className="form-section">
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                                         <div className="form-group" style={{ marginBottom: 0, flex: 1 }}>
-                                            <label>Título da Seção</label>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                                <label>Título da Seção</label>
+                                                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                                                    Dica: Use fotos em <strong>Paisagem</strong>. <a href="https://bulkresizephotos.com/pt" target="_blank" rel="noreferrer" style={{ color: '#2563eb' }}>Redimensionar</a>
+                                                </div>
+                                            </div>
                                             <input
                                                 value={content.eventsTitle || 'Cases de Sucesso'}
                                                 onChange={(e) => setContent(prev => ({ ...prev, eventsTitle: e.target.value }))}
@@ -1131,7 +1174,12 @@ const Editor = () => {
                                 <section className="form-section">
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                                         <div className="form-group" style={{ marginBottom: 0, flex: 1 }}>
-                                            <label>Título da Seção</label>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                                <label>Título da Seção</label>
+                                                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                                                    Dica: Use fotos em <strong>Retrato</strong>. <a href="https://bulkresizephotos.com/pt" target="_blank" rel="noreferrer" style={{ color: '#2563eb' }}>Redimensionador</a>
+                                                </div>
+                                            </div>
                                             <input
                                                 value={content.stationsTitle || 'Nossos Serviços'}
                                                 onChange={(e) => setContent(prev => ({ ...prev, stationsTitle: e.target.value }))}
@@ -1386,7 +1434,7 @@ const Editor = () => {
                             {activeSection === 'custom' && (
                                 <LockedFeature requiredTier="premium" currentTier={user?.plan_tier} title="Módulos Extras">
                                     <>
-                                        <section className="form-section dynamic-factory-section" style={{ border: '2px dashed #cbd5e1', background: '#f8fafc' }}>
+                                        <section className="form-section dynamic-factory-section" style={{ border: '2px dashed #cbd5e1', background: 'transparent' }}>
                                             <div style={{ textAlign: 'center', padding: '1.5rem' }}>
                                                 <h3 style={{ color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                                                     <Layers size={22} /> Fábrica de Módulos
@@ -1485,7 +1533,12 @@ const Editor = () => {
 
                                                 {section.type === 'galeria' && (
                                                     <div className="form-group">
-                                                        <label>Imagens da Galeria</label>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                                            <label>Imagens da Galeria</label>
+                                                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                                                                Dica: Use fotos em <strong>Paisagem</strong>. <a href="https://bulkresizephotos.com/pt" target="_blank" rel="noreferrer" style={{ color: '#2563eb' }}>Redimensionador</a>
+                                                            </div>
+                                                        </div>
                                                         <div className="gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '10px' }}>
                                                             {(section.items || []).map((item, idx) => (
                                                                 <div key={idx} style={{ position: 'relative', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
@@ -1495,9 +1548,9 @@ const Editor = () => {
                                                                             const newItems = section.items.filter((_, i) => i !== idx);
                                                                             updateCustomSection(section.id, 'items', newItems);
                                                                         }}
-                                                                        style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                        style={{ position: 'absolute', top: 5, right: 5, background: '#ef4444', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
                                                                     >
-                                                                        <Trash2 size={14} color="#ef4444" />
+                                                                        <Trash2 size={14} />
                                                                     </button>
                                                                 </div>
                                                             ))}
@@ -1516,16 +1569,34 @@ const Editor = () => {
 
                                                 {section.type === 'grade' && (
                                                     <div className="form-group">
-                                                        <label>Itens da Grade</label>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                                            <label>Itens da Grade (Destaques)</label>
+                                                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                                                                Dica: Use fotos em <strong>Retrato</strong>. <a href="https://bulkresizephotos.com/pt" target="_blank" rel="noreferrer" style={{ color: '#2563eb' }}>Redimensionador</a>
+                                                            </div>
+                                                        </div>
                                                         {(section.items || []).map((item, idx) => (
                                                             <div key={idx} style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #e2e8f0' }}>
-                                                                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                                                                    <div className="item-image-upload" style={{ width: '80px', height: '100px', position: 'relative', background: '#e2e8f0', borderRadius: '8px', overflow: 'hidden', cursor: 'pointer' }}>
+                                                                        {item.image ? (
+                                                                            <img src={item.image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                                        ) : (
+                                                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><ImageIcon size={20} color="#64748b" /></div>
+                                                                        )}
+                                                                        <input
+                                                                            type="file"
+                                                                            accept="image/*"
+                                                                            onChange={(e) => handleCustomGradeImageUpload(e, section.id, idx)}
+                                                                            style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                                        />
+                                                                    </div>
                                                                     <button
                                                                         onClick={() => {
                                                                             const newItems = section.items.filter((_, i) => i !== idx);
                                                                             updateCustomSection(section.id, 'items', newItems);
                                                                         }}
-                                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
+                                                                        style={{ background: '#fee2e2', border: 'none', padding: '6px', borderRadius: '6px', cursor: 'pointer', color: '#ef4444' }}
                                                                     >
                                                                         <Trash2 size={16} />
                                                                     </button>
@@ -1550,14 +1621,14 @@ const Editor = () => {
                                                         ))}
                                                         <button
                                                             onClick={() => {
-                                                                const newItem = { title: 'Novo Item', description: 'Descrição...', icon: 'CheckCircle' };
+                                                                const newItem = { title: 'Novo Item', description: 'Descrição...', icon: 'CheckCircle', image: '' };
                                                                 const newItems = [...(section.items || []), newItem];
                                                                 updateCustomSection(section.id, 'items', newItems);
                                                             }}
                                                             className="btn-secondary"
                                                             style={{ width: '100%', fontSize: '0.8rem' }}
                                                         >
-                                                            + Adicionar Item
+                                                            + Adicionar Item à Grade
                                                         </button>
                                                     </div>
                                                 )}

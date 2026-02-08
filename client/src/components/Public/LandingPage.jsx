@@ -488,9 +488,88 @@ const LandingPage = () => {
                             </div>
                         )}
 
-                        {['galeria', 'grade'].includes(section.type) && (
-                            <div style={{ textAlign: 'center', padding: '40px', background: 'rgba(0,0,0,0.05)', borderRadius: '20px' }}>
-                                <p>Conteúdo modular <strong>{section.type}</strong> ativado. Acesse o CMS para gerenciar.</p>
+                        {section.type === 'galeria' && (
+                            <div className="gallery-grid-public" style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                                gap: '25px'
+                            }}>
+                                {(section.items || []).map((item, idx) => (
+                                    <div key={idx} className="reveal" style={{
+                                        borderRadius: '16px',
+                                        overflow: 'hidden',
+                                        boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                                        background: 'rgba(0,0,0,0.03)',
+                                        aspectRatio: '16/10',
+                                        transition: 'transform 0.3s ease'
+                                    }}>
+                                        <img
+                                            src={item.src}
+                                            alt={`Galeria ${idx}`}
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {section.type === 'grade' && (
+                            <div className="grid-list-public" style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                                gap: '30px'
+                            }}>
+                                {(section.items || []).map((item, idx) => (
+                                    <div key={idx} className="reveal-stagger" style={{
+                                        background: 'white',
+                                        padding: '40px 30px',
+                                        borderRadius: '24px',
+                                        boxShadow: '0 20px 40px rgba(0,0,0,0.04)',
+                                        textAlign: 'center',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        border: '1px solid rgba(0,0,0,0.05)'
+                                    }}>
+                                        {item.image && (
+                                            <div className="grid-item-image" style={{
+                                                width: '100%',
+                                                height: '220px',
+                                                marginBottom: '25px',
+                                                borderRadius: '16px',
+                                                overflow: 'hidden',
+                                                background: '#f8fafc'
+                                            }}>
+                                                <img
+                                                    src={item.image}
+                                                    alt={item.title}
+                                                    style={{
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        objectFit: item.orientation === 'portrait' ? 'contain' : 'cover'
+                                                    }}
+                                                />
+                                            </div>
+                                        )}
+                                        <h3 style={{
+                                            fontSize: '1.6rem',
+                                            fontWeight: '700',
+                                            color: section.titleColor || '#1e293b',
+                                            marginBottom: '15px',
+                                            fontFamily: section.font || 'inherit'
+                                        }}>
+                                            {item.title}
+                                        </h3>
+                                        <p style={{
+                                            color: section.textColor || '#64748b',
+                                            lineHeight: '1.7',
+                                            fontSize: '1.05rem',
+                                            margin: 0
+                                        }}>
+                                            {item.description}
+                                        </p>
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>
