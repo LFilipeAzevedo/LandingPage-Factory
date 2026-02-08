@@ -2,19 +2,33 @@ const express = require('express');
 const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const db = require('../db');
-const { authenticateToken } = require('../middleware/auth'); // Assuming you have this
+const { authenticateToken } = require('../middleware/auth');
 
-// 1. Create Checkout Session
+// Helper to get price ID based on plan and interval
+const getPriceId = (plan, interval) => {
+    const key = `STRIPE_PRICE_${plan.toUpperCase()}_${interval.toUpperCase()}`; // e.g. STRIPE_PRICE_PREMIUM_MONTHLY
+    return process.env[key];
+};
+
+// 1. Create Checkout Session (Dynamic)
 router.post('/create-checkout-session', authenticateToken, async (req, res) => {
     try {
-        if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PRICE_ID_PREMIUM) {
-            console.error('❌ Missing Stripe Configuration.');
+        const { planTier, interval } = req.body; // e.g. { planTier: 'premium', interval: 'monthly' }
+
+        if (!['basic', 'premium'].includes(planTier) || !['monthly', 'yearly'].includes(interval)) {
+            return res.status(400).json({ error: 'Invalid plan or interval.' });
+        }
+
+        const priceId = getPriceId(planTier, interval);
+
+        if (!process.env.STRIPE_SECRET_KEY || !priceId) {
+            console.error(`❌ Missing Stripe Configuration for ${planTier} ${interval}.`);
             return res.status(500).json({ error: 'Server misconfigured: Missing Stripe Keys' });
         }
 
         const userId = req.user.id;
 
-        // Fetch user from DB to ensure we have the email (not present in JWT)
+        // Fetch user from DB
         db.get('SELECT email FROM users WHERE id = ?', [userId], async (err, user) => {
             if (err || !user) {
                 console.error('❌ Database error or user not found:', err);
@@ -25,19 +39,20 @@ router.post('/create-checkout-session', authenticateToken, async (req, res) => {
                 const userEmail = user.email;
                 const origin = req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5173';
 
-                // Checkout initiated
-
                 const session = await stripe.checkout.sessions.create({
                     payment_method_types: ['card'],
                     customer_email: userEmail,
                     line_items: [{
-                        price: process.env.STRIPE_PRICE_ID_PREMIUM,
+                        price: priceId,
                         quantity: 1,
                     }],
                     mode: 'subscription',
                     success_url: `${origin}/admin/plans?success=true`,
                     cancel_url: `${origin}/admin/plans?canceled=true`,
-                    metadata: { userId: userId.toString() }
+                    metadata: {
+                        userId: userId.toString(),
+                        plan_tier: planTier // 'basic' or 'premium'
+                    }
                 });
 
                 res.json({ url: session.url });
@@ -57,7 +72,6 @@ router.post('/create-portal-session', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
 
-        // Get stripe_customer_id from DB
         db.get('SELECT stripe_customer_id FROM users WHERE id = ?', [userId], async (err, row) => {
             if (err || !row || !row.stripe_customer_id) {
                 return res.status(400).json({ error: 'No active subscription found.' });
@@ -79,59 +93,80 @@ router.post('/create-portal-session', authenticateToken, async (req, res) => {
     }
 });
 
-// 3. Get Price Details (Dynamic Frontend)
+// 3. Get Price Details (All Plans)
 router.get('/price-details', async (req, res) => {
     try {
-        if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PRICE_ID_PREMIUM) {
+        if (!process.env.STRIPE_SECRET_KEY) {
             return res.status(500).json({ error: 'Stripe keys missing' });
         }
 
-        const price = await stripe.prices.retrieve(process.env.STRIPE_PRICE_ID_PREMIUM);
+        const plans = [
+            { id: 'basic', monthly: process.env.STRIPE_PRICE_BASIC_MONTHLY, yearly: process.env.STRIPE_PRICE_BASIC_YEARLY },
+            { id: 'premium', monthly: process.env.STRIPE_PRICE_PREMIUM_MONTHLY, yearly: process.env.STRIPE_PRICE_PREMIUM_YEARLY }
+        ];
 
-        res.json({
-            amount: price.unit_amount / 100, // Convert cents to currency unit
-            currency: price.currency,
-            interval: price.recurring?.interval
-        });
+        const results = {};
+
+        for (const plan of plans) {
+            if (plan.monthly) {
+                try {
+                    const priceM = await stripe.prices.retrieve(plan.monthly);
+                    if (!results[plan.id]) results[plan.id] = {};
+                    results[plan.id].monthly = {
+                        amount: priceM.unit_amount / 100,
+                        id: priceM.id
+                    };
+                } catch (e) { console.error(`Failed to fetch monthly price for ${plan.id}`, e.message); }
+            }
+            if (plan.yearly) {
+                try {
+                    const priceY = await stripe.prices.retrieve(plan.yearly);
+                    if (!results[plan.id]) results[plan.id] = {};
+                    results[plan.id].yearly = {
+                        amount: priceY.unit_amount / 100,
+                        id: priceY.id
+                    };
+                } catch (e) { console.error(`Failed to fetch yearly price for ${plan.id}`, e.message); }
+            }
+        }
+
+        res.json(results);
     } catch (error) {
-        console.error('Error fetching price:', error);
-        // Fallback to avoid breaking UI if Stripe fails
-        res.status(500).json({ error: 'Failed to fetch price' });
+        console.error('Error fetching prices:', error);
+        res.status(500).json({ error: 'Failed to fetch prices' });
     }
 });
 
-// 3. Webhook Handler
+// 4. Webhook Handler
 router.post('/webhook', async (req, res) => {
     const sig = req.headers['stripe-signature'];
     let event;
 
     try {
-        // req.rawBody must be available (configured in index.js)
         event = stripe.webhooks.constructEvent(req.rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET);
     } catch (err) {
         console.error(`Webhook Error: ${err.message}`);
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
-    // Handle the event
     switch (event.type) {
         case 'checkout.session.completed':
             const session = event.data.object;
             const userId = session.metadata.userId;
+            const planTier = session.metadata.plan_tier || 'basic'; // Default fallback
             const customerId = session.customer;
             const subscriptionId = session.subscription;
 
-            // Update user to premium
             db.run(`UPDATE users SET 
                 stripe_customer_id = ?, 
                 stripe_subscription_id = ?, 
-                plan_tier = 'premium', 
+                plan_tier = ?, 
                 subscription_status = 'active' 
                 WHERE id = ?`,
-                [customerId, subscriptionId, userId],
+                [customerId, subscriptionId, planTier, userId],
                 (err) => {
                     if (err) console.error('Error updating user subscription:', err);
-                    else console.log(`User ${userId} upgraded to Premium via Webhook.`);
+                    else console.log(`User ${userId} upgraded to ${planTier} via Webhook.`);
                 }
             );
             break;
@@ -140,24 +175,19 @@ router.post('/webhook', async (req, res) => {
             const deletedSubscription = event.data.object;
             const deletedSubId = deletedSubscription.id;
 
-            // Revert user to free
             db.run(`UPDATE users SET 
-                plan_tier = 'basic', 
+                plan_tier = 'static', -- Revert to Free
                 subscription_status = 'canceled' 
                 WHERE stripe_subscription_id = ?`,
                 [deletedSubId],
                 (err) => {
                     if (err) console.error('Error canceling user subscription:', err);
-                    else console.log(`Subscription ${deletedSubId} canceled. User reverted to Basic.`);
+                    else console.log(`Subscription ${deletedSubId} canceled. Reverted to Static (Free).`);
                 }
             );
             break;
-
-        default:
-        // Silently ignore other event types
     }
 
-    // Return a 200 response to acknowledge receipt of the event
     res.send();
 });
 
