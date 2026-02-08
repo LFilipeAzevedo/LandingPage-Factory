@@ -71,8 +71,8 @@ router.get('/:slug', (req, res) => {
             let content = JSON.parse(row.content);
 
             // --- PLAN ENFORCEMENT & SANITIZATION ---
-            // If user is NOT Premium, disable Premium features (Non-Destructive)
-            if (row.plan_tier !== 'premium') {
+            // If user is NOT Premium and NOT Adm, disable Premium features (Non-Destructive)
+            if (row.plan_tier !== 'premium' && row.plan_tier !== 'adm_server') {
                 // 1. Disable Sales Section
                 if (content.salesSection) {
                     content.salesSection.enabled = false;
