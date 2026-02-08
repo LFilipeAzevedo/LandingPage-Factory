@@ -1518,6 +1518,18 @@ const Editor = () => {
                                                             onChange={(color) => updateCustomSection(section.id, 'textColor', color)}
                                                         />
                                                     </div>
+                                                    <div className="form-group">
+                                                        <label style={{ fontSize: '0.75rem', color: '#64748b' }}>Ajuste das Fotos</label>
+                                                        <select
+                                                            value={section.imageFit || 'cover'}
+                                                            onChange={(e) => updateCustomSection(section.id, 'imageFit', e.target.value)}
+                                                            className="input"
+                                                            style={{ fontSize: '0.8rem', height: '36px', padding: '0 8px' }}
+                                                        >
+                                                            <option value="cover">Preencher Espaço</option>
+                                                            <option value="contain">Mostrar Foto Inteira</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
 
                                                 {section.type === 'text' && (
@@ -1548,7 +1560,25 @@ const Editor = () => {
                                                                             const newItems = section.items.filter((_, i) => i !== idx);
                                                                             updateCustomSection(section.id, 'items', newItems);
                                                                         }}
-                                                                        style={{ position: 'absolute', top: 5, right: 5, background: '#ef4444', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
+                                                                        style={{
+                                                                            position: 'absolute',
+                                                                            top: 5,
+                                                                            right: 5,
+                                                                            background: 'rgba(0,0,0,0.5)',
+                                                                            backdropFilter: 'blur(8px)',
+                                                                            color: 'white',
+                                                                            border: '1px solid rgba(255,255,255,0.2)',
+                                                                            borderRadius: '50%',
+                                                                            width: '28px',
+                                                                            height: '28px',
+                                                                            cursor: 'pointer',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            justifyContent: 'center',
+                                                                            boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+                                                                            zIndex: 2
+                                                                        }}
+                                                                        title="Remover foto"
                                                                     >
                                                                         <Trash2 size={14} />
                                                                     </button>
@@ -1596,9 +1626,24 @@ const Editor = () => {
                                                                             const newItems = section.items.filter((_, i) => i !== idx);
                                                                             updateCustomSection(section.id, 'items', newItems);
                                                                         }}
-                                                                        style={{ background: '#fee2e2', border: 'none', padding: '6px', borderRadius: '6px', cursor: 'pointer', color: '#ef4444' }}
+                                                                        style={{
+                                                                            background: '#f8fafc',
+                                                                            border: '1px solid #fee2e2',
+                                                                            padding: '8px',
+                                                                            borderRadius: '8px',
+                                                                            cursor: 'pointer',
+                                                                            color: '#ef4444',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            justifyContent: 'center',
+                                                                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                                                                            transition: 'all 0.2s'
+                                                                        }}
+                                                                        onMouseOver={(e) => { e.currentTarget.style.background = '#fee2e2' }}
+                                                                        onMouseOut={(e) => { e.currentTarget.style.background = '#f8fafc' }}
+                                                                        title="Excluir Item"
                                                                     >
-                                                                        <Trash2 size={16} />
+                                                                        <Trash2 size={18} />
                                                                     </button>
                                                                 </div>
                                                                 <div className="form-group">

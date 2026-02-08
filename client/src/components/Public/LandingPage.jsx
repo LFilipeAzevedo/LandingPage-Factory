@@ -500,13 +500,18 @@ const LandingPage = () => {
                                         overflow: 'hidden',
                                         boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
                                         background: 'rgba(0,0,0,0.03)',
-                                        aspectRatio: '16/10',
+                                        aspectRatio: section.imageFit === 'contain' ? 'unset' : '16/10',
                                         transition: 'transform 0.3s ease'
                                     }}>
                                         <img
                                             src={item.src}
                                             alt={`Galeria ${idx}`}
-                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            style={{
+                                                width: '100%',
+                                                height: '100%',
+                                                minHeight: section.imageFit === 'contain' ? '200px' : 'unset',
+                                                objectFit: section.imageFit || 'cover'
+                                            }}
                                         />
                                     </div>
                                 ))}
@@ -517,7 +522,8 @@ const LandingPage = () => {
                             <div className="grid-list-public" style={{
                                 display: 'grid',
                                 gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                                gap: '30px'
+                                gap: '30px',
+                                alignItems: 'stretch'
                             }}>
                                 {(section.items || []).map((item, idx) => (
                                     <div key={idx} className="reveal-stagger" style={{
@@ -529,12 +535,13 @@ const LandingPage = () => {
                                         display: 'flex',
                                         flexDirection: 'column',
                                         alignItems: 'center',
-                                        border: '1px solid rgba(0,0,0,0.05)'
+                                        border: '1px solid rgba(0,0,0,0.05)',
+                                        height: '100%'
                                     }}>
                                         {item.image && (
                                             <div className="grid-item-image" style={{
                                                 width: '100%',
-                                                height: '220px',
+                                                height: item.orientation === 'portrait' ? '320px' : '220px',
                                                 marginBottom: '25px',
                                                 borderRadius: '16px',
                                                 overflow: 'hidden',
@@ -546,7 +553,7 @@ const LandingPage = () => {
                                                     style={{
                                                         width: '100%',
                                                         height: '100%',
-                                                        objectFit: item.orientation === 'portrait' ? 'contain' : 'cover'
+                                                        objectFit: section.imageFit === 'contain' ? 'contain' : (item.orientation === 'portrait' ? 'contain' : 'cover')
                                                     }}
                                                 />
                                             </div>
