@@ -510,7 +510,8 @@ const LandingPage = () => {
                                                 width: '100%',
                                                 height: '100%',
                                                 minHeight: section.imageFit === 'contain' ? '200px' : 'unset',
-                                                objectFit: section.imageFit || 'cover'
+                                                objectFit: section.imageFit || 'cover',
+                                                objectPosition: `${item.posX || 50}% ${item.posY || 50}%`
                                             }}
                                         />
                                     </div>
@@ -553,7 +554,8 @@ const LandingPage = () => {
                                                     style={{
                                                         width: '100%',
                                                         height: '100%',
-                                                        objectFit: section.imageFit === 'contain' ? 'contain' : (item.orientation === 'portrait' ? 'contain' : 'cover')
+                                                        objectFit: section.imageFit === 'contain' ? 'contain' : (item.orientation === 'portrait' ? 'contain' : 'cover'),
+                                                        objectPosition: `${item.posX || 50}% ${item.posY || 50}%`
                                                     }}
                                                 />
                                             </div>
