@@ -237,17 +237,30 @@ const LandingPage = () => {
                         <div className="carousel-track">
                             {/* Duplicate content for seamless infinite scroll */}
                             {[...content.events, ...content.events].map((event, index) => (
-                                <div key={index} className={`carousel-item ${event.orientation || 'portrait'}`}>
-                                    <img
-                                        src={event.image}
-                                        alt={`Evento ${index + 1}`}
-                                        style={{
-                                            objectFit: 'contain',
-                                            objectPosition: 'center'
-                                        }}
-                                    />
-                                    <div className="carousel-caption">
-                                        <p style={{ color: sectionStyles.eventsTitleColor }}>{event.description}</p>
+                                <div key={index} className={`carousel-item ${event.orientation || 'portrait'}`} style={{
+                                    background: '#ffffff',
+                                    borderRadius: '24px',
+                                    boxShadow: '0 15px 35px rgba(0,0,0,0.06)',
+                                    overflow: 'hidden',
+                                    border: '1px solid rgba(0,0,0,0.04)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    height: '350px'
+                                }}>
+                                    <div className="gallery-item-wrapper">
+                                        <img
+                                            src={event.image}
+                                            alt={`Evento ${index + 1}`}
+                                            style={{
+                                                width: '100%',
+                                                height: '100%',
+                                                objectFit: content.eventsImageFit || 'cover',
+                                                objectPosition: 'center'
+                                            }}
+                                        />
+                                        <div className="gallery-overlay">
+                                            {event.description && <p className="gallery-overlay-description" style={{ fontSize: '1.1rem' }}>{event.description}</p>}
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -267,30 +280,34 @@ const LandingPage = () => {
                                         key={index}
                                         className={`carousel-item station-card-carousel ${station.orientation || 'portrait'}`}
                                         style={{
-                                            backgroundColor: sectionStyles.stationsBackground,
-                                            borderColor: sectionStyles.stationsTitleColor + '20', // 20 is low opacity in hex
-                                            boxShadow: sectionStyles.stationsBackground === '#ffffff' ? undefined : 'none'
+                                            backgroundColor: '#ffffff',
+                                            borderRadius: '24px',
+                                            boxShadow: '0 15px 35px rgba(0,0,0,0.06)',
+                                            border: '1px solid rgba(0,0,0,0.04)',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            overflow: 'hidden',
+                                            height: '350px'
                                         }}
                                     >
-                                        <div
-                                            className="station-image-wrapper"
-                                            style={{ backgroundColor: 'transparent' }}
-                                        >
+                                        <div className="gallery-item-wrapper">
                                             {station.image && (
                                                 <img
                                                     src={station.image}
                                                     alt={station.title}
                                                     className="station-image"
                                                     style={{
-                                                        objectFit: 'contain',
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        objectFit: content.stationsImageFit || 'cover',
                                                         objectPosition: 'center'
                                                     }}
                                                 />
                                             )}
-                                        </div>
-                                        <div className="station-content">
-                                            <h3 style={{ color: sectionStyles.stationsTitleColor }}>{station.title}</h3>
-                                            <p style={{ color: sectionStyles.stationsTitleColor, opacity: 0.9 }}>{station.description}</p>
+                                            <div className="gallery-overlay">
+                                                {station.title && <h4 className="gallery-overlay-title">{station.title}</h4>}
+                                                {station.description && <p className="gallery-overlay-description">{station.description}</p>}
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -492,22 +509,40 @@ const LandingPage = () => {
                             <div className="gallery-grid-public" style={{
                                 display: 'grid',
                                 gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                                gap: '25px'
+                                gap: '30px',
+                                justifyContent: 'center'
                             }}>
                                 {(section.items || []).map((item, idx) => (
                                     <div key={idx} className="reveal" style={{
-                                        borderRadius: '16px',
+                                        background: '#ffffff',
+                                        borderRadius: '24px',
+                                        boxShadow: '0 15px 35px rgba(0,0,0,0.06)',
+                                        border: '1px solid rgba(0,0,0,0.04)',
+                                        maxWidth: '400px',
+                                        margin: '0 auto',
+                                        width: '100%',
+                                        height: '350px',
                                         overflow: 'hidden',
-                                        boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-                                        background: 'rgba(0,0,0,0.03)',
-                                        aspectRatio: '16/10',
                                         transition: 'transform 0.3s ease'
                                     }}>
-                                        <img
-                                            src={item.src}
-                                            alt={`Galeria ${idx}`}
-                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                        />
+                                        <div className="gallery-item-wrapper">
+                                            <img
+                                                src={item.src}
+                                                alt={`Galeria ${idx}`}
+                                                style={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    objectFit: section.imageFit || 'cover',
+                                                    objectPosition: 'center center'
+                                                }}
+                                            />
+                                            {(item.title || item.description) && (
+                                                <div className="gallery-overlay">
+                                                    {item.title && <h4 className="gallery-overlay-title">{item.title}</h4>}
+                                                    {item.description && <p className="gallery-overlay-description">{item.description}</p>}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -517,28 +552,37 @@ const LandingPage = () => {
                             <div className="grid-list-public" style={{
                                 display: 'grid',
                                 gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                                gap: '30px'
+                                gap: '30px',
+                                alignItems: 'stretch',
+                                justifyContent: 'center'
                             }}>
                                 {(section.items || []).map((item, idx) => (
                                     <div key={idx} className="reveal-stagger" style={{
-                                        background: 'white',
-                                        padding: '40px 30px',
+                                        background: '#ffffff',
+                                        padding: '15px',
                                         borderRadius: '24px',
-                                        boxShadow: '0 20px 40px rgba(0,0,0,0.04)',
+                                        boxShadow: '0 15px 35px rgba(0,0,0,0.06)',
+                                        border: '1px solid rgba(0,0,0,0.04)',
                                         textAlign: 'center',
                                         display: 'flex',
                                         flexDirection: 'column',
                                         alignItems: 'center',
-                                        border: '1px solid rgba(0,0,0,0.05)'
+                                        height: '100%',
+                                        maxWidth: '400px',
+                                        margin: '0 auto',
+                                        width: '100%'
                                     }}>
                                         {item.image && (
                                             <div className="grid-item-image" style={{
                                                 width: '100%',
-                                                height: '220px',
-                                                marginBottom: '25px',
+                                                height: '280px',
+                                                marginBottom: '20px',
                                                 borderRadius: '16px',
                                                 overflow: 'hidden',
-                                                background: '#f8fafc'
+                                                background: '#f8fafc',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center'
                                             }}>
                                                 <img
                                                     src={item.image}
@@ -546,7 +590,8 @@ const LandingPage = () => {
                                                     style={{
                                                         width: '100%',
                                                         height: '100%',
-                                                        objectFit: item.orientation === 'portrait' ? 'contain' : 'cover'
+                                                        objectFit: section.imageFit || 'cover',
+                                                        objectPosition: 'center center'
                                                     }}
                                                 />
                                             </div>
@@ -554,14 +599,14 @@ const LandingPage = () => {
                                         <h3 style={{
                                             fontSize: '1.6rem',
                                             fontWeight: '700',
-                                            color: section.titleColor || '#1e293b',
+                                            color: '#1e293b', // Grade cards are always white, need dark text
                                             marginBottom: '15px',
                                             fontFamily: section.font || 'inherit'
                                         }}>
                                             {item.title}
                                         </h3>
                                         <p style={{
-                                            color: section.textColor || '#64748b',
+                                            color: '#64748b', // Grade cards are always white, need gray text
                                             lineHeight: '1.7',
                                             fontSize: '1.05rem',
                                             margin: 0

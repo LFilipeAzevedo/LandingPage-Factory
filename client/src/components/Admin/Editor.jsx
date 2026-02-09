@@ -475,16 +475,33 @@ const Editor = () => {
             });
             const fullUrl = `${api.defaults.baseURL}${response.data.url}`;
 
-            setContent(prev => {
-                const newSections = prev.customSections.map(s => {
-                    if (s.id === sectionId) {
-                        return { ...s, items: [...(s.items || []), { src: fullUrl, id: Date.now() }] };
-                    }
-                    return s;
+            // Create an image object to check dimensions
+            const img = new Image();
+            img.onload = () => {
+                const orientation = img.width > img.height ? 'landscape' : 'portrait';
+
+                setContent(prev => {
+                    const newSections = prev.customSections.map(s => {
+                        if (s.id === sectionId) {
+                            return {
+                                ...s,
+                                imageFit: s.imageFit || 'cover',
+                                items: [...(s.items || []), {
+                                    src: fullUrl,
+                                    id: Date.now(),
+                                    orientation,
+                                    posX: 50,
+                                    posY: 50
+                                }]
+                            };
+                        }
+                        return s;
+                    });
+                    return { ...prev, customSections: newSections };
                 });
-                return { ...prev, customSections: newSections };
-            });
-            setMessage('Imagem adicionada!');
+                setMessage(`Imagem adicionada! (${orientation === 'landscape' ? 'Paisagem' : 'Retrato'})`);
+            };
+            img.src = fullUrl;
         } catch (error) {
             console.error(error);
             setMessage('Erro ao enviar imagem.');
@@ -950,33 +967,69 @@ const Editor = () => {
                                                     <input
                                                         type="checkbox"
                                                         checked={content.topBar?.enabled}
-                                                        onChange={(e) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, enabled: e.target.checked } }))}
+                                                        onChange={(e) => {
+                                                            const isEnabled = e.target.checked;
+                                                            setContent(prev => ({
+                                                                ...prev,
+                                                                topBar: {
+                                                                    ...prev.topBar,
+                                                                    enabled: isEnabled,
+                                                                    text: isEnabled && !prev.topBar.text ? '🎉 Novidade: Nosso curso premium está com 50% de desconto!' : prev.topBar.text
+                                                                }
+                                                            }));
+                                                        }}
                                                     />
                                                     <span className="slider round"></span>
                                                 </label>
                                             </div>
 
                                             {content.topBar?.enabled && (
-                                                <div style={{ padding: '1rem', background: '#fffbeb', borderRadius: '12px', border: '1px solid #fde68a' }}>
-                                                    <div className="form-group">
-                                                        <label>Texto</label>
-                                                        <input
-                                                            value={content.topBar.text}
-                                                            onChange={(e) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, text: e.target.value } }))}
-                                                            className="input"
-                                                        />
+                                                <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                                    {/* Real-time Preview Area */}
+                                                    <div className="preview-box" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px', border: '1px dashed #cbd5e1', textAlign: 'center' }}>
+                                                        <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '1rem' }}>Pré-visualização da Barra</span>
+                                                        <div
+                                                            className="announcement-bar-preview"
+                                                            style={{
+                                                                backgroundColor: content.topBar.backgroundColor || '#3167E7',
+                                                                color: content.topBar.textColor || '#ffffff',
+                                                                padding: '10px',
+                                                                borderRadius: '8px',
+                                                                fontWeight: '700',
+                                                                fontSize: '0.9rem',
+                                                                cursor: 'pointer',
+                                                                transition: 'transform 0.2s ease',
+                                                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                                                            }}
+                                                        >
+                                                            <span>{content.topBar.text || '🎉 Novidade: Nosso curso premium está com 50% de desconto!'}</span>
+                                                        </div>
+                                                        <p style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '8px' }}>Dica: No site, esta barra ficará fixa no topo.</p>
                                                     </div>
-                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-                                                        <ColorPicker
-                                                            label="Fundo"
-                                                            color={content.topBar.backgroundColor}
-                                                            onChange={(val) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, backgroundColor: val } }))}
-                                                        />
-                                                        <ColorPicker
-                                                            label="Texto"
-                                                            color={content.topBar.textColor}
-                                                            onChange={(val) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, textColor: val } }))}
-                                                        />
+
+                                                    {/* Configuration Controls */}
+                                                    <div style={{ padding: '1.5rem', background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                                                        <div className="form-group">
+                                                            <label>Texto do Aviso</label>
+                                                            <input
+                                                                value={content.topBar.text}
+                                                                placeholder="🎉 Novidade: Nosso curso premium está com 50% de desconto!"
+                                                                onChange={(e) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, text: e.target.value } }))}
+                                                                className="input"
+                                                            />
+                                                        </div>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1.5rem' }}>
+                                                            <ColorPicker
+                                                                label="Cor de Fundo"
+                                                                color={content.topBar.backgroundColor || '#3167E7'}
+                                                                onChange={(val) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, backgroundColor: val } }))}
+                                                            />
+                                                            <ColorPicker
+                                                                label="Cor do Texto"
+                                                                color={content.topBar.textColor || '#ffffff'}
+                                                                onChange={(val) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, textColor: val } }))}
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             )}
@@ -994,7 +1047,10 @@ const Editor = () => {
                                             <textarea name="heroSubtitle" value={content.heroSubtitle} onChange={handleChange} className="input textarea" />
                                         </div>
                                         <div className="form-group">
-                                            <label><ImageIcon size={18} /> Imagem de Fundo</label>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                                <label><ImageIcon size={18} /> Imagem de Fundo</label>
+                                                <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Recomendado: 1920x1080px</span>
+                                            </div>
                                             <input
                                                 type="file"
                                                 accept="image/*"
@@ -1012,7 +1068,10 @@ const Editor = () => {
 
                                     <LockedFeature title="Identidade da Marca" currentTier={user?.plan_tier}>
                                         <section className="form-section">
-                                            <h3><ImageIcon size={18} /> Logotipo</h3>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                                <h3><ImageIcon size={18} /> Logotipo</h3>
+                                                <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Recomendado: 250x100px</span>
+                                            </div>
                                             <div className="form-group">
                                                 <input
                                                     type="file"
@@ -1107,8 +1166,8 @@ const Editor = () => {
                                         <div className="form-group" style={{ marginBottom: 0, flex: 1 }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                                                 <label>Título da Seção</label>
-                                                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                                                    Dica: Use fotos em <strong>Paisagem</strong>. <a href="https://bulkresizephotos.com/pt" target="_blank" rel="noreferrer" style={{ color: '#2563eb' }}>Redimensionar</a>
+                                                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold' }}>
+                                                    Quadrante: 370x280px
                                                 </div>
                                             </div>
                                             <input
@@ -1120,6 +1179,19 @@ const Editor = () => {
                                         <button onClick={() => addItem('events', { image: '', description: '', imageFit: 'contain' })} className="btn btn-secondary" style={{ marginLeft: '1rem' }}>
                                             + Novo Item
                                         </button>
+                                    </div>
+
+                                    <div className="form-group" style={{ marginBottom: '1.5rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                                        <label style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>Ajuste das Fotos (Premium)</label>
+                                        <select
+                                            value={content.eventsImageFit || 'cover'}
+                                            onChange={(e) => setContent(prev => ({ ...prev, eventsImageFit: e.target.value }))}
+                                            className="input"
+                                            style={{ maxWidth: '300px' }}
+                                        >
+                                            <option value="cover">Preencher Espaço (Zoom - Recomendado)</option>
+                                            <option value="contain">Mostrar Foto Inteira (Pode gerar bordas)</option>
+                                        </select>
                                     </div>
 
                                     <div className="form-group" style={{ marginBottom: '2rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px' }}>
@@ -1177,7 +1249,7 @@ const Editor = () => {
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                                                 <label>Título da Seção</label>
                                                 <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                                                    Dica: Use fotos em <strong>Retrato</strong>. <a href="https://bulkresizephotos.com/pt" target="_blank" rel="noreferrer" style={{ color: '#2563eb' }}>Redimensionador</a>
+                                                    Recomendado: 370x280px
                                                 </div>
                                             </div>
                                             <input
@@ -1189,6 +1261,19 @@ const Editor = () => {
                                         <button onClick={() => addItem('stations', { image: '', title: '', description: '', imageFit: 'contain' })} className="btn btn-secondary" style={{ marginLeft: '1rem' }}>
                                             + Novo Serviço
                                         </button>
+                                    </div>
+
+                                    <div className="form-group" style={{ marginBottom: '1.5rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                                        <label style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>Ajuste das Fotos (Premium)</label>
+                                        <select
+                                            value={content.stationsImageFit || 'cover'}
+                                            onChange={(e) => setContent(prev => ({ ...prev, stationsImageFit: e.target.value }))}
+                                            className="input"
+                                            style={{ maxWidth: '300px' }}
+                                        >
+                                            <option value="cover">Preencher Espaço (Zoom - Recomendado)</option>
+                                            <option value="contain">Mostrar Foto Inteira (Pode gerar bordas)</option>
+                                        </select>
                                     </div>
 
                                     <div className="form-group" style={{ marginBottom: '2rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px' }}>
@@ -1470,6 +1555,13 @@ const Editor = () => {
                                                     </button>
                                                 </div>
 
+                                                {section.type === 'grade' && (
+                                                    <div style={{ background: '#f0f9ff', padding: '10px 15px', borderRadius: '8px', border: '1px solid #bae6fd', marginBottom: '1.5rem', fontSize: '0.85rem', color: '#0369a1', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <Activity size={16} />
+                                                        <span><strong>Nota:</strong> Os cartões desta grade são brancos. O texto interno é fixado em cores escuras para manter o contraste, ignorando as cores globais da seção.</span>
+                                                    </div>
+                                                )}
+
                                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
                                                     <div className="form-group">
                                                         <label>Nome no Menu</label>
@@ -1518,6 +1610,46 @@ const Editor = () => {
                                                             onChange={(color) => updateCustomSection(section.id, 'textColor', color)}
                                                         />
                                                     </div>
+                                                    <div className="form-group">
+                                                        <label style={{ fontSize: '0.75rem', color: '#64748b' }}>Ajuste das Fotos</label>
+                                                        <select
+                                                            value={section.imageFit || 'cover'}
+                                                            onChange={(e) => updateCustomSection(section.id, 'imageFit', e.target.value)}
+                                                            className="input"
+                                                            style={{ fontSize: '0.8rem', height: '36px', padding: '0 8px' }}
+                                                        >
+                                                            <option value="cover">Preencher Espaço (Zoom - Recomendado)</option>
+                                                            <option value="contain">Mostrar Foto Inteira (Pode gerar bordas)</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                {/* Color Preview Sample */}
+                                                <div style={{
+                                                    marginBottom: '1.5rem',
+                                                    padding: '1.5rem',
+                                                    borderRadius: '12px',
+                                                    backgroundColor: section.backgroundColor || '#ffffff',
+                                                    border: '1px solid #e2e8f0',
+                                                    textAlign: 'center',
+                                                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
+                                                }}>
+                                                    <span style={{ fontSize: '0.7rem', color: '#94a3b8', display: 'block', marginBottom: '10px', textTransform: 'uppercase' }}>Pré-visualização de Cores</span>
+                                                    <h4 style={{
+                                                        color: section.titleColor || '#1e293b',
+                                                        margin: '0 0 10px 0',
+                                                        fontFamily: section.font || 'inherit',
+                                                        fontSize: '1.4rem'
+                                                    }}>
+                                                        Título do Módulo
+                                                    </h4>
+                                                    <p style={{
+                                                        color: section.textColor || '#475569',
+                                                        margin: 0,
+                                                        fontSize: '1rem'
+                                                    }}>
+                                                        Exemplo de como o texto do seu módulo aparecerá sobre o fundo escolhido.
+                                                    </p>
                                                 </div>
 
                                                 {section.type === 'text' && (
@@ -1530,28 +1662,72 @@ const Editor = () => {
                                                         />
                                                     </div>
                                                 )}
-
                                                 {section.type === 'galeria' && (
                                                     <div className="form-group">
                                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                                                             <label>Imagens da Galeria</label>
-                                                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                                                                Dica: Use fotos em <strong>Paisagem</strong>. <a href="https://bulkresizephotos.com/pt" target="_blank" rel="noreferrer" style={{ color: '#2563eb' }}>Redimensionador</a>
+                                                            <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold' }}>
+                                                                Quadrante: 370x280px
                                                             </div>
                                                         </div>
-                                                        <div className="gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '10px' }}>
+                                                        <div className="gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '15px' }}>
                                                             {(section.items || []).map((item, idx) => (
-                                                                <div key={idx} style={{ position: 'relative', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
-                                                                    <img src={item.src || 'https://via.placeholder.com/150'} alt="Item" style={{ width: '100%', height: '100px', objectFit: 'cover' }} />
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            const newItems = section.items.filter((_, i) => i !== idx);
-                                                                            updateCustomSection(section.id, 'items', newItems);
-                                                                        }}
-                                                                        style={{ position: 'absolute', top: 5, right: 5, background: '#ef4444', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
-                                                                    >
-                                                                        <Trash2 size={14} />
-                                                                    </button>
+                                                                <div key={idx} style={{ position: 'relative', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', background: 'white', padding: '5px' }}>
+                                                                    <div style={{ position: 'relative', width: '100%', height: '100px', borderRadius: '8px', overflow: 'hidden', background: '#f1f5f9' }}>
+                                                                        <img
+                                                                            src={item.src || 'https://via.placeholder.com/150'}
+                                                                            alt="Item"
+                                                                            style={{
+                                                                                width: '100%',
+                                                                                height: '100%',
+                                                                                objectFit: 'cover',
+                                                                                objectPosition: `${item.posX || 50}% ${item.posY || 50}%`
+                                                                            }}
+                                                                        />
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.preventDefault();
+                                                                                const newItems = section.items.filter((_, i) => i !== idx);
+                                                                                updateCustomSection(section.id, 'items', newItems);
+                                                                            }}
+                                                                            style={{
+                                                                                position: 'absolute',
+                                                                                top: 5,
+                                                                                right: 5,
+                                                                                background: '#ef4444',
+                                                                                color: 'white',
+                                                                                border: '2px solid white',
+                                                                                borderRadius: '50%',
+                                                                                width: '28px',
+                                                                                height: '28px',
+                                                                                cursor: 'pointer',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                justifyContent: 'center',
+                                                                                boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+                                                                                zIndex: 10
+                                                                            }}
+                                                                            title="Remover foto"
+                                                                        >
+                                                                            <Trash2 size={12} />
+                                                                        </button>
+                                                                    </div>
+
+                                                                    {/* Position sliders removed for UI simplification */}
+                                                                    <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                                        <input
+                                                                            value={item.title || ''}
+                                                                            placeholder="Título (Hover)"
+                                                                            onChange={(e) => handleCustomListChange(section.id, idx, 'title', e.target.value)}
+                                                                            style={{ fontSize: '0.75rem', width: '100%', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0' }}
+                                                                        />
+                                                                        <textarea
+                                                                            value={item.description || ''}
+                                                                            placeholder="Descrição (Hover)"
+                                                                            onChange={(e) => handleCustomListChange(section.id, idx, 'description', e.target.value)}
+                                                                            style={{ fontSize: '0.7rem', width: '100%', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', minHeight: '40px', resize: 'none' }}
+                                                                        />
+                                                                    </div>
                                                                 </div>
                                                             ))}
                                                             <label className="add-gallery-item" style={{ border: '2px dashed #cbd5e1', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', height: '100px', background: '#f8fafc' }}>
@@ -1571,34 +1747,62 @@ const Editor = () => {
                                                     <div className="form-group">
                                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                                                             <label>Itens da Grade (Destaques)</label>
-                                                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                                                                Dica: Use fotos em <strong>Retrato</strong>. <a href="https://bulkresizephotos.com/pt" target="_blank" rel="noreferrer" style={{ color: '#2563eb' }}>Redimensionador</a>
+                                                            <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold' }}>
+                                                                Quadrante: 370x280px
                                                             </div>
                                                         </div>
                                                         {(section.items || []).map((item, idx) => (
-                                                            <div key={idx} style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #e2e8f0' }}>
+                                                            <div key={idx} style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', marginBottom: '1rem', border: '1px solid #e2e8f0' }}>
                                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                                                                    <div className="item-image-upload" style={{ width: '80px', height: '100px', position: 'relative', background: '#e2e8f0', borderRadius: '8px', overflow: 'hidden', cursor: 'pointer' }}>
-                                                                        {item.image ? (
-                                                                            <img src={item.image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                                        ) : (
-                                                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><ImageIcon size={20} color="#64748b" /></div>
-                                                                        )}
-                                                                        <input
-                                                                            type="file"
-                                                                            accept="image/*"
-                                                                            onChange={(e) => handleCustomGradeImageUpload(e, section.id, idx)}
-                                                                            style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
-                                                                        />
+                                                                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flex: 1 }}>
+                                                                        <div className="item-image-upload" style={{ width: '100px', height: '120px', position: 'relative', background: 'white', borderRadius: '10px', overflow: 'hidden', cursor: 'pointer', border: '1px solid #cbd5e1' }}>
+                                                                            {item.image ? (
+                                                                                <img
+                                                                                    src={item.image}
+                                                                                    alt="Preview"
+                                                                                    style={{
+                                                                                        width: '100%',
+                                                                                        height: '100%',
+                                                                                        objectFit: 'cover',
+                                                                                        objectPosition: `${item.posX || 50}% ${item.posY || 50}%`
+                                                                                    }}
+                                                                                />
+                                                                            ) : (
+                                                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><ImageIcon size={24} color="#64748b" /></div>
+                                                                            )}
+                                                                            <input
+                                                                                type="file"
+                                                                                accept="image/*"
+                                                                                onChange={(e) => handleCustomGradeImageUpload(e, section.id, idx)}
+                                                                                style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                                            />
+                                                                        </div>
+
+                                                                        {/* Position sliders removed for UI simplification */}
                                                                     </div>
                                                                     <button
-                                                                        onClick={() => {
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault();
                                                                             const newItems = section.items.filter((_, i) => i !== idx);
                                                                             updateCustomSection(section.id, 'items', newItems);
                                                                         }}
-                                                                        style={{ background: '#fee2e2', border: 'none', padding: '6px', borderRadius: '6px', cursor: 'pointer', color: '#ef4444' }}
+                                                                        style={{
+                                                                            background: '#ef4444',
+                                                                            border: '2px solid white',
+                                                                            padding: '10px',
+                                                                            borderRadius: '10px',
+                                                                            cursor: 'pointer',
+                                                                            color: 'white',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            justifyContent: 'center',
+                                                                            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)',
+                                                                            transition: 'all 0.2s',
+                                                                            zIndex: 10
+                                                                        }}
+                                                                        title="Excluir Item"
                                                                     >
-                                                                        <Trash2 size={16} />
+                                                                        <Trash2 size={20} />
                                                                     </button>
                                                                 </div>
                                                                 <div className="form-group">
@@ -1638,55 +1842,57 @@ const Editor = () => {
                                 </LockedFeature>
                             )}
 
-                            {activeSection === 'footer' && (
-                                <section className="form-section">
-                                    <h3>Rodapé & Contato</h3>
-                                    <div className="form-group">
-                                        <label>Texto do Rodapé</label>
-                                        <input name="footerText" value={content.footerText} onChange={handleChange} className="input" />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Instagram URL</label>
-                                        <input
-                                            value={content.socials.instagram}
-                                            onChange={(e) => setContent(prev => ({ ...prev, socials: { ...prev.socials, instagram: e.target.value } }))}
-                                            className="input"
-                                            placeholder="https://instagram.com/..."
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>WhatsApp</label>
-                                        <input
-                                            value={content.socials.whatsapp}
-                                            onChange={(e) => {
-                                                let val = e.target.value.replace(/\D/g, '');
-                                                if (val.length > 11) val = val.slice(0, 11);
-                                                if (val.length > 2) val = `(${val.slice(0, 2)}) ${val.slice(2)}`;
-                                                if (val.length > 7) val = `${val.slice(0, 9)}-${val.slice(9)}`;
-                                                setContent(prev => ({ ...prev, socials: { ...prev.socials, whatsapp: val } }))
-                                            }}
-                                            className="input"
-                                            placeholder="(XX) XXXXX-XXXX"
-                                        />
-                                    </div>
-
-                                    <div className="form-group" style={{ marginBottom: '2rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px', marginTop: '2rem' }}>
-                                        <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem' }}>Aparência do Rodapé</h4>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                            <ColorPicker
-                                                label="Fundo"
-                                                color={content.sectionStyles?.footerBackground || '#0f172a'}
-                                                onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, footerBackground: val } }))}
-                                            />
-                                            <ColorPicker
-                                                label="Texto"
-                                                color={content.sectionStyles?.footerTitleColor || '#ffffff'}
-                                                onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, footerTitleColor: val } }))}
+                            {
+                                activeSection === 'footer' && (
+                                    <section className="form-section">
+                                        <h3>Rodapé & Contato</h3>
+                                        <div className="form-group">
+                                            <label>Texto do Rodapé</label>
+                                            <input name="footerText" value={content.footerText} onChange={handleChange} className="input" />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Instagram URL</label>
+                                            <input
+                                                value={content.socials.instagram}
+                                                onChange={(e) => setContent(prev => ({ ...prev, socials: { ...prev.socials, instagram: e.target.value } }))}
+                                                className="input"
+                                                placeholder="https://instagram.com/..."
                                             />
                                         </div>
-                                    </div>
-                                </section>
-                            )}
+                                        <div className="form-group">
+                                            <label>WhatsApp</label>
+                                            <input
+                                                value={content.socials.whatsapp}
+                                                onChange={(e) => {
+                                                    let val = e.target.value.replace(/\D/g, '');
+                                                    if (val.length > 11) val = val.slice(0, 11);
+                                                    if (val.length > 2) val = `(${val.slice(0, 2)}) ${val.slice(2)}`;
+                                                    if (val.length > 7) val = `${val.slice(0, 9)}-${val.slice(9)}`;
+                                                    setContent(prev => ({ ...prev, socials: { ...prev.socials, whatsapp: val } }))
+                                                }}
+                                                className="input"
+                                                placeholder="(XX) XXXXX-XXXX"
+                                            />
+                                        </div>
+
+                                        <div className="form-group" style={{ marginBottom: '2rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px', marginTop: '2rem' }}>
+                                            <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem' }}>Aparência do Rodapé</h4>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                                <ColorPicker
+                                                    label="Fundo"
+                                                    color={content.sectionStyles?.footerBackground || '#0f172a'}
+                                                    onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, footerBackground: val } }))}
+                                                />
+                                                <ColorPicker
+                                                    label="Texto"
+                                                    color={content.sectionStyles?.footerTitleColor || '#ffffff'}
+                                                    onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, footerTitleColor: val } }))}
+                                                />
+                                            </div>
+                                        </div>
+                                    </section>
+                                )
+                            }
                         </>
                     ) : (
                         <section className="admin-users-section">
@@ -1800,7 +2006,8 @@ const Editor = () => {
                                 </table>
                             </div>
                         </section>
-                    )}
+                    )
+                    }
                 </div >
             </main >
             {/* UI Modals & Toasts */}
