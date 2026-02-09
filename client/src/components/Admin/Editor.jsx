@@ -1592,8 +1592,8 @@ const Editor = () => {
                                                             className="input"
                                                             style={{ fontSize: '0.8rem', height: '36px', padding: '0 8px' }}
                                                         >
-                                                            <option value="cover">Preencher Espaço (Zoom)</option>
-                                                            <option value="contain">Mostrar Foto Inteira</option>
+                                                            <option value="cover">Preencher Espaço (Zoom - Recomendado)</option>
+                                                            <option value="contain">Mostrar Foto Inteira (Pode gerar bordas)</option>
                                                         </select>
                                                     </div>
                                                 </div>
