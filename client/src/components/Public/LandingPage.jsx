@@ -317,7 +317,8 @@ const LandingPage = () => {
                     </div>
                     <div className="carousel-container">
                         <div className="carousel-track">
-                            {content.stations.map((station, index) => (
+                            {/* Duplicate content for seamless infinite scroll */}
+                            {[...content.stations, ...content.stations].map((station, index) => (
                                 <div
                                     key={index}
                                     className={`carousel-item station-card-carousel ${station.orientation || 'portrait'}`}
@@ -329,7 +330,7 @@ const LandingPage = () => {
                                         display: 'flex',
                                         flexDirection: 'column',
                                         overflow: 'hidden',
-                                        height: '350px'
+                                        height: '350px' // Unified height
                                     }}
                                 >
                                     <div className="gallery-item-wrapper" style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
