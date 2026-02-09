@@ -614,7 +614,7 @@ const LandingPage = () => {
                                                         width: '100%',
                                                         height: '100%',
                                                         objectFit: section.imageFit || 'cover',
-                                                        objectPosition: `${item.posX || 50}% ${item.posY || 50}%`
+                                                        objectPosition: 'center center'
                                                     }}
                                                 />
                                             </div>

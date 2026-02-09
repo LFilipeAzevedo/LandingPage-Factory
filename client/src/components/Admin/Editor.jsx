@@ -1011,7 +1011,10 @@ const Editor = () => {
                                             <textarea name="heroSubtitle" value={content.heroSubtitle} onChange={handleChange} className="input textarea" />
                                         </div>
                                         <div className="form-group">
-                                            <label><ImageIcon size={18} /> Imagem de Fundo</label>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                                <label><ImageIcon size={18} /> Imagem de Fundo</label>
+                                                <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Recomendado: 1920x1080px</span>
+                                            </div>
                                             <input
                                                 type="file"
                                                 accept="image/*"
@@ -1029,7 +1032,10 @@ const Editor = () => {
 
                                     <LockedFeature title="Identidade da Marca" currentTier={user?.plan_tier}>
                                         <section className="form-section">
-                                            <h3><ImageIcon size={18} /> Logotipo</h3>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                                <h3><ImageIcon size={18} /> Logotipo</h3>
+                                                <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Recomendado: 250x100px</span>
+                                            </div>
                                             <div className="form-group">
                                                 <input
                                                     type="file"
@@ -1124,8 +1130,8 @@ const Editor = () => {
                                         <div className="form-group" style={{ marginBottom: 0, flex: 1 }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                                                 <label>Título da Seção</label>
-                                                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                                                    Dica: Use fotos em <strong>Paisagem</strong>. <a href="https://bulkresizephotos.com/pt" target="_blank" rel="noreferrer" style={{ color: '#2563eb' }}>Redimensionar</a>
+                                                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold' }}>
+                                                    Quadrante: 370x280px
                                                 </div>
                                             </div>
                                             <input
@@ -1194,7 +1200,7 @@ const Editor = () => {
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                                                 <label>Título da Seção</label>
                                                 <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                                                    Dica: Use fotos em <strong>Retrato</strong>. <a href="https://bulkresizephotos.com/pt" target="_blank" rel="noreferrer" style={{ color: '#2563eb' }}>Redimensionador</a>
+                                                    Recomendado: 370x280px
                                                 </div>
                                             </div>
                                             <input
@@ -1598,11 +1604,8 @@ const Editor = () => {
                                                     <div className="form-group">
                                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                                                             <label>Imagens da Galeria</label>
-                                                            <div style={{ textAlign: 'right' }}>
-                                                                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold' }}>
-                                                                    Recomendado: 600x400px (Paisagem)
-                                                                </div>
-                                                                <a href="https://bulkresizephotos.com/pt" target="_blank" rel="noreferrer" style={{ fontSize: '0.7rem', color: '#2563eb' }}>Redimensionador</a>
+                                                            <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold' }}>
+                                                                Quadrante: 370x280px
                                                             </div>
                                                         </div>
                                                         <div className="gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '15px' }}>
@@ -1648,33 +1651,7 @@ const Editor = () => {
                                                                         </button>
                                                                     </div>
 
-                                                                    <div style={{ padding: '8px 5px 0 5px' }}>
-                                                                        <label style={{ fontSize: '0.65rem', color: '#94a3b8', display: 'block', marginBottom: '2px' }}>Ajustar Enquadramento (Arraste)</label>
-                                                                        <div style={{ display: 'flex', gap: '5px' }}>
-                                                                            <input
-                                                                                type="range" min="0" max="100"
-                                                                                value={item.posX || 50}
-                                                                                onChange={(e) => {
-                                                                                    const newItems = [...section.items];
-                                                                                    newItems[idx] = { ...newItems[idx], posX: e.target.value };
-                                                                                    updateCustomSection(section.id, 'items', newItems);
-                                                                                }}
-                                                                                style={{ width: '100%', height: '4px', cursor: 'pointer' }}
-                                                                                title="Horizontal"
-                                                                            />
-                                                                            <input
-                                                                                type="range" min="0" max="100"
-                                                                                value={item.posY || 50}
-                                                                                onChange={(e) => {
-                                                                                    const newItems = [...section.items];
-                                                                                    newItems[idx] = { ...newItems[idx], posY: e.target.value };
-                                                                                    updateCustomSection(section.id, 'items', newItems);
-                                                                                }}
-                                                                                style={{ width: '100%', height: '4px', cursor: 'pointer', transform: 'rotate(0deg)' }}
-                                                                                title="Vertical"
-                                                                            />
-                                                                        </div>
-                                                                    </div>
+                                                                    {/* Position sliders removed for UI simplification */}
                                                                 </div>
                                                             ))}
                                                             <label className="add-gallery-item" style={{ border: '2px dashed #cbd5e1', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', height: '100px', background: '#f8fafc' }}>
@@ -1694,11 +1671,8 @@ const Editor = () => {
                                                     <div className="form-group">
                                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                                                             <label>Itens da Grade (Destaques)</label>
-                                                            <div style={{ textAlign: 'right' }}>
-                                                                <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold' }}>
-                                                                    Retrato: 400x550px | Paisagem: 600x400px
-                                                                </div>
-                                                                <a href="https://bulkresizephotos.com/pt" target="_blank" rel="noreferrer" style={{ fontSize: '0.7rem', color: '#2563eb' }}>Redimensionador</a>
+                                                            <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold' }}>
+                                                                Quadrante: 370x280px
                                                             </div>
                                                         </div>
                                                         {(section.items || []).map((item, idx) => (
@@ -1728,29 +1702,7 @@ const Editor = () => {
                                                                             />
                                                                         </div>
 
-                                                                        {item.image && (
-                                                                            <div style={{ flex: 1 }}>
-                                                                                <label style={{ fontSize: '0.7rem', color: '#64748b', display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Enquadramento (Foco)</label>
-                                                                                <div style={{ marginBottom: '10px' }}>
-                                                                                    <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>Horizontal ({item.posX || 50}%)</span>
-                                                                                    <input
-                                                                                        type="range" min="0" max="100"
-                                                                                        value={item.posX || 50}
-                                                                                        onChange={(e) => handleCustomListChange(section.id, idx, 'posX', e.target.value)}
-                                                                                        style={{ width: '100%', height: '6px', cursor: 'pointer', display: 'block' }}
-                                                                                    />
-                                                                                </div>
-                                                                                <div>
-                                                                                    <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>Vertical ({item.posY || 50}%)</span>
-                                                                                    <input
-                                                                                        type="range" min="0" max="100"
-                                                                                        value={item.posY || 50}
-                                                                                        onChange={(e) => handleCustomListChange(section.id, idx, 'posY', e.target.value)}
-                                                                                        style={{ width: '100%', height: '6px', cursor: 'pointer', display: 'block' }}
-                                                                                    />
-                                                                                </div>
-                                                                            </div>
-                                                                        )}
+                                                                        {/* Position sliders removed for UI simplification */}
                                                                     </div>
                                                                     <button
                                                                         onClick={(e) => {
