@@ -2,13 +2,13 @@
 .landing-page {
     font-family: var(--font-sans);
     color: var(--slate-900);
-    padding-top: 80px;
-    /* Altura aproximada do nav */
+    padding-top: 0;
+    /* Removed to allow Hero to touch the top */
 }
 
 .landing-page.has-announcement {
-    padding-top: 120px;
-    /* Altura com a barra de aviso */
+    padding-top: 0;
+    /* Hero starts behind the bars */
 }
 
 /* Hero Section */
@@ -257,9 +257,11 @@
     right: 0;
     padding: var(--spacing-md) var(--spacing-xl);
     z-index: 90;
-    background: rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(15px);
+    background: rgba(0, 0, 0, 0.15);
+    /* More transparent */
+    backdrop-filter: blur(10px);
     transition: all 0.3s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .top-bar.has-announcement {
@@ -306,9 +308,12 @@
 .nav-links a {
     color: white;
     text-decoration: none;
-    font-weight: 500;
-    font-size: 1rem;
-    transition: opacity 0.2s;
+    font-weight: 600;
+    /* Slightly bolder */
+    font-size: 0.95rem;
+    transition: all 0.2s;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    /* Better contrast */
 }
 
 .nav-links a:hover {
