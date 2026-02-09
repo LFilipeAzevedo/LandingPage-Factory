@@ -16,6 +16,7 @@ function verifyToken(req, res, next) {
     jwt.verify(tokenString, SECRET_KEY, (err, decoded) => {
         if (err) return res.status(500).json({ error: 'Failed to authenticate token' });
         req.userId = decoded.id;
+        req.userTier = decoded.plan_tier; // Important for admin permissions
         next();
     });
 }
@@ -151,7 +152,7 @@ router.put('/:slug', verifyToken, (req, res) => {
         if (err) return res.status(500).json({ error: 'Database error' });
         if (!row) return res.status(404).json({ error: 'Page not found' });
 
-        if (row.user_id !== req.userId) {
+        if (row.user_id !== req.userId && req.userTier !== 'adm_server') {
             return res.status(403).json({ error: 'You do not have permission to edit this page' });
         }
 
