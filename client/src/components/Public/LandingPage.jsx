@@ -172,9 +172,27 @@ const LandingPage = () => {
             {/* Top Navigation Bar */}
             <nav className={`top-bar ${topBar.enabled ? 'has-announcement' : ''}`}>
                 <div className="nav-container">
-                    <div className="logo">
+                    <div className="logo" style={{ display: 'flex', alignItems: 'center' }}>
                         {logo ? (
-                            <img src={logo} alt="Logo" style={{ height: '40px', objectFit: 'contain' }} />
+                            <div style={{ height: '40px', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
+                                <img
+                                    src={logo}
+                                    alt="Logo"
+                                    style={content.logoSettings?.cropW ? {
+                                        position: 'absolute',
+                                        width: `${100 / content.logoSettings.cropW * 100}%`,
+                                        height: `${100 / content.logoSettings.cropH * 100}%`,
+                                        top: `${-content.logoSettings.cropY * (100 / content.logoSettings.cropH)}%`,
+                                        left: `${-content.logoSettings.cropX * (100 / content.logoSettings.cropW)}%`,
+                                        objectFit: 'contain'
+                                    } : {
+                                        height: '40px',
+                                        objectFit: 'contain'
+                                    }}
+                                />
+                                {/* Invisible spacer to maintain width if using absolute img */}
+                                <img src={logo} alt="Spacer" style={{ height: '40px', visibility: 'hidden' }} />
+                            </div>
                         ) : (
                             'Logo'
                         )}
@@ -215,14 +233,28 @@ const LandingPage = () => {
 
             <header
                 className="hero"
-                style={{
-                    backgroundImage: `url(${heroImage})`,
-                    backgroundPosition: 'top center',
-                    backgroundSize: 'cover'
-                }}
+                style={{ position: 'relative', overflow: 'hidden' }}
             >
-                <div className="hero-overlay"></div>
-                <div className="hero-content">
+                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflow: 'hidden', zIndex: 0 }}>
+                    <img
+                        src={heroImage}
+                        alt="Hero"
+                        style={content.heroImageSettings?.cropW ? {
+                            position: 'absolute',
+                            width: `${100 / content.heroImageSettings.cropW * 100}%`,
+                            height: `${100 / content.heroImageSettings.cropH * 100}%`,
+                            top: `${-content.heroImageSettings.cropY * (100 / content.heroImageSettings.cropH)}%`,
+                            left: `${-content.heroImageSettings.cropX * (100 / content.heroImageSettings.cropW)}%`,
+                            objectFit: 'cover'
+                        } : {
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                        }}
+                    />
+                </div>
+                <div className="hero-overlay" style={{ zIndex: 1 }}></div>
+                <div className="hero-content" style={{ position: 'relative', zIndex: 2 }}>
                     <h1>{heroTitle}</h1>
                     <p className="hero-subtitle">{heroSubtitle}</p>
                 </div>
@@ -247,11 +279,18 @@ const LandingPage = () => {
                                     flexDirection: 'column',
                                     height: '350px'
                                 }}>
-                                    <div className="gallery-item-wrapper">
+                                    <div className="gallery-item-wrapper" style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
                                         <img
                                             src={event.image}
                                             alt={`Evento ${index + 1}`}
-                                            style={{
+                                            style={event.cropW ? {
+                                                position: 'absolute',
+                                                width: `${100 / event.cropW * 100}%`,
+                                                height: `${100 / event.cropH * 100}%`,
+                                                top: `${-event.cropY * (100 / event.cropH)}%`,
+                                                left: `${-event.cropX * (100 / event.cropW)}%`,
+                                                objectFit: 'cover'
+                                            } : {
                                                 width: '100%',
                                                 height: '100%',
                                                 objectFit: content.eventsImageFit || 'cover',
@@ -290,13 +329,20 @@ const LandingPage = () => {
                                             height: '350px'
                                         }}
                                     >
-                                        <div className="gallery-item-wrapper">
+                                        <div className="gallery-item-wrapper" style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
                                             {station.image && (
                                                 <img
                                                     src={station.image}
                                                     alt={station.title}
                                                     className="station-image"
-                                                    style={{
+                                                    style={station.cropW ? {
+                                                        position: 'absolute',
+                                                        width: `${100 / station.cropW * 100}%`,
+                                                        height: `${100 / station.cropH * 100}%`,
+                                                        top: `${-station.cropY * (100 / station.cropH)}%`,
+                                                        left: `${-station.cropX * (100 / station.cropW)}%`,
+                                                        objectFit: 'cover'
+                                                    } : {
                                                         width: '100%',
                                                         height: '100%',
                                                         objectFit: content.stationsImageFit || 'cover',
