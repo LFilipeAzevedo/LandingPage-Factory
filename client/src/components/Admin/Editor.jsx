@@ -967,33 +967,69 @@ const Editor = () => {
                                                     <input
                                                         type="checkbox"
                                                         checked={content.topBar?.enabled}
-                                                        onChange={(e) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, enabled: e.target.checked } }))}
+                                                        onChange={(e) => {
+                                                            const isEnabled = e.target.checked;
+                                                            setContent(prev => ({
+                                                                ...prev,
+                                                                topBar: {
+                                                                    ...prev.topBar,
+                                                                    enabled: isEnabled,
+                                                                    text: isEnabled && !prev.topBar.text ? '🎉 Novidade: Nosso curso premium está com 50% de desconto!' : prev.topBar.text
+                                                                }
+                                                            }));
+                                                        }}
                                                     />
                                                     <span className="slider round"></span>
                                                 </label>
                                             </div>
 
                                             {content.topBar?.enabled && (
-                                                <div style={{ padding: '1rem', background: '#fffbeb', borderRadius: '12px', border: '1px solid #fde68a' }}>
-                                                    <div className="form-group">
-                                                        <label>Texto</label>
-                                                        <input
-                                                            value={content.topBar.text}
-                                                            onChange={(e) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, text: e.target.value } }))}
-                                                            className="input"
-                                                        />
+                                                <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                                    {/* Real-time Preview Area */}
+                                                    <div className="preview-box" style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px', border: '1px dashed #cbd5e1', textAlign: 'center' }}>
+                                                        <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '1rem' }}>Pré-visualização da Barra</span>
+                                                        <div
+                                                            className="announcement-bar-preview"
+                                                            style={{
+                                                                backgroundColor: content.topBar.backgroundColor || '#3167E7',
+                                                                color: content.topBar.textColor || '#ffffff',
+                                                                padding: '10px',
+                                                                borderRadius: '8px',
+                                                                fontWeight: '700',
+                                                                fontSize: '0.9rem',
+                                                                cursor: 'pointer',
+                                                                transition: 'transform 0.2s ease',
+                                                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                                                            }}
+                                                        >
+                                                            <span>{content.topBar.text || '🎉 Novidade: Nosso curso premium está com 50% de desconto!'}</span>
+                                                        </div>
+                                                        <p style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '8px' }}>Dica: No site, esta barra ficará fixa no topo.</p>
                                                     </div>
-                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-                                                        <ColorPicker
-                                                            label="Fundo"
-                                                            color={content.topBar.backgroundColor}
-                                                            onChange={(val) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, backgroundColor: val } }))}
-                                                        />
-                                                        <ColorPicker
-                                                            label="Texto"
-                                                            color={content.topBar.textColor}
-                                                            onChange={(val) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, textColor: val } }))}
-                                                        />
+
+                                                    {/* Configuration Controls */}
+                                                    <div style={{ padding: '1.5rem', background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                                                        <div className="form-group">
+                                                            <label>Texto do Aviso</label>
+                                                            <input
+                                                                value={content.topBar.text}
+                                                                placeholder="🎉 Novidade: Nosso curso premium está com 50% de desconto!"
+                                                                onChange={(e) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, text: e.target.value } }))}
+                                                                className="input"
+                                                            />
+                                                        </div>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1.5rem' }}>
+                                                            <ColorPicker
+                                                                label="Cor de Fundo"
+                                                                color={content.topBar.backgroundColor || '#3167E7'}
+                                                                onChange={(val) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, backgroundColor: val } }))}
+                                                            />
+                                                            <ColorPicker
+                                                                label="Cor do Texto"
+                                                                color={content.topBar.textColor || '#ffffff'}
+                                                                onChange={(val) => setContent(prev => ({ ...prev, topBar: { ...prev.topBar, textColor: val } }))}
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             )}

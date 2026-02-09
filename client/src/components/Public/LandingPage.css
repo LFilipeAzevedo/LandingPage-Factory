@@ -158,6 +158,12 @@
 .announcement-bar span {
     display: inline-block;
     animation: pulse 2s infinite ease-in-out;
+    transition: transform 0.2s ease;
+}
+
+.announcement-bar:hover span {
+    animation-play-state: paused;
+    transform: scale(1.05);
 }
 
 @keyframes pulse {
