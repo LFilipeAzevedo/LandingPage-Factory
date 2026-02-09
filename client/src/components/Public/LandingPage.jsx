@@ -511,7 +511,7 @@ const LandingPage = () => {
                                             borderRadius: '16px',
                                             overflow: 'hidden',
                                             background: '#f8fafc',
-                                            aspectRatio: section.imageFit === 'contain' ? 'unset' : (item.orientation === 'portrait' ? '3/4' : '16/10'),
+                                            height: '280px',
                                             width: '100%',
                                             display: 'flex',
                                             alignItems: 'center',
@@ -561,7 +561,7 @@ const LandingPage = () => {
                                         {item.image && (
                                             <div className="grid-item-image" style={{
                                                 width: '100%',
-                                                height: item.orientation === 'portrait' ? '320px' : '220px',
+                                                height: '280px',
                                                 marginBottom: '20px',
                                                 borderRadius: '16px',
                                                 overflow: 'hidden',
