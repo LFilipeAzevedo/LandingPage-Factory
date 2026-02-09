@@ -5,9 +5,75 @@ import { useNavigate } from 'react-router-dom';
 import './Editor.css';
 import { LogOut, Save, Layout, Type, Image as ImageIcon, TrendingUp, ShoppingBag, CheckCircle, Plus, Trash2, ShieldCheck, Users, Activity, Globe, Search, Layers, List, CreditCard } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import Cropper from 'react-easy-crop';
 import ColorPicker from './ColorPicker';
 import RichTextEditor from './RichTextEditor';
 import FontSelector from './FontSelector';
+
+const ImageCropperModal = ({ image, initialCrop, initialZoom, onSave, onCancel }) => {
+    const [crop, setCrop] = useState(initialCrop || { x: 0, y: 0 });
+    const [zoom, setZoom] = useState(initialZoom || 1);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+
+    const onCropComplete = (croppedArea, croppedAreaPixels) => {
+        setCroppedAreaPixels(croppedAreaPixels);
+    };
+
+    return (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+            <div style={{ position: 'relative', width: '100%', maxWidth: '600px', height: '400px', background: '#334155', borderRadius: '12px', overflow: 'hidden' }}>
+                <Cropper
+                    image={image}
+                    crop={crop}
+                    zoom={zoom}
+                    aspect={370 / 280}
+                    onCropChange={setCrop}
+                    onZoomChange={setZoom}
+                    onCropComplete={onCropComplete}
+                />
+            </div>
+            <div style={{ width: '100%', maxWidth: '600px', padding: '20px', background: 'white', borderRadius: '0 0 12px 12px' }}>
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        Zoom <span>{zoom.toFixed(1)}x</span>
+                    </label>
+                    <input
+                        type="range"
+                        min={1}
+                        max={3}
+                        step={0.1}
+                        value={zoom}
+                        onChange={(e) => setZoom(parseFloat(e.target.value))}
+                        style={{ width: '100%', cursor: 'pointer' }}
+                    />
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button onClick={onCancel} className="btn btn-secondary" style={{ flex: 1 }}>Cancelar</button>
+                    <button
+                        onClick={() => {
+                            // Convert crop pixels to percentage for object-position if needed, 
+                            // but usually easy-crop provides what we need. 
+                            // We'll save the zoom and the center point.
+                            onSave({
+                                zoom,
+                                posX: 50 + (crop.x / 5), // Rough estimation or just save raw values
+                                posY: 50 + (crop.y / 5),
+                                rawCrop: crop
+                            });
+                        }}
+                        className="btn btn-primary"
+                        style={{ flex: 1, background: '#2563eb' }}
+                    >
+                        Confirmar Ajuste
+                    </button>
+                </div>
+                <p style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '15px', textAlign: 'center' }}>
+                    Arraste a imagem para posicionar e use o slider para dar zoom.
+                </p>
+            </div>
+        </div>
+    );
+};
 
 const LockedFeature = ({ title, requiredTier, currentTier, children }) => {
     const navigate = useNavigate();
@@ -86,6 +152,7 @@ const Editor = () => {
     const { logout, user } = useAuth();
     const userTier = user?.plan_tier || 'basic'; // Fix: Define userTier
     const navigate = useNavigate();
+    const [editingImage, setEditingImage] = useState(null); // { src, sectionId, index, field, initialCrop, initialZoom }
     const [content, setContent] = useState(null);
     const [pageSlug, setPageSlug] = useState('home');
     const [loading, setLoading] = useState(true);
@@ -451,6 +518,31 @@ const Editor = () => {
 
     const addItem = (listName, template) => {
         setContent(prev => ({ ...prev, [listName]: [...prev[listName], template] }));
+    };
+
+    const handleCropSave = (cropData) => {
+        if (!editingImage) return;
+        const { sectionId, index } = editingImage;
+
+        setContent(prev => {
+            const newSections = prev.customSections.map(s => {
+                if (s.id === sectionId) {
+                    const newItems = [...(s.items || [])];
+                    newItems[index] = {
+                        ...newItems[index],
+                        posX: cropData.posX,
+                        posY: cropData.posY,
+                        zoom: cropData.zoom,
+                        crop: cropData.rawCrop
+                    };
+                    return { ...s, items: newItems };
+                }
+                return s;
+            });
+            return { ...prev, customSections: newSections };
+        });
+        setEditingImage(null);
+        showToast('Enquadramento salvo!');
     };
 
     const removeItem = (listName, index) => {
@@ -1681,9 +1773,42 @@ const Editor = () => {
                                                                                 width: '100%',
                                                                                 height: '100%',
                                                                                 objectFit: 'cover',
-                                                                                objectPosition: `${item.posX || 50}% ${item.posY || 50}%`
+                                                                                objectPosition: `${item.posX || 50}% ${item.posY || 50}%`,
+                                                                                transform: `scale(${item.zoom || 1})`
                                                                             }}
                                                                         />
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.preventDefault();
+                                                                                setEditingImage({
+                                                                                    src: item.src,
+                                                                                    sectionId: section.id,
+                                                                                    index: idx,
+                                                                                    initialCrop: item.crop,
+                                                                                    initialZoom: item.zoom
+                                                                                });
+                                                                            }}
+                                                                            style={{
+                                                                                position: 'absolute',
+                                                                                bottom: 5,
+                                                                                left: 5,
+                                                                                background: 'rgba(255,255,255,0.9)',
+                                                                                color: '#0f172a',
+                                                                                border: 'none',
+                                                                                borderRadius: '6px',
+                                                                                padding: '4px 8px',
+                                                                                fontSize: '0.65rem',
+                                                                                fontWeight: 'bold',
+                                                                                cursor: 'pointer',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                gap: '4px',
+                                                                                boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+                                                                                zIndex: 10
+                                                                            }}
+                                                                        >
+                                                                            <Layout size={10} /> Ajustar
+                                                                        </button>
                                                                         <button
                                                                             onClick={(e) => {
                                                                                 e.preventDefault();
@@ -1757,16 +1882,51 @@ const Editor = () => {
                                                                     <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flex: 1 }}>
                                                                         <div className="item-image-upload" style={{ width: '100px', height: '120px', position: 'relative', background: 'white', borderRadius: '10px', overflow: 'hidden', cursor: 'pointer', border: '1px solid #cbd5e1' }}>
                                                                             {item.image ? (
-                                                                                <img
-                                                                                    src={item.image}
-                                                                                    alt="Preview"
-                                                                                    style={{
-                                                                                        width: '100%',
-                                                                                        height: '100%',
-                                                                                        objectFit: 'cover',
-                                                                                        objectPosition: `${item.posX || 50}% ${item.posY || 50}%`
-                                                                                    }}
-                                                                                />
+                                                                                <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                                                                                    <img
+                                                                                        src={item.image}
+                                                                                        alt="Preview"
+                                                                                        style={{
+                                                                                            width: '100%',
+                                                                                            height: '100%',
+                                                                                            objectFit: 'cover',
+                                                                                            objectPosition: `${item.posX || 50}% ${item.posY || 50}%`,
+                                                                                            transform: `scale(${item.zoom || 1})`
+                                                                                        }}
+                                                                                    />
+                                                                                    <button
+                                                                                        onClick={(e) => {
+                                                                                            e.preventDefault();
+                                                                                            setEditingImage({
+                                                                                                src: item.image,
+                                                                                                sectionId: section.id,
+                                                                                                index: idx,
+                                                                                                initialCrop: item.crop,
+                                                                                                initialZoom: item.zoom
+                                                                                            });
+                                                                                        }}
+                                                                                        style={{
+                                                                                            position: 'absolute',
+                                                                                            bottom: 5,
+                                                                                            left: 5,
+                                                                                            background: 'rgba(255,255,255,0.9)',
+                                                                                            color: '#0f172a',
+                                                                                            border: 'none',
+                                                                                            borderRadius: '6px',
+                                                                                            padding: '4px 8px',
+                                                                                            fontSize: '0.65rem',
+                                                                                            fontWeight: 'bold',
+                                                                                            cursor: 'pointer',
+                                                                                            display: 'flex',
+                                                                                            alignItems: 'center',
+                                                                                            gap: '4px',
+                                                                                            boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+                                                                                            zIndex: 10
+                                                                                        }}
+                                                                                    >
+                                                                                        <Layout size={10} /> Ajustar
+                                                                                    </button>
+                                                                                </div>
                                                                             ) : (
                                                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><ImageIcon size={24} color="#64748b" /></div>
                                                                             )}
@@ -2025,6 +2185,16 @@ const Editor = () => {
                     </div>
                 )
             }
+
+            {editingImage && (
+                <ImageCropperModal
+                    image={editingImage.src}
+                    initialCrop={editingImage.initialCrop}
+                    initialZoom={editingImage.initialZoom}
+                    onSave={handleCropSave}
+                    onCancel={() => setEditingImage(null)}
+                />
+            )}
 
             <div className="toast-container">
                 {toasts.map(toast => (

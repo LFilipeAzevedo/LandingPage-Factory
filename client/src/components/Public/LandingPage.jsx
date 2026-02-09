@@ -533,7 +533,8 @@ const LandingPage = () => {
                                                     width: '100%',
                                                     height: '100%',
                                                     objectFit: section.imageFit || 'cover',
-                                                    objectPosition: 'center center'
+                                                    objectPosition: `${item.posX || 50}% ${item.posY || 50}%`,
+                                                    transform: `scale(${item.zoom || 1})`
                                                 }}
                                             />
                                             {(item.title || item.description) && (
@@ -591,7 +592,8 @@ const LandingPage = () => {
                                                         width: '100%',
                                                         height: '100%',
                                                         objectFit: section.imageFit || 'cover',
-                                                        objectPosition: 'center center'
+                                                        objectPosition: `${item.posX || 50}% ${item.posY || 50}%`,
+                                                        transform: `scale(${item.zoom || 1})`
                                                     }}
                                                 />
                                             </div>
