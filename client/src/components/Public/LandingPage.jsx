@@ -552,94 +552,22 @@ const LandingPage = () => {
                         )}
 
                         {section.type === 'galeria' && (
-                            <div className="gallery-grid-public" style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                                gap: '30px',
-                                justifyContent: 'center'
-                            }}>
-                                {(section.items || []).map((item, idx) => (
-                                    <div key={idx} className="reveal" style={{
-                                        background: '#ffffff',
-                                        borderRadius: '24px',
-                                        boxShadow: '0 15px 35px rgba(0,0,0,0.06)',
-                                        border: '1px solid rgba(0,0,0,0.04)',
-                                        maxWidth: '400px',
-                                        margin: '0 auto',
-                                        width: '100%',
-                                        height: '350px',
-                                        overflow: 'hidden',
-                                        transition: 'transform 0.3s ease'
-                                    }}>
-                                        <div className="gallery-item-wrapper" style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
-                                            <img
-                                                src={item.src}
-                                                alt={`Galeria ${idx}`}
-                                                style={item.cropW ? {
-                                                    position: 'absolute',
-                                                    width: `${100 / item.cropW * 100}%`,
-                                                    height: `${100 / item.cropH * 100}%`,
-                                                    top: `${-item.cropY * (100 / item.cropH)}%`,
-                                                    left: `${-item.cropX * (100 / item.cropW)}%`,
-                                                    objectFit: 'cover'
-                                                } : {
-                                                    width: '100%',
-                                                    height: '100%',
-                                                    objectFit: section.imageFit || 'cover',
-                                                    objectPosition: 'center center'
-                                                }}
-                                            />
-                                            {(item.title || item.description) && (
-                                                <div className="gallery-overlay">
-                                                    {item.title && <h4 className="gallery-overlay-title">{item.title}</h4>}
-                                                    {item.description && <p className="gallery-overlay-description">{item.description}</p>}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {section.type === 'grade' && (
-                            <div className="grid-list-public" style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                                gap: '30px',
-                                alignItems: 'stretch',
-                                justifyContent: 'center'
-                            }}>
-                                {(section.items || []).map((item, idx) => (
-                                    <div key={idx} className="reveal-stagger" style={{
-                                        background: '#ffffff',
-                                        padding: '15px',
-                                        borderRadius: '24px',
-                                        boxShadow: '0 15px 35px rgba(0,0,0,0.06)',
-                                        border: '1px solid rgba(0,0,0,0.04)',
-                                        textAlign: 'center',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        height: '100%',
-                                        maxWidth: '400px',
-                                        margin: '0 auto',
-                                        width: '100%'
-                                    }}>
-                                        {item.image && (
-                                            <div className="grid-item-image" style={{
-                                                width: '100%',
-                                                height: '280px',
-                                                marginBottom: '20px',
-                                                borderRadius: '16px',
-                                                overflow: 'hidden',
-                                                background: '#f8fafc',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center'
-                                            }}>
+                            <div className="carousel-container">
+                                <div className="carousel-track">
+                                    {/* Duplicate content for seamless infinite scroll */}
+                                    {[...(section.items || []), ...(section.items || [])].map((item, idx) => (
+                                        <div key={idx} className={`carousel-item ${item.orientation || 'portrait'}`} style={{
+                                            background: '#ffffff',
+                                            borderRadius: '24px',
+                                            boxShadow: '0 15px 35px rgba(0,0,0,0.06)',
+                                            border: '1px solid rgba(0,0,0,0.04)',
+                                            overflow: 'hidden',
+                                            height: '350px'
+                                        }}>
+                                            <div className="gallery-item-wrapper" style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
                                                 <img
-                                                    src={item.image}
-                                                    alt={item.title}
+                                                    src={item.src}
+                                                    alt={`Galeria ${idx}`}
                                                     style={item.cropW ? {
                                                         position: 'absolute',
                                                         width: `${100 / item.cropW * 100}%`,
@@ -654,27 +582,93 @@ const LandingPage = () => {
                                                         objectPosition: 'center center'
                                                     }}
                                                 />
+                                                {(item.title || item.description) && (
+                                                    <div className="gallery-overlay">
+                                                        {item.title && <h4 className="gallery-overlay-title">{item.title}</h4>}
+                                                        {item.description && <p className="gallery-overlay-description">{item.description}</p>}
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
-                                        <h3 style={{
-                                            fontSize: '1.6rem',
-                                            fontWeight: '700',
-                                            color: '#1e293b', // Grade cards are always white, need dark text
-                                            marginBottom: '15px',
-                                            fontFamily: section.font || 'inherit'
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {section.type === 'grade' && (
+                            <div className="carousel-container">
+                                <div className="carousel-track">
+                                    {/* Duplicate content for seamless infinite scroll */}
+                                    {[...(section.items || []), ...(section.items || [])].map((item, idx) => (
+                                        <div key={idx} className="carousel-item portrait" style={{
+                                            background: '#ffffff',
+                                            padding: '15px',
+                                            borderRadius: '24px',
+                                            boxShadow: '0 15px 35px rgba(0,0,0,0.06)',
+                                            border: '1px solid rgba(0,0,0,0.04)',
+                                            textAlign: 'center',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            height: '420px', // Slightly taller to accommodate text
+                                            overflow: 'hidden'
                                         }}>
-                                            {item.title}
-                                        </h3>
-                                        <p style={{
-                                            color: '#64748b', // Grade cards are always white, need gray text
-                                            lineHeight: '1.7',
-                                            fontSize: '1.05rem',
-                                            margin: 0
-                                        }}>
-                                            {item.description}
-                                        </p>
-                                    </div>
-                                ))}
+                                            {item.image && (
+                                                <div className="grid-item-image" style={{
+                                                    width: '100%',
+                                                    height: '220px', // Adjusted height within carousel
+                                                    marginBottom: '15px',
+                                                    borderRadius: '16px',
+                                                    overflow: 'hidden',
+                                                    background: '#f8fafc',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    position: 'relative'
+                                                }}>
+                                                    <img
+                                                        src={item.image}
+                                                        alt={item.title}
+                                                        style={item.cropW ? {
+                                                            position: 'absolute',
+                                                            width: `${100 / item.cropW * 100}%`,
+                                                            height: `${100 / item.cropH * 100}%`,
+                                                            top: `${-item.cropY * (100 / item.cropH)}%`,
+                                                            left: `${-item.cropX * (100 / item.cropW)}%`,
+                                                            objectFit: 'cover'
+                                                        } : {
+                                                            width: '100%',
+                                                            height: '100%',
+                                                            objectFit: section.imageFit || 'cover',
+                                                            objectPosition: 'center center'
+                                                        }}
+                                                    />
+                                                </div>
+                                            )}
+                                            <h3 style={{
+                                                fontSize: '1.4rem',
+                                                fontWeight: '700',
+                                                color: '#1e293b',
+                                                marginBottom: '10px',
+                                                fontFamily: section.font || 'inherit'
+                                            }}>
+                                                {item.title}
+                                            </h3>
+                                            <p style={{
+                                                color: '#64748b',
+                                                lineHeight: '1.6',
+                                                fontSize: '0.95rem',
+                                                margin: 0,
+                                                display: '-webkit-box',
+                                                WebkitLineClamp: 4,
+                                                WebkitBoxOrient: 'vertical',
+                                                overflow: 'hidden'
+                                            }}>
+                                                {item.description}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
                     </div>
