@@ -429,12 +429,11 @@
 
 .carousel-track {
     display: flex;
-    gap: var(--spacing-lg);
-    padding: 0 var(--spacing-xl);
+    gap: var(--spacing-xl);
+    padding: 0 40px;
     width: max-content;
-    margin: 0 auto;
-    animation: scroll 40s linear infinite;
-    /* Adjust speed as needed */
+    animation: scroll 60s linear infinite;
+    /* Smoother scroll for more items */
 }
 
 @keyframes scroll {

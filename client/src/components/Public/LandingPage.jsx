@@ -172,9 +172,27 @@ const LandingPage = () => {
             {/* Top Navigation Bar */}
             <nav className={`top-bar ${topBar.enabled ? 'has-announcement' : ''}`}>
                 <div className="nav-container">
-                    <div className="logo">
+                    <div className="logo" style={{ display: 'flex', alignItems: 'center' }}>
                         {logo ? (
-                            <img src={logo} alt="Logo" style={{ height: '40px', objectFit: 'contain' }} />
+                            <div style={{ height: '40px', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
+                                <img
+                                    src={logo}
+                                    alt="Logo"
+                                    style={content.logoSettings?.cropW ? {
+                                        position: 'absolute',
+                                        width: `${100 / content.logoSettings.cropW * 100}%`,
+                                        height: `${100 / content.logoSettings.cropH * 100}%`,
+                                        top: `${-content.logoSettings.cropY * (100 / content.logoSettings.cropH)}%`,
+                                        left: `${-content.logoSettings.cropX * (100 / content.logoSettings.cropW)}%`,
+                                        objectFit: 'contain'
+                                    } : {
+                                        height: '40px',
+                                        objectFit: 'contain'
+                                    }}
+                                />
+                                {/* Invisible spacer to maintain width if using absolute img */}
+                                <img src={logo} alt="Spacer" style={{ height: '40px', visibility: 'hidden' }} />
+                            </div>
                         ) : (
                             'Logo'
                         )}
@@ -215,14 +233,28 @@ const LandingPage = () => {
 
             <header
                 className="hero"
-                style={{
-                    backgroundImage: `url(${heroImage})`,
-                    backgroundPosition: 'top center',
-                    backgroundSize: 'cover'
-                }}
+                style={{ position: 'relative', overflow: 'hidden' }}
             >
-                <div className="hero-overlay"></div>
-                <div className="hero-content">
+                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflow: 'hidden', zIndex: 0 }}>
+                    <img
+                        src={heroImage}
+                        alt="Hero"
+                        style={content.heroImageSettings?.cropW ? {
+                            position: 'absolute',
+                            width: `${100 / content.heroImageSettings.cropW * 100}%`,
+                            height: `${100 / content.heroImageSettings.cropH * 100}%`,
+                            top: `${-content.heroImageSettings.cropY * (100 / content.heroImageSettings.cropH)}%`,
+                            left: `${-content.heroImageSettings.cropX * (100 / content.heroImageSettings.cropW)}%`,
+                            objectFit: 'cover'
+                        } : {
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                        }}
+                    />
+                </div>
+                <div className="hero-overlay" style={{ zIndex: 1 }}></div>
+                <div className="hero-content" style={{ position: 'relative', zIndex: 2 }}>
                     <h1>{heroTitle}</h1>
                     <p className="hero-subtitle">{heroSubtitle}</p>
                 </div>
@@ -231,8 +263,10 @@ const LandingPage = () => {
 
 
             {content.events && content.events.length > 0 && (
-                <section className="section-dark" id="events" style={{ backgroundColor: sectionStyles.eventsBackground }}>
-                    <h2 style={{ color: sectionStyles.eventsTitleColor }}>{content.eventsTitle || 'Nossos Eventos'}</h2>
+                <section className="section-dark" id="events" style={{ backgroundColor: sectionStyles.eventsBackground, paddingLeft: 0, paddingRight: 0 }}>
+                    <div className="content-container" style={{ textAlign: 'center' }}>
+                        <h2 style={{ color: sectionStyles.eventsTitleColor, marginBottom: '3rem' }}>{content.eventsTitle || 'Nossos Eventos'}</h2>
+                    </div>
                     <div className="carousel-container">
                         <div className="carousel-track">
                             {/* Duplicate content for seamless infinite scroll */}
@@ -247,11 +281,18 @@ const LandingPage = () => {
                                     flexDirection: 'column',
                                     height: '350px'
                                 }}>
-                                    <div className="gallery-item-wrapper">
+                                    <div className="gallery-item-wrapper" style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
                                         <img
                                             src={event.image}
                                             alt={`Evento ${index + 1}`}
-                                            style={{
+                                            style={event.cropW ? {
+                                                position: 'absolute',
+                                                width: `${100 / event.cropW * 100}%`,
+                                                height: `${100 / event.cropH * 100}%`,
+                                                top: `${-event.cropY * (100 / event.cropH)}%`,
+                                                left: `${-event.cropX * (100 / event.cropW)}%`,
+                                                objectFit: 'cover'
+                                            } : {
                                                 width: '100%',
                                                 height: '100%',
                                                 objectFit: content.eventsImageFit || 'cover',
@@ -270,48 +311,55 @@ const LandingPage = () => {
             )}
 
             {content.stations && content.stations.length > 0 && (
-                <section className="features" id="stations" style={{ backgroundColor: sectionStyles.stationsBackground }}>
+                <section className="features" id="stations" style={{ backgroundColor: sectionStyles.stationsBackground, paddingLeft: 0, paddingRight: 0 }}>
                     <div className="content-container">
-                        <h2 style={{ color: sectionStyles.stationsTitleColor }}>{content.stationsTitle || 'Nossas Estações'}</h2>
-                        <div className="carousel-container">
-                            <div className="carousel-track">
-                                {content.stations.map((station, index) => (
-                                    <div
-                                        key={index}
-                                        className={`carousel-item station-card-carousel ${station.orientation || 'portrait'}`}
-                                        style={{
-                                            backgroundColor: '#ffffff',
-                                            borderRadius: '24px',
-                                            boxShadow: '0 15px 35px rgba(0,0,0,0.06)',
-                                            border: '1px solid rgba(0,0,0,0.04)',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            overflow: 'hidden',
-                                            height: '350px'
-                                        }}
-                                    >
-                                        <div className="gallery-item-wrapper">
-                                            {station.image && (
-                                                <img
-                                                    src={station.image}
-                                                    alt={station.title}
-                                                    className="station-image"
-                                                    style={{
-                                                        width: '100%',
-                                                        height: '100%',
-                                                        objectFit: content.stationsImageFit || 'cover',
-                                                        objectPosition: 'center'
-                                                    }}
-                                                />
-                                            )}
-                                            <div className="gallery-overlay">
-                                                {station.title && <h4 className="gallery-overlay-title">{station.title}</h4>}
-                                                {station.description && <p className="gallery-overlay-description">{station.description}</p>}
-                                            </div>
+                        <h2 style={{ color: sectionStyles.stationsTitleColor, textAlign: 'center', marginBottom: '3rem' }}>{content.stationsTitle || 'Nossas Estações'}</h2>
+                    </div>
+                    <div className="carousel-container">
+                        <div className="carousel-track">
+                            {content.stations.map((station, index) => (
+                                <div
+                                    key={index}
+                                    className={`carousel-item station-card-carousel ${station.orientation || 'portrait'}`}
+                                    style={{
+                                        backgroundColor: '#ffffff',
+                                        borderRadius: '24px',
+                                        boxShadow: '0 15px 35px rgba(0,0,0,0.06)',
+                                        border: '1px solid rgba(0,0,0,0.04)',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        overflow: 'hidden',
+                                        height: '350px'
+                                    }}
+                                >
+                                    <div className="gallery-item-wrapper" style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+                                        {station.image && (
+                                            <img
+                                                src={station.image}
+                                                alt={station.title}
+                                                className="station-image"
+                                                style={station.cropW ? {
+                                                    position: 'absolute',
+                                                    width: `${100 / station.cropW * 100}%`,
+                                                    height: `${100 / station.cropH * 100}%`,
+                                                    top: `${-station.cropY * (100 / station.cropH)}%`,
+                                                    left: `${-station.cropX * (100 / station.cropW)}%`,
+                                                    objectFit: 'cover'
+                                                } : {
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    objectFit: content.stationsImageFit || 'cover',
+                                                    objectPosition: 'center'
+                                                }}
+                                            />
+                                        )}
+                                        <div className="gallery-overlay">
+                                            {station.title && <h4 className="gallery-overlay-title">{station.title}</h4>}
+                                            {station.description && <p className="gallery-overlay-description">{station.description}</p>}
                                         </div>
                                     </div>
-                                ))}
-                            </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </section>
@@ -347,279 +395,307 @@ const LandingPage = () => {
             </section>
 
             {/* Sales Section (Courses/Ebooks) */}
-            {salesSection.enabled && (
-                <section
-                    className="sales-section"
-                    id="sales"
-                    style={{
-                        backgroundColor: sectionStyles?.salesBackground || '#ffffff',
-                    }}
-                >
-                    <div className="content-container sales-container">
-                        <div className="sales-info">
-                            <h2 className="sales-title" style={{ color: sectionStyles?.salesTitleColor || sectionStyles?.aboutTitleColor }}>{salesSection.title}</h2>
-                            <p className="sales-subtitle" style={{ color: sectionStyles?.salesTitleColor || sectionStyles?.aboutTitleColor }}>{salesSection.subtitle}</p>
+            {
+                salesSection.enabled && (
+                    <section
+                        className="sales-section"
+                        id="sales"
+                        style={{
+                            backgroundColor: sectionStyles?.salesBackground || '#ffffff',
+                        }}
+                    >
+                        <div className="content-container sales-container">
+                            <div className="sales-info">
+                                <h2 className="sales-title" style={{ color: sectionStyles?.salesTitleColor || sectionStyles?.aboutTitleColor }}>{salesSection.title}</h2>
+                                <p className="sales-subtitle" style={{ color: sectionStyles?.salesTitleColor || sectionStyles?.aboutTitleColor }}>{salesSection.subtitle}</p>
 
-                            <div className="sales-features-list">
-                                {salesSection.features?.map((feature, idx) => (
-                                    <div key={idx} className="benefit-item">
-                                        <div
-                                            className="benefit-icon-wrapper"
-                                            style={{
-                                                background: sectionStyles?.salesIconColor
-                                                    ? `linear-gradient(135deg, ${sectionStyles.salesIconColor}, ${sectionStyles.salesIconColor}dd)`
-                                                    : 'linear-gradient(135deg, #0f172a, #334155)'
-                                            }}
-                                        >
-                                            <div className="benefit-icon-inner">
-                                                <CheckCircle size={20} />
+                                <div className="sales-features-list">
+                                    {salesSection.features?.map((feature, idx) => (
+                                        <div key={idx} className="benefit-item">
+                                            <div
+                                                className="benefit-icon-wrapper"
+                                                style={{
+                                                    background: sectionStyles?.salesIconColor
+                                                        ? `linear-gradient(135deg, ${sectionStyles.salesIconColor}, ${sectionStyles.salesIconColor}dd)`
+                                                        : 'linear-gradient(135deg, #0f172a, #334155)'
+                                                }}
+                                            >
+                                                <div className="benefit-icon-inner">
+                                                    <CheckCircle size={20} />
+                                                </div>
+                                            </div>
+                                            <div className="benefit-text" style={{ color: sectionStyles?.salesTitleColor || sectionStyles?.aboutTitleColor }}>
+                                                {feature.text}
                                             </div>
                                         </div>
-                                        <div className="benefit-text" style={{ color: sectionStyles?.salesTitleColor || sectionStyles?.aboutTitleColor }}>
-                                            {feature.text}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="sales-card-outer">
-                            <div
-                                className="sales-card-container"
-                                style={{
-                                    backgroundColor: sectionStyles?.salesCardBackground || '#ffffff',
-                                    color: sectionStyles?.salesCardTextColor || '#0f172a'
-                                }}
-                            >
-                                <h3 className="card-outer-title" style={{ color: sectionStyles?.salesCardTextColor || '#ffffff' }}>{salesSection.card?.title}</h3>
-
-                                <ul className="card-checklist-premium">
-                                    {salesSection.card?.highlights?.map((h, idx) => (
-                                        <li key={idx}>
-                                            <CheckCircle
-                                                size={18}
-                                                className="icon-check-premium"
-                                                style={{ color: sectionStyles?.salesCardIconColor || '#ffd43b' }}
-                                            />
-                                            <span>{h}</span>
-                                        </li>
                                     ))}
-                                </ul>
+                                </div>
+                            </div>
 
-                                <div className="sales-card">
-                                    <div className="price-container-premium">
-                                        {salesSection.card?.oldPrice && (
-                                            <span className="old-price-premium">
-                                                De R$ {salesSection.card.oldPrice} por
-                                            </span>
+                            <div className="sales-card-outer">
+                                <div
+                                    className="sales-card-container"
+                                    style={{
+                                        backgroundColor: sectionStyles?.salesCardBackground || '#ffffff',
+                                        color: sectionStyles?.salesCardTextColor || '#0f172a'
+                                    }}
+                                >
+                                    <h3 className="card-outer-title" style={{ color: sectionStyles?.salesCardTextColor || '#ffffff' }}>{salesSection.card?.title}</h3>
+
+                                    <ul className="card-checklist-premium">
+                                        {salesSection.card?.highlights?.map((h, idx) => (
+                                            <li key={idx}>
+                                                <CheckCircle
+                                                    size={18}
+                                                    className="icon-check-premium"
+                                                    style={{ color: sectionStyles?.salesCardIconColor || '#ffd43b' }}
+                                                />
+                                                <span>{h}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+
+                                    <div className="sales-card">
+                                        <div className="price-container-premium">
+                                            {salesSection.card?.oldPrice && (
+                                                <span className="old-price-premium">
+                                                    De R$ {salesSection.card.oldPrice} por
+                                                </span>
+                                            )}
+                                            <div className="current-price-premium">
+                                                <span className="currency">R$</span>
+                                                <span className="amount">{salesSection.card?.currentPrice}</span>
+                                            </div>
+                                            <span className="installment-premium">{salesSection.card?.installmentInfo}</span>
+                                        </div>
+
+                                        {salesSection.card?.checkoutUrl && (
+                                            <a
+                                                href={salesSection.card.checkoutUrl}
+                                                className="checkout-button-premium"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                {salesSection.card.buttonText}
+                                            </a>
                                         )}
-                                        <div className="current-price-premium">
-                                            <span className="currency">R$</span>
-                                            <span className="amount">{salesSection.card?.currentPrice}</span>
-                                        </div>
-                                        <span className="installment-premium">{salesSection.card?.installmentInfo}</span>
-                                    </div>
 
-                                    {salesSection.card?.checkoutUrl && (
-                                        <a
-                                            href={salesSection.card.checkoutUrl}
-                                            className="checkout-button-premium"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                        >
-                                            {salesSection.card.buttonText}
-                                        </a>
-                                    )}
-
-                                    <div className="trust-badges-premium">
-                                        <div className="badge-p">
-                                            <ShieldCheck size={14} style={{ color: sectionStyles?.salesCardIconColor || '#ffd43b' }} />
-                                            <span>Compra Segura</span>
-                                        </div>
-                                        <div className="badge-p">
-                                            <ShieldCheck size={14} style={{ color: sectionStyles?.salesCardIconColor || '#ffd43b' }} />
-                                            <span>Satisfação Garantida</span>
-                                        </div>
-                                        <div className="badge-p">
-                                            <ShieldCheck size={14} style={{ color: sectionStyles?.salesCardIconColor || '#ffd43b' }} />
-                                            <span>Privacidade Protegida</span>
+                                        <div className="trust-badges-premium">
+                                            <div className="badge-p">
+                                                <ShieldCheck size={14} style={{ color: sectionStyles?.salesCardIconColor || '#ffd43b' }} />
+                                                <span>Compra Segura</span>
+                                            </div>
+                                            <div className="badge-p">
+                                                <ShieldCheck size={14} style={{ color: sectionStyles?.salesCardIconColor || '#ffd43b' }} />
+                                                <span>Satisfação Garantida</span>
+                                            </div>
+                                            <div className="badge-p">
+                                                <ShieldCheck size={14} style={{ color: sectionStyles?.salesCardIconColor || '#ffd43b' }} />
+                                                <span>Privacidade Protegida</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </section>
-            )}
+                    </section>
+                )
+            }
 
 
             {/* --- CUSTOM SECTIONS RENDERER --- */}
-            {(customSections || []).map((section) => (
-                <section
-                    key={section.id}
-                    id={section.id}
-                    className="dynamic-section"
-                    style={{
-                        backgroundColor: section.backgroundColor || '#ffffff',
-                        fontFamily: section.font || "'Inter', sans-serif",
-                        padding: '80px 20px',
-                        width: '100%',
-                        overflow: 'hidden'
-                    }}
-                >
-                    <div className="container" style={{ maxWidth: '1000px', margin: '0 auto' }}>
-                        <h2 style={{
-                            fontSize: '2.5rem',
-                            textAlign: 'center',
-                            marginBottom: '3rem',
-                            fontFamily: section.font || 'inherit',
-                            color: section.titleColor || '#1e293b'
-                        }}>
-                            {section.title}
-                        </h2>
+            {
+                (customSections || []).map((section) => (
+                    <section
+                        key={section.id}
+                        id={section.id}
+                        className="dynamic-section"
+                        style={{
+                            backgroundColor: section.backgroundColor || '#ffffff',
+                            fontFamily: section.font || "'Inter', sans-serif",
+                            padding: (section.type === 'galeria' || section.type === 'grade') ? '80px 0' : '80px 20px',
+                            width: '100%',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        {(section.type !== 'galeria' && section.type !== 'grade') ? (
+                            <div className="container" style={{ maxWidth: '1000px', margin: '0 auto' }}>
+                                <h2 style={{
+                                    fontSize: '2.5rem',
+                                    textAlign: 'center',
+                                    marginBottom: '3rem',
+                                    fontFamily: section.font || 'inherit',
+                                    color: section.titleColor || '#1e293b'
+                                }}>
+                                    {section.title}
+                                </h2>
 
-                        {section.type === 'text' && (
-                            <div
-                                className="rich-content"
-                                style={{
-                                    fontSize: '1.2rem',
-                                    lineHeight: '1.8',
-                                    color: section.textColor || '#475569'
-                                }}
-                                dangerouslySetInnerHTML={{ __html: section.content }}
-                            />
-                        )}
+                                {section.type === 'text' && (
+                                    <div
+                                        className="rich-content"
+                                        style={{
+                                            fontSize: '1.2rem',
+                                            lineHeight: '1.8',
+                                            color: section.textColor || '#475569'
+                                        }}
+                                        dangerouslySetInnerHTML={{ __html: section.content }}
+                                    />
+                                )}
 
-                        {section.type === 'venda' && (
-                            <div style={{ textAlign: 'center' }}>
-                                <p style={{ fontSize: '1.1rem', color: section.textColor || '#64748b', marginBottom: '2rem' }}>{section.subtitle}</p>
-                                <div className="pricing-card" style={{ maxWidth: '400px', margin: '0 auto', background: 'white', padding: '2rem', borderRadius: '16px' }}>
-                                    <h3>Oferta Especial</h3>
-                                    <div className="price" style={{ fontSize: '2rem', fontWeight: 'bold', margin: '1rem 0' }}>
-                                        Confira no Checkout
-                                    </div>
-                                    <a href="#sales" className="btn btn-primary" style={{ display: 'block', width: '100%' }} onClick={(e) => handleNavClick(e, '#sales')}>
-                                        Ver Oferta Completa
-                                    </a>
-                                </div>
-                            </div>
-                        )}
-
-                        {section.type === 'galeria' && (
-                            <div className="gallery-grid-public" style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                                gap: '30px',
-                                justifyContent: 'center'
-                            }}>
-                                {(section.items || []).map((item, idx) => (
-                                    <div key={idx} className="reveal" style={{
-                                        background: '#ffffff',
-                                        borderRadius: '24px',
-                                        boxShadow: '0 15px 35px rgba(0,0,0,0.06)',
-                                        border: '1px solid rgba(0,0,0,0.04)',
-                                        maxWidth: '400px',
-                                        margin: '0 auto',
-                                        width: '100%',
-                                        height: '350px',
-                                        overflow: 'hidden',
-                                        transition: 'transform 0.3s ease'
-                                    }}>
-                                        <div className="gallery-item-wrapper">
-                                            <img
-                                                src={item.src}
-                                                alt={`Galeria ${idx}`}
-                                                style={{
-                                                    width: '100%',
-                                                    height: '100%',
-                                                    objectFit: section.imageFit || 'cover',
-                                                    objectPosition: 'center center'
-                                                }}
-                                            />
-                                            {(item.title || item.description) && (
-                                                <div className="gallery-overlay">
-                                                    {item.title && <h4 className="gallery-overlay-title">{item.title}</h4>}
-                                                    {item.description && <p className="gallery-overlay-description">{item.description}</p>}
-                                                </div>
-                                            )}
+                                {section.type === 'venda' && (
+                                    <div style={{ textAlign: 'center' }}>
+                                        <p style={{ fontSize: '1.1rem', color: section.textColor || '#64748b', marginBottom: '2rem' }}>{section.subtitle}</p>
+                                        <div className="pricing-card" style={{ maxWidth: '400px', margin: '0 auto', background: 'white', padding: '2rem', borderRadius: '16px' }}>
+                                            <h3>Oferta Especial</h3>
+                                            <div className="price" style={{ fontSize: '2rem', fontWeight: 'bold', margin: '1rem 0' }}>
+                                                Confira no Checkout
+                                            </div>
+                                            <a href="#sales" className="btn btn-primary" style={{ display: 'block', width: '100%' }} onClick={(e) => handleNavClick(e, '#sales')}>
+                                                Ver Oferta Completa
+                                            </a>
                                         </div>
                                     </div>
-                                ))}
+                                )}
                             </div>
-                        )}
-
-                        {section.type === 'grade' && (
-                            <div className="grid-list-public" style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                                gap: '30px',
-                                alignItems: 'stretch',
-                                justifyContent: 'center'
-                            }}>
-                                {(section.items || []).map((item, idx) => (
-                                    <div key={idx} className="reveal-stagger" style={{
-                                        background: '#ffffff',
-                                        padding: '15px',
-                                        borderRadius: '24px',
-                                        boxShadow: '0 15px 35px rgba(0,0,0,0.06)',
-                                        border: '1px solid rgba(0,0,0,0.04)',
+                        ) : (
+                            <>
+                                <div className="container" style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 20px' }}>
+                                    <h2 style={{
+                                        fontSize: '2.5rem',
                                         textAlign: 'center',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        height: '100%',
-                                        maxWidth: '400px',
-                                        margin: '0 auto',
-                                        width: '100%'
+                                        marginBottom: '3rem',
+                                        fontFamily: section.font || 'inherit',
+                                        color: section.titleColor || '#1e293b'
                                     }}>
-                                        {item.image && (
-                                            <div className="grid-item-image" style={{
-                                                width: '100%',
-                                                height: '280px',
-                                                marginBottom: '20px',
-                                                borderRadius: '16px',
-                                                overflow: 'hidden',
-                                                background: '#f8fafc',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center'
-                                            }}>
-                                                <img
-                                                    src={item.image}
-                                                    alt={item.title}
-                                                    style={{
-                                                        width: '100%',
-                                                        height: '100%',
-                                                        objectFit: section.imageFit || 'cover',
-                                                        objectPosition: 'center center'
-                                                    }}
-                                                />
-                                            </div>
-                                        )}
-                                        <h3 style={{
-                                            fontSize: '1.6rem',
-                                            fontWeight: '700',
-                                            color: '#1e293b', // Grade cards are always white, need dark text
-                                            marginBottom: '15px',
-                                            fontFamily: section.font || 'inherit'
-                                        }}>
-                                            {item.title}
-                                        </h3>
-                                        <p style={{
-                                            color: '#64748b', // Grade cards are always white, need gray text
-                                            lineHeight: '1.7',
-                                            fontSize: '1.05rem',
-                                            margin: 0
-                                        }}>
-                                            {item.description}
-                                        </p>
+                                        {section.title}
+                                    </h2>
+                                </div>
+
+                                {section.type === 'galeria' && (
+                                    <div className="carousel-container">
+                                        <div className="carousel-track">
+                                            {/* Duplicate content for seamless infinite scroll */}
+                                            {[...(section.items || []), ...(section.items || [])].map((item, idx) => (
+                                                <div key={idx} className={`carousel-item ${item.orientation || 'portrait'}`} style={{
+                                                    background: '#ffffff',
+                                                    borderRadius: '24px',
+                                                    boxShadow: '0 15px 35px rgba(0,0,0,0.06)',
+                                                    border: '1px solid rgba(0,0,0,0.04)',
+                                                    overflow: 'hidden',
+                                                    height: '350px'
+                                                }}>
+                                                    <div className="gallery-item-wrapper" style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+                                                        <img
+                                                            src={item.src}
+                                                            alt={`Galeria ${idx}`}
+                                                            style={item.cropW ? {
+                                                                position: 'absolute',
+                                                                width: `${100 / item.cropW * 100}%`,
+                                                                height: `${100 / item.cropH * 100}%`,
+                                                                top: `${-item.cropY * (100 / item.cropH)}%`,
+                                                                left: `${-item.cropX * (100 / item.cropW)}%`,
+                                                                objectFit: 'cover'
+                                                            } : {
+                                                                width: '100%',
+                                                                height: '100%',
+                                                                objectFit: section.imageFit || 'cover',
+                                                                objectPosition: 'center center'
+                                                            }}
+                                                        />
+                                                        {(item.title || item.description) && (
+                                                            <div className="gallery-overlay">
+                                                                {item.title && <h4 className="gallery-overlay-title">{item.title}</h4>}
+                                                                {item.description && <p className="gallery-overlay-description">{item.description}</p>}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                ))}
-                            </div>
+                                )}
+
+                                {section.type === 'grade' && (
+                                    <div className="carousel-container">
+                                        <div className="carousel-track">
+                                            {/* Duplicate content for seamless infinite scroll */}
+                                            {[...(section.items || []), ...(section.items || [])].map((item, idx) => (
+                                                <div key={idx} className="carousel-item portrait" style={{
+                                                    background: '#ffffff',
+                                                    padding: '15px',
+                                                    borderRadius: '24px',
+                                                    boxShadow: '0 15px 35px rgba(0,0,0,0.06)',
+                                                    border: '1px solid rgba(0,0,0,0.04)',
+                                                    textAlign: 'center',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center',
+                                                    height: '420px', // Slightly taller to accommodate text
+                                                    overflow: 'hidden'
+                                                }}>
+                                                    {item.image && (
+                                                        <div className="grid-item-image" style={{
+                                                            width: '100%',
+                                                            height: '220px', // Adjusted height within carousel
+                                                            marginBottom: '15px',
+                                                            borderRadius: '16px',
+                                                            overflow: 'hidden',
+                                                            background: '#f8fafc',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            position: 'relative'
+                                                        }}>
+                                                            <img
+                                                                src={item.image}
+                                                                alt={item.title}
+                                                                style={item.cropW ? {
+                                                                    position: 'absolute',
+                                                                    width: `${100 / item.cropW * 100}%`,
+                                                                    height: `${100 / item.cropH * 100}%`,
+                                                                    top: `${-item.cropY * (100 / item.cropH)}%`,
+                                                                    left: `${-item.cropX * (100 / item.cropW)}%`,
+                                                                    objectFit: 'cover'
+                                                                } : {
+                                                                    width: '100%',
+                                                                    height: '100%',
+                                                                    objectFit: section.imageFit || 'cover',
+                                                                    objectPosition: 'center center'
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                    <h3 style={{
+                                                        fontSize: '1.4rem',
+                                                        fontWeight: '700',
+                                                        color: '#1e293b',
+                                                        marginBottom: '10px',
+                                                        fontFamily: section.font || 'inherit'
+                                                    }}>
+                                                        {item.title}
+                                                    </h3>
+                                                    <p style={{
+                                                        color: '#64748b',
+                                                        lineHeight: '1.6',
+                                                        fontSize: '0.95rem',
+                                                        margin: 0,
+                                                        display: '-webkit-box',
+                                                        WebkitLineClamp: 4,
+                                                        WebkitBoxOrient: 'vertical',
+                                                        overflow: 'hidden'
+                                                    }}>
+                                                        {item.description}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </>
                         )}
-                    </div>
-                </section>
-            ))}
+                    </section>
+                ))
+            }
 
             <footer
                 className="footer"
@@ -657,7 +733,7 @@ const LandingPage = () => {
                     </a>
                 </div>
             </footer>
-        </div>
+        </div >
     );
 };
 

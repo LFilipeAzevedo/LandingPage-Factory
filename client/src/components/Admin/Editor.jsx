@@ -5,9 +5,76 @@ import { useNavigate } from 'react-router-dom';
 import './Editor.css';
 import { LogOut, Save, Layout, Type, Image as ImageIcon, TrendingUp, ShoppingBag, CheckCircle, Plus, Trash2, ShieldCheck, Users, Activity, Globe, Search, Layers, List, CreditCard } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import Cropper from 'react-easy-crop';
 import ColorPicker from './ColorPicker';
 import RichTextEditor from './RichTextEditor';
 import FontSelector from './FontSelector';
+
+const ImageCropperModal = ({ image, initialCrop, initialZoom, onSave, onCancel }) => {
+    const [crop, setCrop] = useState(initialCrop || { x: 0, y: 0 });
+    const [zoom, setZoom] = useState(initialZoom || 1);
+    const [croppedArea, setCroppedArea] = useState(null);
+
+    const onCropComplete = (croppedArea, croppedAreaPixels) => {
+        setCroppedArea(croppedArea);
+    };
+
+    return (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+            <div style={{ position: 'relative', width: '100%', maxWidth: '600px', height: '400px', background: '#334155', borderRadius: '12px', overflow: 'hidden' }}>
+                <Cropper
+                    image={image}
+                    crop={crop}
+                    zoom={zoom}
+                    aspect={370 / 280}
+                    onCropChange={setCrop}
+                    onZoomChange={setZoom}
+                    onCropComplete={onCropComplete}
+                />
+            </div>
+            <div style={{ width: '100%', maxWidth: '600px', padding: '20px', background: 'white', borderRadius: '0 0 12px 12px' }}>
+                <div className="form-group" style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        Zoom <span>{zoom.toFixed(1)}x</span>
+                    </label>
+                    <input
+                        type="range"
+                        min={1}
+                        max={3}
+                        step={0.1}
+                        value={zoom}
+                        onChange={(e) => setZoom(parseFloat(e.target.value))}
+                        style={{ width: '100%', cursor: 'pointer' }}
+                    />
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button onClick={onCancel} className="btn btn-secondary" style={{ flex: 1 }}>Cancelar</button>
+                    <button
+                        onClick={() => {
+                            if (croppedArea) {
+                                onSave({
+                                    zoom,
+                                    cropX: croppedArea.x,
+                                    cropY: croppedArea.y,
+                                    cropW: croppedArea.width,
+                                    cropH: croppedArea.height,
+                                    rawCrop: crop
+                                });
+                            }
+                        }}
+                        className="btn btn-primary"
+                        style={{ flex: 1, background: '#2563eb' }}
+                    >
+                        Confirmar Ajuste
+                    </button>
+                </div>
+                <p style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '15px', textAlign: 'center' }}>
+                    Arraste a imagem para posicionar e use o slider para dar zoom.
+                </p>
+            </div>
+        </div>
+    );
+};
 
 const LockedFeature = ({ title, requiredTier, currentTier, children }) => {
     const navigate = useNavigate();
@@ -86,6 +153,7 @@ const Editor = () => {
     const { logout, user } = useAuth();
     const userTier = user?.plan_tier || 'basic'; // Fix: Define userTier
     const navigate = useNavigate();
+    const [editingImage, setEditingImage] = useState(null); // { src, sectionId, index, field, initialCrop, initialZoom }
     const [content, setContent] = useState(null);
     const [pageSlug, setPageSlug] = useState('home');
     const [loading, setLoading] = useState(true);
@@ -451,6 +519,66 @@ const Editor = () => {
 
     const addItem = (listName, template) => {
         setContent(prev => ({ ...prev, [listName]: [...prev[listName], template] }));
+    };
+
+    const handleCropSave = (cropData) => {
+        if (!editingImage) return;
+        const { sectionId, index, field, isNativeList } = editingImage;
+
+        setContent(prev => {
+            // Case 1: Hero or Logo (Direct fields in content)
+            if (field === 'heroImage' || field === 'logo') {
+                const settingsField = field === 'heroImage' ? 'heroImageSettings' : 'logoSettings';
+                return {
+                    ...prev,
+                    [settingsField]: {
+                        ...prev[settingsField] || {},
+                        cropX: cropData.cropX,
+                        cropY: cropData.cropY,
+                        cropW: cropData.cropW,
+                        cropH: cropData.cropH,
+                        zoom: cropData.zoom,
+                        crop: cropData.rawCrop
+                    }
+                };
+            }
+
+            // Case 2: Native Lists (events, stations)
+            if (isNativeList) {
+                const newList = [...(prev[field] || [])];
+                newList[index] = {
+                    ...newList[index],
+                    cropX: cropData.cropX,
+                    cropY: cropData.cropY,
+                    cropW: cropData.cropW,
+                    cropH: cropData.cropH,
+                    zoom: cropData.zoom,
+                    crop: cropData.rawCrop
+                };
+                return { ...prev, [field]: newList };
+            }
+
+            // Case 3: Custom Sections
+            const newSections = prev.customSections.map(s => {
+                if (s.id === sectionId) {
+                    const newItems = [...(s.items || [])];
+                    newItems[index] = {
+                        ...newItems[index],
+                        cropX: cropData.cropX,
+                        cropY: cropData.cropY,
+                        cropW: cropData.cropW,
+                        cropH: cropData.cropH,
+                        zoom: cropData.zoom,
+                        crop: cropData.rawCrop
+                    };
+                    return { ...s, items: newItems };
+                }
+                return s;
+            });
+            return { ...prev, customSections: newSections };
+        });
+        setEditingImage(null);
+        showToast('Enquadramento salvo!');
     };
 
     const removeItem = (listName, index) => {
@@ -1059,8 +1187,40 @@ const Editor = () => {
                                                 disabled={uploading}
                                             />
                                             {content.heroImage && (
-                                                <div style={{ marginTop: '1rem' }}>
-                                                    <img src={content.heroImage} alt="Preview" className="image-preview" style={{ height: '150px', objectFit: 'cover' }} />
+                                                <div style={{ marginTop: '1rem', position: 'relative', display: 'inline-block', width: '100%', maxWidth: '300px' }}>
+                                                    <div style={{ width: '100%', height: '150px', position: 'relative', overflow: 'hidden', borderRadius: '8px', background: '#f1f5f9' }}>
+                                                        <img
+                                                            src={content.heroImage}
+                                                            alt="Preview"
+                                                            style={content.heroImageSettings?.cropW ? {
+                                                                position: 'absolute',
+                                                                width: `${100 / content.heroImageSettings.cropW * 100}%`,
+                                                                height: `${100 / content.heroImageSettings.cropH * 100}%`,
+                                                                top: `${-content.heroImageSettings.cropY * (100 / content.heroImageSettings.cropH)}%`,
+                                                                left: `${-content.heroImageSettings.cropX * (100 / content.heroImageSettings.cropW)}%`,
+                                                                objectFit: 'cover'
+                                                            } : {
+                                                                width: '100%',
+                                                                height: '100%',
+                                                                objectFit: 'contain'
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            setEditingImage({
+                                                                src: content.heroImage,
+                                                                field: 'heroImage',
+                                                                initialCrop: content.heroImageSettings?.crop,
+                                                                initialZoom: content.heroImageSettings?.zoom
+                                                            });
+                                                        }}
+                                                        className="btn btn-secondary"
+                                                        style={{ position: 'absolute', bottom: '10px', right: '10px', fontSize: '0.75rem', padding: '4px 8px', display: 'flex', alignItems: 'center', gap: '5px', zIndex: 5 }}
+                                                    >
+                                                        <Layout size={14} /> Ajustar
+                                                    </button>
                                                 </div>
                                             )}
                                         </div>
@@ -1081,8 +1241,24 @@ const Editor = () => {
                                                     disabled={uploading}
                                                 />
                                                 {content.logo && (
-                                                    <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: '#e2e8f0', borderRadius: '4px', display: 'inline-block' }}>
+                                                    <div style={{ marginTop: '0.5rem', padding: '10px', background: '#e2e8f0', borderRadius: '8px', display: 'inline-block', position: 'relative' }}>
                                                         <img src={content.logo} alt="Logo" style={{ height: '40px' }} />
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                setEditingImage({
+                                                                    src: content.logo,
+                                                                    field: 'logo',
+                                                                    initialCrop: content.logoSettings?.crop,
+                                                                    initialZoom: content.logoSettings?.zoom
+                                                                });
+                                                            }}
+                                                            className="btn btn-secondary"
+                                                            style={{ position: 'absolute', top: '-5px', right: '-5px', padding: '4px', borderRadius: '50%', minWidth: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                            title="Ajustar Enquadramento"
+                                                        >
+                                                            <Layout size={10} />
+                                                        </button>
                                                     </div>
                                                 )}
                                             </div>
@@ -1226,7 +1402,45 @@ const Editor = () => {
                                                 <div className="form-group">
                                                     <label>Imagem</label>
                                                     <input type="file" accept="image/*" onChange={(e) => handleListImageUpload(e, 'events', index)} className="input" />
-                                                    {event.image && <img src={event.image} alt="Preview" className="image-preview" style={{ height: '80px', objectFit: 'contain' }} />}
+                                                    {event.image && (
+                                                        <div style={{ position: 'relative', display: 'inline-block', marginTop: '0.5rem', width: '140px' }}>
+                                                            <div style={{ width: '100%', height: '80px', position: 'relative', overflow: 'hidden', background: '#f1f5f9', borderRadius: '4px' }}>
+                                                                <img
+                                                                    src={event.image}
+                                                                    alt="Preview"
+                                                                    style={event.cropW ? {
+                                                                        position: 'absolute',
+                                                                        width: `${100 / event.cropW * 100}%`,
+                                                                        height: `${100 / event.cropH * 100}%`,
+                                                                        top: `${-event.cropY * (100 / event.cropH)}%`,
+                                                                        left: `${-event.cropX * (100 / event.cropW)}%`,
+                                                                        objectFit: 'cover'
+                                                                    } : {
+                                                                        width: '100%',
+                                                                        height: '100%',
+                                                                        objectFit: 'contain'
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    setEditingImage({
+                                                                        src: event.image,
+                                                                        field: 'events',
+                                                                        index: index,
+                                                                        isNativeList: true,
+                                                                        initialCrop: event.crop,
+                                                                        initialZoom: event.zoom
+                                                                    });
+                                                                }}
+                                                                className="btn btn-secondary"
+                                                                style={{ position: 'absolute', bottom: '5px', right: '5px', padding: '2px 4px', fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: '3px', zIndex: 5 }}
+                                                            >
+                                                                <Layout size={10} /> Ajustar
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="form-group">
                                                     <label>Descrição</label>
@@ -1308,7 +1522,45 @@ const Editor = () => {
                                                 <div className="form-group">
                                                     <label>Ícone / Imagem</label>
                                                     <input type="file" accept="image/*" onChange={(e) => handleListImageUpload(e, 'stations', index)} className="input" />
-                                                    {station.image && <img src={station.image} alt="Preview" className="image-preview" style={{ height: '80px', objectFit: 'contain' }} />}
+                                                    {station.image && (
+                                                        <div style={{ position: 'relative', display: 'inline-block', marginTop: '0.5rem', width: '140px' }}>
+                                                            <div style={{ width: '100%', height: '80px', position: 'relative', overflow: 'hidden', background: '#f1f5f9', borderRadius: '4px' }}>
+                                                                <img
+                                                                    src={station.image}
+                                                                    alt="Preview"
+                                                                    style={station.cropW ? {
+                                                                        position: 'absolute',
+                                                                        width: `${100 / station.cropW * 100}%`,
+                                                                        height: `${100 / station.cropH * 100}%`,
+                                                                        top: `${-station.cropY * (100 / station.cropH)}%`,
+                                                                        left: `${-station.cropX * (100 / station.cropW)}%`,
+                                                                        objectFit: 'cover'
+                                                                    } : {
+                                                                        width: '100%',
+                                                                        height: '100%',
+                                                                        objectFit: 'contain'
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    setEditingImage({
+                                                                        src: station.image,
+                                                                        field: 'stations',
+                                                                        index: index,
+                                                                        isNativeList: true,
+                                                                        initialCrop: station.crop,
+                                                                        initialZoom: station.zoom
+                                                                    });
+                                                                }}
+                                                                className="btn btn-secondary"
+                                                                style={{ position: 'absolute', bottom: '5px', right: '5px', padding: '2px 4px', fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: '3px', zIndex: 5 }}
+                                                            >
+                                                                <Layout size={10} /> Ajustar
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="form-group">
                                                     <label>Título</label>
@@ -1674,16 +1926,56 @@ const Editor = () => {
                                                             {(section.items || []).map((item, idx) => (
                                                                 <div key={idx} style={{ position: 'relative', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', background: 'white', padding: '5px' }}>
                                                                     <div style={{ position: 'relative', width: '100%', height: '100px', borderRadius: '8px', overflow: 'hidden', background: '#f1f5f9' }}>
-                                                                        <img
-                                                                            src={item.src || 'https://via.placeholder.com/150'}
-                                                                            alt="Item"
-                                                                            style={{
-                                                                                width: '100%',
-                                                                                height: '100%',
-                                                                                objectFit: 'cover',
-                                                                                objectPosition: `${item.posX || 50}% ${item.posY || 50}%`
+                                                                        <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+                                                                            <img
+                                                                                src={item.src || 'https://via.placeholder.com/150'}
+                                                                                alt="Item"
+                                                                                style={item.cropW ? {
+                                                                                    position: 'absolute',
+                                                                                    width: `${100 / item.cropW * 100}%`,
+                                                                                    height: `${100 / item.cropH * 100}%`,
+                                                                                    top: `${-item.cropY * (100 / item.cropH)}%`,
+                                                                                    left: `${-item.cropX * (100 / item.cropW)}%`,
+                                                                                    objectFit: 'cover'
+                                                                                } : {
+                                                                                    width: '100%',
+                                                                                    height: '100%',
+                                                                                    objectFit: 'cover'
+                                                                                }}
+                                                                            />
+                                                                        </div>
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.preventDefault();
+                                                                                setEditingImage({
+                                                                                    src: item.src,
+                                                                                    sectionId: section.id,
+                                                                                    index: idx,
+                                                                                    initialCrop: item.crop,
+                                                                                    initialZoom: item.zoom
+                                                                                });
                                                                             }}
-                                                                        />
+                                                                            style={{
+                                                                                position: 'absolute',
+                                                                                bottom: 5,
+                                                                                left: 5,
+                                                                                background: 'rgba(255,255,255,0.9)',
+                                                                                color: '#0f172a',
+                                                                                border: 'none',
+                                                                                borderRadius: '6px',
+                                                                                padding: '4px 8px',
+                                                                                fontSize: '0.65rem',
+                                                                                fontWeight: 'bold',
+                                                                                cursor: 'pointer',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                gap: '4px',
+                                                                                boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+                                                                                zIndex: 10
+                                                                            }}
+                                                                        >
+                                                                            <Layout size={10} /> Ajustar
+                                                                        </button>
                                                                         <button
                                                                             onClick={(e) => {
                                                                                 e.preventDefault();
@@ -1757,16 +2049,56 @@ const Editor = () => {
                                                                     <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flex: 1 }}>
                                                                         <div className="item-image-upload" style={{ width: '100px', height: '120px', position: 'relative', background: 'white', borderRadius: '10px', overflow: 'hidden', cursor: 'pointer', border: '1px solid #cbd5e1' }}>
                                                                             {item.image ? (
-                                                                                <img
-                                                                                    src={item.image}
-                                                                                    alt="Preview"
-                                                                                    style={{
-                                                                                        width: '100%',
-                                                                                        height: '100%',
-                                                                                        objectFit: 'cover',
-                                                                                        objectPosition: `${item.posX || 50}% ${item.posY || 50}%`
-                                                                                    }}
-                                                                                />
+                                                                                <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+                                                                                    <img
+                                                                                        src={item.image}
+                                                                                        alt="Preview"
+                                                                                        style={item.cropW ? {
+                                                                                            position: 'absolute',
+                                                                                            width: `${100 / item.cropW * 100}%`,
+                                                                                            height: `${100 / item.cropH * 100}%`,
+                                                                                            top: `${-item.cropY * (100 / item.cropH)}%`,
+                                                                                            left: `${-item.cropX * (100 / item.cropW)}%`,
+                                                                                            objectFit: 'cover'
+                                                                                        } : {
+                                                                                            width: '100%',
+                                                                                            height: '100%',
+                                                                                            objectFit: 'cover'
+                                                                                        }}
+                                                                                    />
+                                                                                    <button
+                                                                                        onClick={(e) => {
+                                                                                            e.preventDefault();
+                                                                                            setEditingImage({
+                                                                                                src: item.image,
+                                                                                                sectionId: section.id,
+                                                                                                index: idx,
+                                                                                                initialCrop: item.crop,
+                                                                                                initialZoom: item.zoom
+                                                                                            });
+                                                                                        }}
+                                                                                        style={{
+                                                                                            position: 'absolute',
+                                                                                            bottom: 5,
+                                                                                            left: 5,
+                                                                                            background: 'rgba(255,255,255,0.9)',
+                                                                                            color: '#0f172a',
+                                                                                            border: 'none',
+                                                                                            borderRadius: '6px',
+                                                                                            padding: '4px 8px',
+                                                                                            fontSize: '0.65rem',
+                                                                                            fontWeight: 'bold',
+                                                                                            cursor: 'pointer',
+                                                                                            display: 'flex',
+                                                                                            alignItems: 'center',
+                                                                                            gap: '4px',
+                                                                                            boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+                                                                                            zIndex: 10
+                                                                                        }}
+                                                                                    >
+                                                                                        <Layout size={10} /> Ajustar
+                                                                                    </button>
+                                                                                </div>
                                                                             ) : (
                                                                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><ImageIcon size={24} color="#64748b" /></div>
                                                                             )}
@@ -2025,6 +2357,16 @@ const Editor = () => {
                     </div>
                 )
             }
+
+            {editingImage && (
+                <ImageCropperModal
+                    image={editingImage.src}
+                    initialCrop={editingImage.initialCrop}
+                    initialZoom={editingImage.initialZoom}
+                    onSave={handleCropSave}
+                    onCancel={() => setEditingImage(null)}
+                />
+            )}
 
             <div className="toast-container">
                 {toasts.map(toast => (
