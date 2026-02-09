@@ -10,7 +10,7 @@ import ColorPicker from './ColorPicker';
 import RichTextEditor from './RichTextEditor';
 import FontSelector from './FontSelector';
 
-const ImageCropperModal = ({ image, initialCrop, initialZoom, onSave, onCancel }) => {
+const ImageCropperModal = ({ image, initialCrop, initialZoom, aspect, onSave, onCancel }) => {
     const [crop, setCrop] = useState(initialCrop || { x: 0, y: 0 });
     const [zoom, setZoom] = useState(initialZoom || 1);
     const [croppedArea, setCroppedArea] = useState(null);
@@ -26,7 +26,7 @@ const ImageCropperModal = ({ image, initialCrop, initialZoom, onSave, onCancel }
                     image={image}
                     crop={crop}
                     zoom={zoom}
-                    aspect={370 / 280}
+                    aspect={aspect || 370 / 280}
                     onCropChange={setCrop}
                     onZoomChange={setZoom}
                     onCropComplete={onCropComplete}
@@ -1213,7 +1213,8 @@ const Editor = () => {
                                                                 src: content.heroImage,
                                                                 field: 'heroImage',
                                                                 initialCrop: content.heroImageSettings?.crop,
-                                                                initialZoom: content.heroImageSettings?.zoom
+                                                                initialZoom: content.heroImageSettings?.zoom,
+                                                                aspect: 1920 / 1080
                                                             });
                                                         }}
                                                         className="btn btn-secondary"
@@ -1250,7 +1251,8 @@ const Editor = () => {
                                                                     src: content.logo,
                                                                     field: 'logo',
                                                                     initialCrop: content.logoSettings?.crop,
-                                                                    initialZoom: content.logoSettings?.zoom
+                                                                    initialZoom: content.logoSettings?.zoom,
+                                                                    aspect: 250 / 100
                                                                 });
                                                             }}
                                                             className="btn btn-secondary"
@@ -1431,7 +1433,8 @@ const Editor = () => {
                                                                         index: index,
                                                                         isNativeList: true,
                                                                         initialCrop: event.crop,
-                                                                        initialZoom: event.zoom
+                                                                        initialZoom: event.zoom,
+                                                                        aspect: event.orientation === 'landscape' ? 600 / 350 : 300 / 350
                                                                     });
                                                                 }}
                                                                 className="btn btn-secondary"
@@ -1551,7 +1554,8 @@ const Editor = () => {
                                                                         index: index,
                                                                         isNativeList: true,
                                                                         initialCrop: station.crop,
-                                                                        initialZoom: station.zoom
+                                                                        initialZoom: station.zoom,
+                                                                        aspect: station.orientation === 'landscape' ? 600 / 350 : 300 / 350
                                                                     });
                                                                 }}
                                                                 className="btn btn-secondary"
@@ -1952,7 +1956,8 @@ const Editor = () => {
                                                                                     sectionId: section.id,
                                                                                     index: idx,
                                                                                     initialCrop: item.crop,
-                                                                                    initialZoom: item.zoom
+                                                                                    initialZoom: item.zoom,
+                                                                                    aspect: item.orientation === 'landscape' ? 600 / 350 : 300 / 350
                                                                                 });
                                                                             }}
                                                                             style={{
@@ -2074,7 +2079,8 @@ const Editor = () => {
                                                                                                 sectionId: section.id,
                                                                                                 index: idx,
                                                                                                 initialCrop: item.crop,
-                                                                                                initialZoom: item.zoom
+                                                                                                initialZoom: item.zoom,
+                                                                                                aspect: 370 / 280 // Fixed aspect for grid items
                                                                                             });
                                                                                         }}
                                                                                         style={{
