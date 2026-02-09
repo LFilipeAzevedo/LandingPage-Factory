@@ -244,35 +244,23 @@ const LandingPage = () => {
                                     overflow: 'hidden',
                                     border: '1px solid rgba(0,0,0,0.04)',
                                     display: 'flex',
-                                    flexDirection: 'column'
+                                    flexDirection: 'column',
+                                    height: '350px'
                                 }}>
-                                    <div style={{
-                                        height: '280px',
-                                        width: '100%',
-                                        background: '#f8fafc',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
-                                    }}>
+                                    <div className="gallery-item-wrapper">
                                         <img
                                             src={event.image}
                                             alt={`Evento ${index + 1}`}
                                             style={{
                                                 width: '100%',
                                                 height: '100%',
-                                                objectFit: 'contain',
+                                                objectFit: content.eventsImageFit || 'cover',
                                                 objectPosition: 'center'
                                             }}
                                         />
-                                    </div>
-                                    <div className="carousel-caption" style={{
-                                        position: 'static',
-                                        background: 'white',
-                                        padding: '20px',
-                                        transform: 'none',
-                                        opacity: 1
-                                    }}>
-                                        <p style={{ color: '#64748b', margin: 0, fontSize: '0.95rem', fontWeight: '500' }}>{event.description}</p>
+                                        <div className="gallery-overlay">
+                                            {event.description && <p className="gallery-overlay-description" style={{ fontSize: '1.1rem' }}>{event.description}</p>}
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -298,19 +286,11 @@ const LandingPage = () => {
                                             border: '1px solid rgba(0,0,0,0.04)',
                                             display: 'flex',
                                             flexDirection: 'column',
-                                            overflow: 'hidden'
+                                            overflow: 'hidden',
+                                            height: '350px'
                                         }}
                                     >
-                                        <div
-                                            className="station-image-wrapper"
-                                            style={{
-                                                backgroundColor: '#f8fafc',
-                                                height: '280px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center'
-                                            }}
-                                        >
+                                        <div className="gallery-item-wrapper">
                                             {station.image && (
                                                 <img
                                                     src={station.image}
@@ -319,15 +299,15 @@ const LandingPage = () => {
                                                     style={{
                                                         width: '100%',
                                                         height: '100%',
-                                                        objectFit: 'contain',
+                                                        objectFit: content.stationsImageFit || 'cover',
                                                         objectPosition: 'center'
                                                     }}
                                                 />
                                             )}
-                                        </div>
-                                        <div className="station-content" style={{ padding: '20px' }}>
-                                            <h3 style={{ color: '#1e293b', marginTop: 0, fontSize: '1.25rem' }}>{station.title}</h3>
-                                            <p style={{ color: '#64748b', margin: 0, fontSize: '0.95rem', opacity: 1 }}>{station.description}</p>
+                                            <div className="gallery-overlay">
+                                                {station.title && <h4 className="gallery-overlay-title">{station.title}</h4>}
+                                                {station.description && <p className="gallery-overlay-description">{station.description}</p>}
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -541,7 +521,7 @@ const LandingPage = () => {
                                         maxWidth: '400px',
                                         margin: '0 auto',
                                         width: '100%',
-                                        height: '280px',
+                                        height: '350px',
                                         overflow: 'hidden',
                                         transition: 'transform 0.3s ease'
                                     }}>

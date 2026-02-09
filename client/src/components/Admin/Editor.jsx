@@ -1181,6 +1181,19 @@ const Editor = () => {
                                         </button>
                                     </div>
 
+                                    <div className="form-group" style={{ marginBottom: '1.5rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                                        <label style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>Ajuste das Fotos (Premium)</label>
+                                        <select
+                                            value={content.eventsImageFit || 'cover'}
+                                            onChange={(e) => setContent(prev => ({ ...prev, eventsImageFit: e.target.value }))}
+                                            className="input"
+                                            style={{ maxWidth: '300px' }}
+                                        >
+                                            <option value="cover">Preencher Espaço (Zoom - Recomendado)</option>
+                                            <option value="contain">Mostrar Foto Inteira (Pode gerar bordas)</option>
+                                        </select>
+                                    </div>
+
                                     <div className="form-group" style={{ marginBottom: '2rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px' }}>
                                         <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem' }}>Aparência {['static', 'basic'].includes(user?.plan_tier) && <span style={{ fontSize: '0.7em', color: '#f59e0b' }}>(Premium)</span>}</h4>
                                         {!['static', 'basic'].includes(user?.plan_tier) ? (
@@ -1248,6 +1261,19 @@ const Editor = () => {
                                         <button onClick={() => addItem('stations', { image: '', title: '', description: '', imageFit: 'contain' })} className="btn btn-secondary" style={{ marginLeft: '1rem' }}>
                                             + Novo Serviço
                                         </button>
+                                    </div>
+
+                                    <div className="form-group" style={{ marginBottom: '1.5rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                                        <label style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>Ajuste das Fotos (Premium)</label>
+                                        <select
+                                            value={content.stationsImageFit || 'cover'}
+                                            onChange={(e) => setContent(prev => ({ ...prev, stationsImageFit: e.target.value }))}
+                                            className="input"
+                                            style={{ maxWidth: '300px' }}
+                                        >
+                                            <option value="cover">Preencher Espaço (Zoom - Recomendado)</option>
+                                            <option value="contain">Mostrar Foto Inteira (Pode gerar bordas)</option>
+                                        </select>
                                     </div>
 
                                     <div className="form-group" style={{ marginBottom: '2rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px' }}>
