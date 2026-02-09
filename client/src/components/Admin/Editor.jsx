@@ -854,7 +854,7 @@ const Editor = () => {
                                 className="nav-item"
                                 onClick={() => navigate('/admin/plans')}
                             >
-                                <ShieldCheck size={16} /> Meu Plano ({user?.plan_tier === 'premium' ? 'Premium' : 'Gratuito'})
+                                <ShieldCheck size={16} /> Meu Plano ({user?.plan_tier === 'adm_server' ? 'Super ADM' : (user?.plan_tier === 'premium' ? 'Premium' : 'Gratuito')})
                             </button>
                         </div>
                     </div>
