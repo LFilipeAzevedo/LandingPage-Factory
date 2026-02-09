@@ -237,17 +237,42 @@ const LandingPage = () => {
                         <div className="carousel-track">
                             {/* Duplicate content for seamless infinite scroll */}
                             {[...content.events, ...content.events].map((event, index) => (
-                                <div key={index} className={`carousel-item ${event.orientation || 'portrait'}`}>
-                                    <img
-                                        src={event.image}
-                                        alt={`Evento ${index + 1}`}
-                                        style={{
-                                            objectFit: 'contain',
-                                            objectPosition: 'center'
-                                        }}
-                                    />
-                                    <div className="carousel-caption">
-                                        <p style={{ color: sectionStyles.eventsTitleColor }}>{event.description}</p>
+                                <div key={index} className={`carousel-item ${event.orientation || 'portrait'}`} style={{
+                                    background: '#ffffff',
+                                    borderRadius: '24px',
+                                    boxShadow: '0 15px 35px rgba(0,0,0,0.06)',
+                                    overflow: 'hidden',
+                                    border: '1px solid rgba(0,0,0,0.04)',
+                                    display: 'flex',
+                                    flexDirection: 'column'
+                                }}>
+                                    <div style={{
+                                        height: '280px',
+                                        width: '100%',
+                                        background: '#f8fafc',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}>
+                                        <img
+                                            src={event.image}
+                                            alt={`Evento ${index + 1}`}
+                                            style={{
+                                                width: '100%',
+                                                height: '100%',
+                                                objectFit: 'contain',
+                                                objectPosition: 'center'
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="carousel-caption" style={{
+                                        position: 'static',
+                                        background: 'white',
+                                        padding: '20px',
+                                        transform: 'none',
+                                        opacity: 1
+                                    }}>
+                                        <p style={{ color: '#64748b', margin: 0, fontSize: '0.95rem', fontWeight: '500' }}>{event.description}</p>
                                     </div>
                                 </div>
                             ))}
@@ -267,14 +292,24 @@ const LandingPage = () => {
                                         key={index}
                                         className={`carousel-item station-card-carousel ${station.orientation || 'portrait'}`}
                                         style={{
-                                            backgroundColor: sectionStyles.stationsBackground,
-                                            borderColor: sectionStyles.stationsTitleColor + '20', // 20 is low opacity in hex
-                                            boxShadow: sectionStyles.stationsBackground === '#ffffff' ? undefined : 'none'
+                                            backgroundColor: '#ffffff',
+                                            borderRadius: '24px',
+                                            boxShadow: '0 15px 35px rgba(0,0,0,0.06)',
+                                            border: '1px solid rgba(0,0,0,0.04)',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            overflow: 'hidden'
                                         }}
                                     >
                                         <div
                                             className="station-image-wrapper"
-                                            style={{ backgroundColor: 'transparent' }}
+                                            style={{
+                                                backgroundColor: '#f8fafc',
+                                                height: '280px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center'
+                                            }}
                                         >
                                             {station.image && (
                                                 <img
@@ -282,15 +317,17 @@ const LandingPage = () => {
                                                     alt={station.title}
                                                     className="station-image"
                                                     style={{
+                                                        width: '100%',
+                                                        height: '100%',
                                                         objectFit: 'contain',
                                                         objectPosition: 'center'
                                                     }}
                                                 />
                                             )}
                                         </div>
-                                        <div className="station-content">
-                                            <h3 style={{ color: sectionStyles.stationsTitleColor }}>{station.title}</h3>
-                                            <p style={{ color: sectionStyles.stationsTitleColor, opacity: 0.9 }}>{station.description}</p>
+                                        <div className="station-content" style={{ padding: '20px' }}>
+                                            <h3 style={{ color: '#1e293b', marginTop: 0, fontSize: '1.25rem' }}>{station.title}</h3>
+                                            <p style={{ color: '#64748b', margin: 0, fontSize: '0.95rem', opacity: 1 }}>{station.description}</p>
                                         </div>
                                     </div>
                                 ))}
