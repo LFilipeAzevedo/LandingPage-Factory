@@ -535,25 +535,17 @@ const LandingPage = () => {
                                 {(section.items || []).map((item, idx) => (
                                     <div key={idx} className="reveal" style={{
                                         background: '#ffffff',
-                                        padding: '15px',
                                         borderRadius: '24px',
                                         boxShadow: '0 15px 35px rgba(0,0,0,0.06)',
                                         border: '1px solid rgba(0,0,0,0.04)',
                                         maxWidth: '400px',
                                         margin: '0 auto',
                                         width: '100%',
+                                        height: '280px',
+                                        overflow: 'hidden',
                                         transition: 'transform 0.3s ease'
                                     }}>
-                                        <div style={{
-                                            borderRadius: '16px',
-                                            overflow: 'hidden',
-                                            background: '#f8fafc',
-                                            height: '280px',
-                                            width: '100%',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                        }}>
+                                        <div className="gallery-item-wrapper">
                                             <img
                                                 src={item.src}
                                                 alt={`Galeria ${idx}`}
@@ -564,6 +556,12 @@ const LandingPage = () => {
                                                     objectPosition: 'center center'
                                                 }}
                                             />
+                                            {(item.title || item.description) && (
+                                                <div className="gallery-overlay">
+                                                    {item.title && <h4 className="gallery-overlay-title">{item.title}</h4>}
+                                                    {item.description && <p className="gallery-overlay-description">{item.description}</p>}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))}

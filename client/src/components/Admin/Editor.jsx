@@ -1688,6 +1688,20 @@ const Editor = () => {
                                                                     </div>
 
                                                                     {/* Position sliders removed for UI simplification */}
+                                                                    <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                                        <input
+                                                                            value={item.title || ''}
+                                                                            placeholder="Título (Hover)"
+                                                                            onChange={(e) => handleCustomListChange(section.id, idx, 'title', e.target.value)}
+                                                                            style={{ fontSize: '0.75rem', width: '100%', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0' }}
+                                                                        />
+                                                                        <textarea
+                                                                            value={item.description || ''}
+                                                                            placeholder="Descrição (Hover)"
+                                                                            onChange={(e) => handleCustomListChange(section.id, idx, 'description', e.target.value)}
+                                                                            style={{ fontSize: '0.7rem', width: '100%', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', minHeight: '40px', resize: 'none' }}
+                                                                        />
+                                                                    </div>
                                                                 </div>
                                                             ))}
                                                             <label className="add-gallery-item" style={{ border: '2px dashed #cbd5e1', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', height: '100px', background: '#f8fafc' }}>
