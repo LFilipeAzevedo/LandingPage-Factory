@@ -525,16 +525,22 @@ const LandingPage = () => {
                                         overflow: 'hidden',
                                         transition: 'transform 0.3s ease'
                                     }}>
-                                        <div className="gallery-item-wrapper">
+                                        <div className="gallery-item-wrapper" style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
                                             <img
                                                 src={item.src}
                                                 alt={`Galeria ${idx}`}
-                                                style={{
+                                                style={item.cropW ? {
+                                                    position: 'absolute',
+                                                    width: `${100 / item.cropW * 100}%`,
+                                                    height: `${100 / item.cropH * 100}%`,
+                                                    top: `${-item.cropY * (100 / item.cropH)}%`,
+                                                    left: `${-item.cropX * (100 / item.cropW)}%`,
+                                                    objectFit: 'cover'
+                                                } : {
                                                     width: '100%',
                                                     height: '100%',
                                                     objectFit: section.imageFit || 'cover',
-                                                    objectPosition: `${item.posX || 50}% ${item.posY || 50}%`,
-                                                    transform: `scale(${item.zoom || 1})`
+                                                    objectPosition: 'center center'
                                                 }}
                                             />
                                             {(item.title || item.description) && (
@@ -588,12 +594,18 @@ const LandingPage = () => {
                                                 <img
                                                     src={item.image}
                                                     alt={item.title}
-                                                    style={{
+                                                    style={item.cropW ? {
+                                                        position: 'absolute',
+                                                        width: `${100 / item.cropW * 100}%`,
+                                                        height: `${100 / item.cropH * 100}%`,
+                                                        top: `${-item.cropY * (100 / item.cropH)}%`,
+                                                        left: `${-item.cropX * (100 / item.cropW)}%`,
+                                                        objectFit: 'cover'
+                                                    } : {
                                                         width: '100%',
                                                         height: '100%',
                                                         objectFit: section.imageFit || 'cover',
-                                                        objectPosition: `${item.posX || 50}% ${item.posY || 50}%`,
-                                                        transform: `scale(${item.zoom || 1})`
+                                                        objectPosition: 'center center'
                                                     }}
                                                 />
                                             </div>

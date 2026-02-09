@@ -13,10 +13,10 @@ import FontSelector from './FontSelector';
 const ImageCropperModal = ({ image, initialCrop, initialZoom, onSave, onCancel }) => {
     const [crop, setCrop] = useState(initialCrop || { x: 0, y: 0 });
     const [zoom, setZoom] = useState(initialZoom || 1);
-    const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+    const [croppedArea, setCroppedArea] = useState(null);
 
     const onCropComplete = (croppedArea, croppedAreaPixels) => {
-        setCroppedAreaPixels(croppedAreaPixels);
+        setCroppedArea(croppedArea);
     };
 
     return (
@@ -51,15 +51,16 @@ const ImageCropperModal = ({ image, initialCrop, initialZoom, onSave, onCancel }
                     <button onClick={onCancel} className="btn btn-secondary" style={{ flex: 1 }}>Cancelar</button>
                     <button
                         onClick={() => {
-                            // Convert crop pixels to percentage for object-position if needed, 
-                            // but usually easy-crop provides what we need. 
-                            // We'll save the zoom and the center point.
-                            onSave({
-                                zoom,
-                                posX: 50 + (crop.x / 5), // Rough estimation or just save raw values
-                                posY: 50 + (crop.y / 5),
-                                rawCrop: crop
-                            });
+                            if (croppedArea) {
+                                onSave({
+                                    zoom,
+                                    cropX: croppedArea.x,
+                                    cropY: croppedArea.y,
+                                    cropW: croppedArea.width,
+                                    cropH: croppedArea.height,
+                                    rawCrop: crop
+                                });
+                            }
                         }}
                         className="btn btn-primary"
                         style={{ flex: 1, background: '#2563eb' }}
@@ -530,8 +531,10 @@ const Editor = () => {
                     const newItems = [...(s.items || [])];
                     newItems[index] = {
                         ...newItems[index],
-                        posX: cropData.posX,
-                        posY: cropData.posY,
+                        cropX: cropData.cropX,
+                        cropY: cropData.cropY,
+                        cropW: cropData.cropW,
+                        cropH: cropData.cropH,
                         zoom: cropData.zoom,
                         crop: cropData.rawCrop
                     };
@@ -1766,17 +1769,24 @@ const Editor = () => {
                                                             {(section.items || []).map((item, idx) => (
                                                                 <div key={idx} style={{ position: 'relative', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', background: 'white', padding: '5px' }}>
                                                                     <div style={{ position: 'relative', width: '100%', height: '100px', borderRadius: '8px', overflow: 'hidden', background: '#f1f5f9' }}>
-                                                                        <img
-                                                                            src={item.src || 'https://via.placeholder.com/150'}
-                                                                            alt="Item"
-                                                                            style={{
-                                                                                width: '100%',
-                                                                                height: '100%',
-                                                                                objectFit: 'cover',
-                                                                                objectPosition: `${item.posX || 50}% ${item.posY || 50}%`,
-                                                                                transform: `scale(${item.zoom || 1})`
-                                                                            }}
-                                                                        />
+                                                                        <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+                                                                            <img
+                                                                                src={item.src || 'https://via.placeholder.com/150'}
+                                                                                alt="Item"
+                                                                                style={item.cropW ? {
+                                                                                    position: 'absolute',
+                                                                                    width: `${100 / item.cropW * 100}%`,
+                                                                                    height: `${100 / item.cropH * 100}%`,
+                                                                                    top: `${-item.cropY * (100 / item.cropH)}%`,
+                                                                                    left: `${-item.cropX * (100 / item.cropW)}%`,
+                                                                                    objectFit: 'cover'
+                                                                                } : {
+                                                                                    width: '100%',
+                                                                                    height: '100%',
+                                                                                    objectFit: 'cover'
+                                                                                }}
+                                                                            />
+                                                                        </div>
                                                                         <button
                                                                             onClick={(e) => {
                                                                                 e.preventDefault();
@@ -1882,16 +1892,21 @@ const Editor = () => {
                                                                     <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flex: 1 }}>
                                                                         <div className="item-image-upload" style={{ width: '100px', height: '120px', position: 'relative', background: 'white', borderRadius: '10px', overflow: 'hidden', cursor: 'pointer', border: '1px solid #cbd5e1' }}>
                                                                             {item.image ? (
-                                                                                <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                                                                                <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
                                                                                     <img
                                                                                         src={item.image}
                                                                                         alt="Preview"
-                                                                                        style={{
+                                                                                        style={item.cropW ? {
+                                                                                            position: 'absolute',
+                                                                                            width: `${100 / item.cropW * 100}%`,
+                                                                                            height: `${100 / item.cropH * 100}%`,
+                                                                                            top: `${-item.cropY * (100 / item.cropH)}%`,
+                                                                                            left: `${-item.cropX * (100 / item.cropW)}%`,
+                                                                                            objectFit: 'cover'
+                                                                                        } : {
                                                                                             width: '100%',
                                                                                             height: '100%',
-                                                                                            objectFit: 'cover',
-                                                                                            objectPosition: `${item.posX || 50}% ${item.posY || 50}%`,
-                                                                                            transform: `scale(${item.zoom || 1})`
+                                                                                            objectFit: 'cover'
                                                                                         }}
                                                                                     />
                                                                                     <button
