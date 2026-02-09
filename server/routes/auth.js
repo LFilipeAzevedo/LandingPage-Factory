@@ -34,6 +34,14 @@ router.post('/login', (req, res) => {
         const passwordIsValid = bcrypt.compareSync(password, user.password_hash);
         if (!passwordIsValid) return res.status(401).json({ error: 'Invalid credentials' });
 
+        // AUTOMATIC DOWNGRADE: Check if yearly plan has expired
+        if (user.plan_tier !== 'static' && user.plan_tier !== 'adm_server' && user.subscription_expires_at && new Date(user.subscription_expires_at) < new Date()) {
+            db.run("UPDATE users SET plan_tier = 'static', subscription_status = 'expired' WHERE id = ?", [user.id], (err) => {
+                if (err) console.error('Error during auto-downgrade:', err);
+            });
+            user.plan_tier = 'static';
+        }
+
         const token = jwt.sign({ id: user.id, username: user.username, plan_tier: user.plan_tier }, SECRET_KEY, {
             expiresIn: 86400 // 24 hours
         });

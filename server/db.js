@@ -62,6 +62,9 @@ function initDb() {
         db.run("ALTER TABLE users ADD COLUMN subscription_status TEXT DEFAULT 'static'", (err) => {
             if (err && !err.message.includes('duplicate column')) console.log('Migration Stripe Status:', err.message);
         });
+        db.run("ALTER TABLE users ADD COLUMN subscription_expires_at DATETIME", (err) => {
+            if (err && !err.message.includes('duplicate column')) console.log('Migration Stripe Expiry:', err.message);
+        });
 
         // Create Pages Table
         db.run(`CREATE TABLE IF NOT EXISTS pages (

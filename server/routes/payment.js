@@ -39,22 +39,36 @@ router.post('/create-checkout-session', authenticateToken, async (req, res) => {
                 const userEmail = user.email;
                 const origin = req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5173';
 
-                const session = await stripe.checkout.sessions.create({
+                const isYearly = interval === 'yearly';
+                const sessionOptions = {
                     payment_method_types: ['card'],
                     customer_email: userEmail,
                     line_items: [{
                         price: priceId,
                         quantity: 1,
                     }],
-                    mode: 'subscription',
+                    mode: isYearly ? 'payment' : 'subscription', // Use payment for yearly to allow installments in Brazil
                     success_url: `${origin}/admin/plans?success=true`,
                     cancel_url: `${origin}/admin/plans?canceled=true`,
                     metadata: {
                         userId: userId.toString(),
-                        plan_tier: planTier // 'basic' or 'premium'
+                        plan_tier: planTier,
+                        interval: interval
                     }
-                });
+                };
 
+                // Enable installments for BRAZIL cards if it's a payment mode
+                if (isYearly) {
+                    sessionOptions.payment_method_options = {
+                        card: {
+                            installments: {
+                                enabled: true
+                            }
+                        }
+                    };
+                }
+
+                const session = await stripe.checkout.sessions.create(sessionOptions);
                 res.json({ url: session.url });
             } catch (innerError) {
                 console.error('❌ Stripe Async Error:', innerError);
@@ -154,19 +168,29 @@ router.post('/webhook', async (req, res) => {
             const session = event.data.object;
             const userId = session.metadata.userId;
             const planTier = session.metadata.plan_tier || 'basic'; // Default fallback
+            const interval = session.metadata.interval || 'monthly';
             const customerId = session.customer;
-            const subscriptionId = session.subscription;
+            const subscriptionId = session.subscription || null;
+
+            // Handle Expiration for One-time payments (Yearly with Installments)
+            let expiryDate = null;
+            if (session.mode === 'payment' && interval === 'yearly') {
+                const date = new Date();
+                date.setFullYear(date.getFullYear() + 1);
+                expiryDate = date.toISOString();
+            }
 
             db.run(`UPDATE users SET 
                 stripe_customer_id = ?, 
                 stripe_subscription_id = ?, 
                 plan_tier = ?, 
-                subscription_status = 'active' 
+                subscription_status = 'active',
+                subscription_expires_at = ?
                 WHERE id = ?`,
-                [customerId, subscriptionId, planTier, userId],
+                [customerId, subscriptionId, planTier, expiryDate, userId],
                 (err) => {
                     if (err) console.error('Error updating user subscription:', err);
-                    else console.log(`User ${userId} upgraded to ${planTier} via Webhook.`);
+                    else console.log(`User ${userId} upgraded to ${planTier} (${interval}) via Webhook. Expiry: ${expiryDate || 'N/A'}`);
                 }
             );
             break;
