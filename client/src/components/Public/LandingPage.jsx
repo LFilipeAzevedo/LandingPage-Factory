@@ -149,6 +149,8 @@ const LandingPage = () => {
         stationsTitleColor: '#1e293b',
         footerBackground: '#0f172a',
         footerTitleColor: '#cbd5e1',
+        salesBackground: '#ffffff',
+        salesTitleColor: '#1e293b',
         ...content.sectionStyles
     };
 
@@ -387,8 +389,8 @@ const LandingPage = () => {
                     >
                         <div className="content-container sales-container">
                             <div className="sales-info">
-                                <h2 className="sales-title" style={{ color: sectionStyles?.salesTitleColor || sectionStyles?.aboutTitleColor }}>{salesSection.title}</h2>
-                                <p className="sales-subtitle" style={{ color: sectionStyles?.salesTitleColor || sectionStyles?.aboutTitleColor }}>{salesSection.subtitle}</p>
+                                <h2 className="sales-title" style={{ color: sectionStyles?.salesTitleColor }}>{salesSection.title}</h2>
+                                <p className="sales-subtitle" style={{ color: sectionStyles?.salesTitleColor }}>{salesSection.subtitle}</p>
 
                                 <div className="sales-features-list">
                                     {salesSection.features?.map((feature, idx) => (

@@ -1662,11 +1662,16 @@ const Editor = () => {
 
                                                 <div className="form-group" style={{ marginBottom: '2rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px' }}>
                                                     <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem' }}>Aparência da Seção</h4>
-                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
                                                         <ColorPicker
                                                             label="Fundo"
                                                             color={content.sectionStyles?.salesBackground || '#ffffff'}
                                                             onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, salesBackground: val } }))}
+                                                        />
+                                                        <ColorPicker
+                                                            label="Texto"
+                                                            color={content.sectionStyles?.salesTitleColor || '#1e293b'}
+                                                            onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, salesTitleColor: val } }))}
                                                         />
                                                         <ColorPicker
                                                             label="Ícone"
