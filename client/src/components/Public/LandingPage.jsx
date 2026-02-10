@@ -271,16 +271,7 @@ const LandingPage = () => {
                         <div className="carousel-track">
                             {/* Duplicate content for seamless infinite scroll */}
                             {[...content.events, ...content.events].map((event, index) => (
-                                <div key={index} className={`carousel-item ${event.orientation || 'portrait'}`} style={{
-                                    background: '#ffffff',
-                                    borderRadius: '24px',
-                                    boxShadow: '0 15px 35px rgba(0,0,0,0.06)',
-                                    overflow: 'hidden',
-                                    border: '1px solid rgba(0,0,0,0.04)',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    height: '350px'
-                                }}>
+                                <div key={index} className={`carousel-item ${event.orientation || 'portrait'}`}>
                                     <div className="gallery-item-wrapper" style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
                                         <img
                                             src={event.image}
@@ -322,18 +313,8 @@ const LandingPage = () => {
                                 <div
                                     key={index}
                                     className={`carousel-item station-card-carousel ${station.orientation || 'portrait'}`}
-                                    style={{
-                                        backgroundColor: '#ffffff',
-                                        borderRadius: '24px',
-                                        boxShadow: '0 15px 35px rgba(0,0,0,0.06)',
-                                        border: '1px solid rgba(0,0,0,0.04)',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        overflow: 'hidden',
-                                        height: '350px' // Unified height
-                                    }}
                                 >
-                                    <div className="gallery-item-wrapper" style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+                                    <div className="gallery-item-wrapper" style={{ height: '100%' }}>
                                         {station.image && (
                                             <img
                                                 src={station.image}
@@ -577,15 +558,8 @@ const LandingPage = () => {
                                         <div className="carousel-track">
                                             {/* Duplicate content for seamless infinite scroll */}
                                             {[...(section.items || []), ...(section.items || [])].map((item, idx) => (
-                                                <div key={idx} className={`carousel-item ${item.orientation || 'portrait'}`} style={{
-                                                    background: '#ffffff',
-                                                    borderRadius: '24px',
-                                                    boxShadow: '0 15px 35px rgba(0,0,0,0.06)',
-                                                    border: '1px solid rgba(0,0,0,0.04)',
-                                                    overflow: 'hidden',
-                                                    height: '350px'
-                                                }}>
-                                                    <div className="gallery-item-wrapper" style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+                                                <div key={idx} className={`carousel-item ${item.orientation || 'portrait'}`}>
+                                                    <div className="gallery-item-wrapper" style={{ height: '100%' }}>
                                                         <img
                                                             src={item.src}
                                                             alt={`Galeria ${idx}`}
@@ -621,32 +595,9 @@ const LandingPage = () => {
                                         <div className="carousel-track">
                                             {/* Duplicate content for seamless infinite scroll */}
                                             {[...(section.items || []), ...(section.items || [])].map((item, idx) => (
-                                                <div key={idx} className="carousel-item portrait" style={{
-                                                    background: '#ffffff',
-                                                    padding: '15px',
-                                                    borderRadius: '24px',
-                                                    boxShadow: '0 15px 35px rgba(0,0,0,0.06)',
-                                                    border: '1px solid rgba(0,0,0,0.04)',
-                                                    textAlign: 'center',
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    alignItems: 'center',
-                                                    height: '420px', // Slightly taller to accommodate text
-                                                    overflow: 'hidden'
-                                                }}>
+                                                <div key={idx} className="carousel-item portrait">
                                                     {item.image && (
-                                                        <div className="grid-item-image" style={{
-                                                            width: '100%',
-                                                            height: '220px', // Adjusted height within carousel
-                                                            marginBottom: '15px',
-                                                            borderRadius: '16px',
-                                                            overflow: 'hidden',
-                                                            background: '#f8fafc',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            position: 'relative'
-                                                        }}>
+                                                        <div className="gallery-item-wrapper" style={{ height: '240px', minHeight: '240px' }}>
                                                             <img
                                                                 src={item.image}
                                                                 alt={item.title}
@@ -666,27 +617,29 @@ const LandingPage = () => {
                                                             />
                                                         </div>
                                                     )}
-                                                    <h3 style={{
-                                                        fontSize: '1.4rem',
-                                                        fontWeight: '700',
-                                                        color: '#1e293b',
-                                                        marginBottom: '10px',
-                                                        fontFamily: section.font || 'inherit'
-                                                    }}>
-                                                        {item.title}
-                                                    </h3>
-                                                    <p style={{
-                                                        color: '#64748b',
-                                                        lineHeight: '1.6',
-                                                        fontSize: '0.95rem',
-                                                        margin: 0,
-                                                        display: '-webkit-box',
-                                                        WebkitLineClamp: 4,
-                                                        WebkitBoxOrient: 'vertical',
-                                                        overflow: 'hidden'
-                                                    }}>
-                                                        {item.description}
-                                                    </p>
+                                                    <div style={{ padding: '20px', textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                                        <h3 style={{
+                                                            fontSize: '1.4rem',
+                                                            fontWeight: '700',
+                                                            color: '#1e293b',
+                                                            marginBottom: '10px',
+                                                            fontFamily: section.font || 'inherit'
+                                                        }}>
+                                                            {item.title}
+                                                        </h3>
+                                                        <p style={{
+                                                            color: '#64748b',
+                                                            lineHeight: '1.6',
+                                                            fontSize: '0.95rem',
+                                                            margin: 0,
+                                                            display: '-webkit-box',
+                                                            WebkitLineClamp: 4,
+                                                            WebkitBoxOrient: 'vertical',
+                                                            overflow: 'hidden'
+                                                        }}>
+                                                            {item.description}
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>

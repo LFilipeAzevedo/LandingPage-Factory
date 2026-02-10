@@ -1434,7 +1434,7 @@ const Editor = () => {
                                                                         isNativeList: true,
                                                                         initialCrop: event.crop,
                                                                         initialZoom: event.zoom,
-                                                                        aspect: event.orientation === 'landscape' ? 600 / 350 : 300 / 350
+                                                                        aspect: event.orientation === 'landscape' ? 580 / 420 : 320 / 420
                                                                     });
                                                                 }}
                                                                 className="btn btn-secondary"
@@ -1555,7 +1555,7 @@ const Editor = () => {
                                                                         isNativeList: true,
                                                                         initialCrop: station.crop,
                                                                         initialZoom: station.zoom,
-                                                                        aspect: station.orientation === 'landscape' ? 600 / 350 : 300 / 350
+                                                                        aspect: station.orientation === 'landscape' ? 580 / 420 : 320 / 420
                                                                     });
                                                                 }}
                                                                 className="btn btn-secondary"
@@ -1957,7 +1957,7 @@ const Editor = () => {
                                                                                     index: idx,
                                                                                     initialCrop: item.crop,
                                                                                     initialZoom: item.zoom,
-                                                                                    aspect: item.orientation === 'landscape' ? 600 / 350 : 300 / 350
+                                                                                    aspect: item.orientation === 'landscape' ? 580 / 420 : 320 / 420
                                                                                 });
                                                                             }}
                                                                             style={{
@@ -2080,7 +2080,7 @@ const Editor = () => {
                                                                                                 index: idx,
                                                                                                 initialCrop: item.crop,
                                                                                                 initialZoom: item.zoom,
-                                                                                                aspect: 370 / 280 // Fixed aspect for grid items
+                                                                                                aspect: 320 / 240 // Matching 320x240 display in front-end
                                                                                             });
                                                                                         }}
                                                                                         style={{
