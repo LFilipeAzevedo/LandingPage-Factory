@@ -314,7 +314,7 @@ const LandingPage = () => {
                                     key={index}
                                     className={`carousel-item station-card-carousel ${station.orientation || 'portrait'}`}
                                 >
-                                    <div className="gallery-item-wrapper" style={{ height: '100%' }}>
+                                    <div className="gallery-item-wrapper" style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
                                         {station.image && (
                                             <img
                                                 src={station.image}
@@ -559,7 +559,7 @@ const LandingPage = () => {
                                             {/* Duplicate content for seamless infinite scroll */}
                                             {[...(section.items || []), ...(section.items || [])].map((item, idx) => (
                                                 <div key={idx} className={`carousel-item ${item.orientation || 'portrait'}`}>
-                                                    <div className="gallery-item-wrapper" style={{ height: '100%' }}>
+                                                    <div className="gallery-item-wrapper" style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
                                                         <img
                                                             src={item.src}
                                                             alt={`Galeria ${idx}`}
@@ -597,7 +597,7 @@ const LandingPage = () => {
                                             {[...(section.items || []), ...(section.items || [])].map((item, idx) => (
                                                 <div key={idx} className="carousel-item portrait">
                                                     {item.image && (
-                                                        <div className="gallery-item-wrapper" style={{ height: '240px', minHeight: '240px' }}>
+                                                        <div className="gallery-item-wrapper" style={{ position: 'relative', width: '100%', height: '240px', minHeight: '240px', overflow: 'hidden' }}>
                                                             <img
                                                                 src={item.image}
                                                                 alt={item.title}
