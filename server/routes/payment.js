@@ -75,7 +75,7 @@ router.post('/create-checkout-session', authenticateToken, async (req, res) => {
                     }
                 };
 
-                // Enable installments for BRAZIL cards if it's a payment mode
+                // Regional options for Brazil (Yearly Payment Mode)
                 if (isYearly) {
                     sessionOptions.payment_method_options = {
                         card: {
@@ -86,6 +86,7 @@ router.post('/create-checkout-session', authenticateToken, async (req, res) => {
                     };
                 }
 
+                console.log('🚀 Creating Stripe Session with options:', JSON.stringify(sessionOptions, null, 2));
                 const session = await stripe.checkout.sessions.create(sessionOptions);
                 res.json({ url: session.url });
             } catch (innerError) {
