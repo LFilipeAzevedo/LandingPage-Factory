@@ -62,7 +62,7 @@ router.post('/create-checkout-session', authenticateToken, async (req, res) => {
                 }
 
                 const sessionOptions = {
-                    payment_method_types: ['card'],
+                    payment_method_types: isYearly ? ['card', 'pix', 'boleto'] : ['card'],
                     customer_email: userEmail,
                     line_items: [lineItem],
                     mode: isYearly ? 'payment' : 'subscription',
@@ -82,6 +82,12 @@ router.post('/create-checkout-session', authenticateToken, async (req, res) => {
                             installments: {
                                 enabled: true
                             }
+                        },
+                        boleto: {
+                            expires_after_days: 3
+                        },
+                        pix: {
+                            expires_after_seconds: 86400 // 1 day
                         }
                     };
                 }
@@ -184,34 +190,39 @@ router.post('/webhook', async (req, res) => {
 
     switch (event.type) {
         case 'checkout.session.completed':
+        case 'checkout.session.async_payment_succeeded':
             const session = event.data.object;
             const userId = session.metadata.userId;
-            const planTier = session.metadata.plan_tier || 'basic'; // Default fallback
+            const planTier = session.metadata.plan_tier || 'basic';
             const interval = session.metadata.interval || 'monthly';
             const customerId = session.customer;
             const subscriptionId = session.subscription || null;
 
-            // Handle Expiration for One-time payments (Yearly with Installments)
-            let expiryDate = null;
-            if (session.mode === 'payment' && interval === 'yearly') {
-                const date = new Date();
-                date.setFullYear(date.getFullYear() + 1);
-                expiryDate = date.toISOString();
-            }
-
-            db.run(`UPDATE users SET 
-                stripe_customer_id = ?, 
-                stripe_subscription_id = ?, 
-                plan_tier = ?, 
-                subscription_status = 'active',
-                subscription_expires_at = ?
-                WHERE id = ?`,
-                [customerId, subscriptionId, planTier, expiryDate, userId],
-                (err) => {
-                    if (err) console.error('Error updating user subscription:', err);
-                    else console.log(`User ${userId} upgraded to ${planTier} (${interval}) via Webhook. Expiry: ${expiryDate || 'N/A'}`);
+            // Only update DB if payment is confirmed
+            if (session.payment_status === 'paid') {
+                let expiryDate = null;
+                if (session.mode === 'payment' && interval === 'yearly') {
+                    const date = new Date();
+                    date.setFullYear(date.getFullYear() + 1);
+                    expiryDate = date.toISOString();
                 }
-            );
+
+                db.run(`UPDATE users SET 
+                    stripe_customer_id = ?, 
+                    stripe_subscription_id = ?, 
+                    plan_tier = ?, 
+                    subscription_status = 'active',
+                    subscription_expires_at = ?
+                    WHERE id = ?`,
+                    [customerId, subscriptionId, planTier, expiryDate, userId],
+                    (err) => {
+                        if (err) console.error('Error updating user subscription:', err);
+                        else console.log(`User ${userId} upgraded to ${planTier} (${interval}) via Webhook (${event.type}). Expiry: ${expiryDate || 'N/A'}`);
+                    }
+                );
+            } else {
+                console.log(`Checkout Session for user ${userId} is persistent but status is ${session.payment_status}. Waiting for payment.`);
+            }
             break;
 
         case 'customer.subscription.deleted':
