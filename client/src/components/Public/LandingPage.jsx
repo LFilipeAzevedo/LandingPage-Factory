@@ -405,7 +405,7 @@ const LandingPage = () => {
                                                     <CheckCircle size={20} />
                                                 </div>
                                             </div>
-                                            <div className="benefit-text" style={{ color: sectionStyles?.salesTitleColor || sectionStyles?.aboutTitleColor }}>
+                                            <div className="benefit-text">
                                                 {feature.text}
                                             </div>
                                         </div>

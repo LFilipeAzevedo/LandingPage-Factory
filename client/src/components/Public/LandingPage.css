@@ -579,10 +579,11 @@
     align-items: center;
     gap: 1.5rem;
     padding: 1.25rem 1.75rem;
-    background: rgba(255, 255, 255, 0.7);
+    background: #f8fafc;
     border-radius: 20px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid #e2e8f0;
+    margin-bottom: 1rem;
 }
 
 .benefit-item:hover {
@@ -623,6 +624,7 @@
 
 .benefit-text {
     font-size: 1.1rem;
+    color: #1e293b;
     font-weight: 600;
 }
 
@@ -698,7 +700,8 @@
 
 .old-price-premium {
     text-decoration: line-through;
-    opacity: 0.6;
+    color: #94a3b8 !important;
+    opacity: 0.8;
     font-size: 1.1rem;
     margin-bottom: 0.25rem;
 }
