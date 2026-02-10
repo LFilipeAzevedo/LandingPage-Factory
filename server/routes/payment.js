@@ -62,7 +62,7 @@ router.post('/create-checkout-session', authenticateToken, async (req, res) => {
                 }
 
                 const sessionOptions = {
-                    payment_method_types: isYearly ? ['card', 'pix', 'boleto'] : ['card'],
+                    payment_method_types: isYearly ? ['card', 'boleto'] : ['card'],
                     customer_email: userEmail,
                     line_items: [lineItem],
                     mode: isYearly ? 'payment' : 'subscription',
@@ -85,9 +85,6 @@ router.post('/create-checkout-session', authenticateToken, async (req, res) => {
                         },
                         boleto: {
                             expires_after_days: 3
-                        },
-                        pix: {
-                            expires_after_seconds: 86400 // 1 day
                         }
                     };
                 }
