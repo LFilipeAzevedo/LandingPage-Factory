@@ -1188,7 +1188,7 @@ const Editor = () => {
                                             />
                                             {content.heroImage && (
                                                 <div style={{ marginTop: '1rem', position: 'relative', display: 'inline-block', width: '100%', maxWidth: '300px' }}>
-                                                    <div style={{ width: '100%', height: '150px', position: 'relative', overflow: 'hidden', borderRadius: '8px', background: '#f1f5f9' }}>
+                                                    <div style={{ width: '100%', height: '125px', position: 'relative', overflow: 'hidden', borderRadius: '8px', background: '#f1f5f9', border: '1px solid #e2e8f0' }}>
                                                         <img
                                                             src={content.heroImage}
                                                             alt="Preview"
@@ -1202,7 +1202,7 @@ const Editor = () => {
                                                             } : {
                                                                 width: '100%',
                                                                 height: '100%',
-                                                                objectFit: 'contain'
+                                                                objectFit: 'cover'
                                                             }}
                                                         />
                                                     </div>
@@ -1214,7 +1214,7 @@ const Editor = () => {
                                                                 field: 'heroImage',
                                                                 initialCrop: content.heroImageSettings?.crop,
                                                                 initialZoom: content.heroImageSettings?.zoom,
-                                                                aspect: 1920 / 1080
+                                                                aspect: 1920 / 800
                                                             });
                                                         }}
                                                         className="btn btn-secondary"
