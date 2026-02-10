@@ -268,7 +268,7 @@ const LandingPage = () => {
                         <h2 style={{ color: sectionStyles.eventsTitleColor, marginBottom: '3rem' }}>{content.eventsTitle || 'Nossos Eventos'}</h2>
                     </div>
                     <div className="carousel-container">
-                        <div className="carousel-track">
+                        <div className="carousel-track" style={{ padding: 0 }}>
                             {/* Duplicate content for seamless infinite scroll */}
                             {[...content.events, ...content.events].map((event, index) => (
                                 <div key={index} className={`carousel-item ${event.orientation || 'portrait'}`}>
@@ -307,7 +307,7 @@ const LandingPage = () => {
                         <h2 style={{ color: sectionStyles.stationsTitleColor, textAlign: 'center', marginBottom: '3rem' }}>{content.stationsTitle || 'Nossas Estações'}</h2>
                     </div>
                     <div className="carousel-container">
-                        <div className="carousel-track">
+                        <div className="carousel-track" style={{ padding: 0 }}>
                             {/* Duplicate content for seamless infinite scroll */}
                             {[...content.stations, ...content.stations].map((station, index) => (
                                 <div
@@ -319,7 +319,6 @@ const LandingPage = () => {
                                             <img
                                                 src={station.image}
                                                 alt={station.title}
-                                                className="station-image"
                                                 style={station.cropW ? {
                                                     position: 'absolute',
                                                     width: `${100 / station.cropW * 100}%`,
@@ -555,7 +554,7 @@ const LandingPage = () => {
 
                                 {section.type === 'galeria' && (
                                     <div className="carousel-container">
-                                        <div className="carousel-track">
+                                        <div className="carousel-track" style={{ padding: 0 }}>
                                             {/* Duplicate content for seamless infinite scroll */}
                                             {[...(section.items || []), ...(section.items || [])].map((item, idx) => (
                                                 <div key={idx} className={`carousel-item ${item.orientation || 'portrait'}`}>
@@ -574,7 +573,7 @@ const LandingPage = () => {
                                                                 width: '100%',
                                                                 height: '100%',
                                                                 objectFit: section.imageFit || 'cover',
-                                                                objectPosition: 'center center'
+                                                                objectPosition: 'center'
                                                             }}
                                                         />
                                                         {(item.title || item.description) && (
@@ -592,7 +591,7 @@ const LandingPage = () => {
 
                                 {section.type === 'grade' && (
                                     <div className="carousel-container">
-                                        <div className="carousel-track">
+                                        <div className="carousel-track" style={{ padding: 0 }}>
                                             {/* Duplicate content for seamless infinite scroll */}
                                             {[...(section.items || []), ...(section.items || [])].map((item, idx) => (
                                                 <div key={idx} className="carousel-item portrait">
@@ -612,7 +611,7 @@ const LandingPage = () => {
                                                                     width: '100%',
                                                                     height: '100%',
                                                                     objectFit: section.imageFit || 'cover',
-                                                                    objectPosition: 'center center'
+                                                                    objectPosition: 'center'
                                                                 }}
                                                             />
                                                         </div>
