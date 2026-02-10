@@ -344,14 +344,14 @@ const Editor = () => {
                     { text: "Embalagens e Fornecedores (pra você não perder dinheiro testando)" }
                 ],
                 card: {
-                    title: "O Curso te dá:",
+                    title: "O Curso te oferece:",
                     highlights: [
                         "Acesso imediato",
                         "Acesso e suporte para dúvidas de 1 ano",
                         "Aulas gravadas com todo o passo a passo",
                         "PDFs com receitas e materiais",
                         "Lista de Fornecedores e Embalagens",
-                        "Bônus: Praliné de Amêndoas e Picolé de Pudim"
+                        "Bônus: ...."
                     ],
                     oldPrice: "197,00",
                     currentPrice: "127,00",
@@ -1662,11 +1662,16 @@ const Editor = () => {
 
                                                 <div className="form-group" style={{ marginBottom: '2rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px' }}>
                                                     <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem' }}>Aparência da Seção</h4>
-                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
                                                         <ColorPicker
                                                             label="Fundo"
                                                             color={content.sectionStyles?.salesBackground || '#ffffff'}
                                                             onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, salesBackground: val } }))}
+                                                        />
+                                                        <ColorPicker
+                                                            label="Texto"
+                                                            color={content.sectionStyles?.salesTitleColor || '#1e293b'}
+                                                            onChange={(val) => setContent(prev => ({ ...prev, sectionStyles: { ...prev.sectionStyles, salesTitleColor: val } }))}
                                                         />
                                                         <ColorPicker
                                                             label="Ícone"
