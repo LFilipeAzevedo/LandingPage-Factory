@@ -698,14 +698,14 @@ const Editor = () => {
             img.onload = () => {
                 const orientation = img.width > img.height ? 'landscape' : 'portrait';
 
-                // Update state with image URL, orientation, and force 'contain' to avoid cropping quality loss
+                // Update state with image URL, orientation, and default to 'cover' for better visual filling
                 const newList = [...content[listName]];
                 newList[index]['image'] = fullUrl;
                 newList[index]['orientation'] = orientation;
-                newList[index]['imageFit'] = 'contain'; // User request: "enquadra-las sem perder qualidade"
+                newList[index]['imageFit'] = 'cover';
 
                 setContent(prev => ({ ...prev, [listName]: newList }));
-                setMessage(`Imagem enviada! Detectado: ${orientation === 'landscape' ? 'Paisagem' : 'Retrato'} (Ajuste: Mostrar Tudo)`);
+                setMessage(`Imagem enviada! Detectado: ${orientation === 'landscape' ? 'Paisagem' : 'Retrato'} (Enquadramento: Preencher Espaço)`);
             };
             img.src = fullUrl;
 
