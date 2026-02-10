@@ -344,14 +344,14 @@ const Editor = () => {
                     { text: "Embalagens e Fornecedores (pra você não perder dinheiro testando)" }
                 ],
                 card: {
-                    title: "O Curso te dá:",
+                    title: "O Curso te oferece:",
                     highlights: [
                         "Acesso imediato",
                         "Acesso e suporte para dúvidas de 1 ano",
                         "Aulas gravadas com todo o passo a passo",
                         "PDFs com receitas e materiais",
                         "Lista de Fornecedores e Embalagens",
-                        "Bônus: Praliné de Amêndoas e Picolé de Pudim"
+                        "Bônus: ...."
                     ],
                     oldPrice: "197,00",
                     currentPrice: "127,00",
