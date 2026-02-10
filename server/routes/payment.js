@@ -40,14 +40,32 @@ router.post('/create-checkout-session', authenticateToken, async (req, res) => {
                 const origin = req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5173';
 
                 const isYearly = interval === 'yearly';
+                let lineItem = {
+                    price: priceId,
+                    quantity: 1,
+                };
+
+                // If it's yearly and we want 'payment' mode for installments, 
+                // we must ensure the line item isn't tied to a 'recurring' price ID directly if using mode: payment.
+                // We'll fetch the price details to get the amount and use price_data.
+                if (isYearly) {
+                    const priceObject = await stripe.prices.retrieve(priceId);
+                    lineItem = {
+                        price_data: {
+                            currency: priceObject.currency,
+                            product: priceObject.product,
+                            unit_amount: priceObject.unit_amount,
+                            recurring: undefined, // Ensure it's treated as one-time
+                        },
+                        quantity: 1,
+                    };
+                }
+
                 const sessionOptions = {
                     payment_method_types: ['card'],
                     customer_email: userEmail,
-                    line_items: [{
-                        price: priceId,
-                        quantity: 1,
-                    }],
-                    mode: isYearly ? 'payment' : 'subscription', // Use payment for yearly to allow installments in Brazil
+                    line_items: [lineItem],
+                    mode: isYearly ? 'payment' : 'subscription',
                     success_url: `${origin}/admin/plans?success=true`,
                     cancel_url: `${origin}/admin/plans?canceled=true`,
                     metadata: {
