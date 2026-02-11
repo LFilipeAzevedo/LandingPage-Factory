@@ -21,12 +21,22 @@ function verifyAdmin(req, res, next) {
     jwt.verify(tokenString, SECRET_KEY, (err, decoded) => {
         if (err) return res.status(500).json({ error: 'Failed to authenticate token' });
 
-        if (decoded.plan_tier !== 'adm_server') {
-            return res.status(403).json({ error: 'Access denied: Super Admin only' });
-        }
+        // Real-time Check: Ensure admin is still active
+        db.get("SELECT is_active, plan_tier FROM users WHERE id = ?", [decoded.id], (err, user) => {
+            if (err) return res.status(500).json({ error: 'Database error' });
+            if (!user) return res.status(404).json({ error: 'User not found' });
 
-        req.userId = decoded.id;
-        next();
+            if (user.is_active === 0) {
+                return res.status(403).json({ error: 'Sua conta administrativa foi desativada.' });
+            }
+
+            if (user.plan_tier !== 'adm_server') {
+                return res.status(403).json({ error: 'Access denied: Super Admin only' });
+            }
+
+            req.userId = decoded.id;
+            next();
+        });
     });
 }
 

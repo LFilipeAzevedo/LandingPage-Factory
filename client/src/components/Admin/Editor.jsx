@@ -868,7 +868,7 @@ const Editor = () => {
                             <div className="nav-subitems">
                                 <button
                                     className={`nav-item ${activeTab === 'users' ? 'active' : ''}`}
-                                    onClick={() => setActiveTab('users')}
+                                    onClick={() => navigate('/admin/users')}
                                 >
                                     <Users size={16} /> Gestão de Usuários
                                 </button>

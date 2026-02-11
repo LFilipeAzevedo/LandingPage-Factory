@@ -31,6 +31,13 @@ router.post('/login', (req, res) => {
             });
         }
 
+        // BLOCK login if DEACTIVATED
+        if (user.is_active === 0) {
+            return res.status(403).json({
+                error: 'Sua conta foi desativada. Entre em contato com o suporte para mais informações.'
+            });
+        }
+
         const passwordIsValid = bcrypt.compareSync(password, user.password_hash);
         if (!passwordIsValid) return res.status(401).json({ error: 'Invalid credentials' });
 

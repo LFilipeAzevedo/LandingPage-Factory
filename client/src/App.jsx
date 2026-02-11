@@ -8,6 +8,8 @@ import Editor from './components/Admin/Editor';
 import Plans from './components/Admin/Plans';
 import LandingPage from './components/Public/LandingPage'; // Placeholder, will create next
 
+import AdminUsers from './components/Admin/AdminUsers';
+
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -40,6 +42,11 @@ function App() {
           <Route path="/admin/plans" element={
             <ProtectedRoute>
               <Plans />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/users" element={
+            <ProtectedRoute>
+              <AdminUsers />
             </ProtectedRoute>
           } />
 
