@@ -3,7 +3,7 @@ import api from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import './Editor.css';
-import { LogOut, Save, Layout, Type, Image as ImageIcon, TrendingUp, ShoppingBag, CheckCircle, Plus, Trash2, ShieldCheck, Users, Activity, Globe, Search, Layers, List, CreditCard } from 'lucide-react';
+import { LogOut, Save, Layout, Type, Image as ImageIcon, TrendingUp, ShoppingBag, CheckCircle, Plus, Trash2, ShieldCheck, Users, Activity, Globe, Search, Layers, List, CreditCard, MessageSquare, Mail, AlertCircle } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Cropper from 'react-easy-crop';
 import ColorPicker from './ColorPicker';
@@ -172,6 +172,7 @@ const Editor = () => {
     // Modern Interaction State
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, userId: null, username: '' });
     const [toasts, setToasts] = useState([]);
+    const [isDeactivated, setIsDeactivated] = useState(false);
 
     const showToast = (msg, type = 'success') => {
         const id = Date.now();
@@ -388,7 +389,11 @@ const Editor = () => {
             setContent(data);
         } catch (error) {
             console.error("Error loading content", error);
-            setMessage('Erro ao carregar conteúdo.');
+            if (error.response?.status === 403 && (error.response?.data?.error?.includes('desativada') || error.response?.data?.error?.includes('revogado'))) {
+                setIsDeactivated(true);
+            } else {
+                setMessage('Erro ao carregar conteúdo. Por favor, recarregue a página.');
+            }
         } finally {
             setLoading(false);
         }
@@ -906,6 +911,80 @@ const Editor = () => {
                 </header>
 
                 {message && <div className={`message ${message.includes('Erro') || message.includes('falhou') ? 'error' : 'success'}`}>{message}</div>}
+
+                {isDeactivated && (
+                    <div style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(255, 255, 255, 0.95)',
+                        backdropFilter: 'blur(10px)',
+                        zIndex: 9999,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '2rem',
+                        textAlign: 'center'
+                    }}>
+                        <div style={{
+                            background: '#fef2f2',
+                            padding: '2rem',
+                            borderRadius: '24px',
+                            maxWidth: '500px',
+                            border: '1px solid #fee2e2',
+                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+                        }}>
+                            <div style={{
+                                width: '64px',
+                                height: '64px',
+                                background: '#fee2e2',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                margin: '0 auto 1.5rem',
+                                color: '#ef4444'
+                            }}>
+                                <AlertCircle size={32} />
+                            </div>
+                            <h2 style={{ fontSize: '1.5rem', color: '#1e293b', marginBottom: '1rem', fontWeight: 'bold' }}>Acesso Restrito</h2>
+                            <p style={{ color: '#64748b', lineHeight: '1.6', marginBottom: '2rem' }}>
+                                Olá, notamos que sua conta está temporariamente inativa. Por favor, entre em contato com nosso suporte para regularizar seu acesso e continuar criando suas landing pages.
+                            </p>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <div style={{ display: 'flex', gap: '12px' }}>
+                                    <a
+                                        href="https://wa.me/5511999999999"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="btn btn-primary"
+                                        style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: '#22c55e', border: 'none' }}
+                                    >
+                                        <MessageSquare size={18} /> WhatsApp
+                                    </a>
+                                    <a
+                                        href="mailto:suporte@lpfactory.com"
+                                        className="btn btn-secondary"
+                                        style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                                    >
+                                        <Mail size={18} /> E-mail
+                                    </a>
+                                </div>
+                                <button
+                                    onClick={handleLogout}
+                                    className="btn"
+                                    style={{ background: 'transparent', color: '#64748b', fontSize: '0.9rem', marginTop: '1rem', textDecoration: 'underline' }}
+                                >
+                                    Sair e entrar com outra conta
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <div className={`editor-form ${activeTab === 'users' ? 'full-width' : ''}`}>
                     {activeTab === 'editor' ? (
