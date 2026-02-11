@@ -2,9 +2,12 @@
     "name": "landingpage-factory-root",
     "version": "1.0.0",
     "private": true,
+    "engines": {
+        "node": ">=20.0.0"
+    },
     "scripts": {
-        "postinstall": "cd client && npm install && cd ../server && npm install",
-        "build": "cd client && npm run build",
-        "start": "cd server && node index.js"
+        "postinstall": "npm install --prefix client && npm install --prefix server",
+        "build": "npm run build --prefix client",
+        "start": "node server/index.js"
     }
 }

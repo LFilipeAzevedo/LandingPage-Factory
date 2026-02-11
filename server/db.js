@@ -85,6 +85,11 @@ function initDb() {
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )`);
 
+        // --- PERFORMANCE INDEXES ---
+        db.run("CREATE INDEX IF NOT EXISTS idx_visits_slug ON visits(slug)");
+        db.run("CREATE INDEX IF NOT EXISTS idx_pages_user_id ON pages(user_id)");
+        db.run("CREATE INDEX IF NOT EXISTS idx_pages_slug ON pages(slug)");
+
         // Seed Default User (from .env)
         const defaultUser = process.env.ADMIN_USERNAME || 'LuizFactoryAdm';
         const defaultPass = process.env.ADMIN_PASSWORD;
