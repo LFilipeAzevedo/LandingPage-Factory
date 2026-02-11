@@ -12,7 +12,10 @@ import {
     Globe,
     CheckCircle,
     TrendingUp,
-    LogOut
+    LogOut,
+    ExternalLink,
+    Mail,
+    AlertTriangle
 } from 'lucide-react';
 
 const AdminUsers = () => {
@@ -198,8 +201,10 @@ const AdminUsers = () => {
                                 <tr style={{ textAlign: 'left' }}>
                                     <th style={{ padding: '16px', fontSize: '0.75rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>Usuário</th>
                                     <th style={{ padding: '16px', fontSize: '0.75rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>E-mail</th>
+                                    <th style={{ padding: '16px', fontSize: '0.75rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>Slug / Link</th>
                                     <th style={{ padding: '16px', fontSize: '0.75rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>Plano</th>
                                     <th style={{ padding: '16px', fontSize: '0.75rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>Cadastro</th>
+                                    <th style={{ padding: '16px', fontSize: '0.75rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>Expira em</th>
                                     <th style={{ padding: '16px', fontSize: '0.75rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>Visitas</th>
                                     <th style={{ padding: '16px', fontSize: '0.75rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase' }}>Status</th>
                                     <th style={{ padding: '16px', fontSize: '0.75rem', fontWeight: '600', color: '#64748b', textTransform: 'uppercase', textAlign: 'right' }}>Ações</th>
@@ -209,7 +214,30 @@ const AdminUsers = () => {
                                 {filteredUsers.map(u => (
                                     <tr key={u.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                                         <td style={{ padding: '16px', fontWeight: '600', color: '#0f172a' }}>{u.username}</td>
-                                        <td style={{ padding: '16px', color: '#64748b' }}>{u.email}</td>
+                                        <td style={{ padding: '16px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <span style={{ color: '#64748b' }}>{u.email}</span>
+                                                {u.is_verified ? (
+                                                    <CheckCircle size={14} color="#22c55e" title="E-mail Verificado" />
+                                                ) : (
+                                                    <AlertTriangle size={14} color="#f59e0b" title="E-mail Pendente" />
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td style={{ padding: '16px' }}>
+                                            {u.slug ? (
+                                                <a
+                                                    href={`/${u.slug}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#6366f1', textDecoration: 'none', fontSize: '0.875rem' }}
+                                                >
+                                                    /{u.slug} <ExternalLink size={14} />
+                                                </a>
+                                            ) : (
+                                                <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Sem página</span>
+                                            )}
+                                        </td>
                                         <td style={{ padding: '16px' }}>
                                             <select
                                                 value={u.plan_tier}
@@ -223,6 +251,9 @@ const AdminUsers = () => {
                                             </select>
                                         </td>
                                         <td style={{ padding: '16px', fontSize: '0.875rem', color: '#64748b' }}>{u.date_formatted}</td>
+                                        <td style={{ padding: '16px', fontSize: '0.875rem', color: u.subscription_expires_at ? '#22c55e' : '#94a3b8' }}>
+                                            {u.subscription_expires_at ? new Date(u.subscription_expires_at).toLocaleDateString('pt-BR') : '—'}
+                                        </td>
                                         <td style={{ padding: '16px', fontWeight: 'bold', color: '#3b82f6' }}>{u.total_visits}</td>
                                         <td style={{ padding: '16px' }}>
                                             <span style={{

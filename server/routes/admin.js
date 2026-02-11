@@ -44,9 +44,11 @@ function verifyAdmin(req, res, next) {
 router.get('/users', verifyAdmin, (req, res) => {
 
     db.all(`
-        SELECT u.id, u.username, u.email, u.plan_tier, u.is_active, 
+        SELECT u.id, u.username, u.email, u.plan_tier, u.is_active, u.is_verified, 
+        u.subscription_expires_at,
         strftime('%d/%m/%Y', u.created_at) as date_formatted,
-        (SELECT COUNT(*) FROM visits v JOIN pages p ON v.slug = p.slug WHERE p.user_id = u.id AND v.is_admin_hit = 0) as total_visits
+        (SELECT COUNT(*) FROM visits v JOIN pages p ON v.slug = p.slug WHERE p.user_id = u.id AND v.is_admin_hit = 0) as total_visits,
+        (SELECT slug FROM pages WHERE user_id = u.id LIMIT 1) as slug
         FROM users u
         ORDER BY u.created_at DESC
     `, [], (err, rows) => {
