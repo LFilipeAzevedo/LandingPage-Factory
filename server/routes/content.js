@@ -5,19 +5,29 @@ const db = require('../db');
 const router = express.Router();
 const SECRET_KEY = process.env.JWT_SECRET || 'super_secret_key_123';
 
-// Middleware to verify token
+// Middleware to verify token and check if account is active
 function verifyToken(req, res, next) {
     const token = req.headers['authorization'];
     if (!token) return res.status(403).json({ error: 'No token provided' });
 
-    // Bearer <token>
     const tokenString = token.startsWith('Bearer ') ? token.slice(7, token.length) : token;
 
     jwt.verify(tokenString, SECRET_KEY, (err, decoded) => {
         if (err) return res.status(500).json({ error: 'Failed to authenticate token' });
-        req.userId = decoded.id;
-        req.userTier = decoded.plan_tier; // Important for admin permissions
-        next();
+
+        // Real-time Check: Ensure user is still active in the database
+        db.get("SELECT is_active FROM users WHERE id = ?", [decoded.id], (err, user) => {
+            if (err) return res.status(500).json({ error: 'Database error' });
+            if (!user) return res.status(404).json({ error: 'User not found' });
+
+            if (user.is_active === 0) {
+                return res.status(403).json({ error: 'Sua conta foi desativada e seu acesso foi revogado.' });
+            }
+
+            req.userId = decoded.id;
+            req.userTier = decoded.plan_tier;
+            next();
+        });
     });
 }
 

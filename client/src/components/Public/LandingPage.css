@@ -16,13 +16,22 @@
     position: relative;
     padding: var(--spacing-xxl) var(--spacing-md);
     min-height: 70vh;
-    /* Reduced from 80vh for better balance */
+    aspect-ratio: 1920 / 800;
     display: flex;
     align-items: center;
     background-size: cover;
-    background-position: top center;
+    background-position: center;
     color: white;
     text-align: center;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .hero {
+        aspect-ratio: auto;
+        min-height: 80vh;
+        padding: var(--spacing-xl) var(--spacing-md);
+    }
 }
 
 .hero-overlay {

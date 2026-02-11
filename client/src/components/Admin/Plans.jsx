@@ -129,9 +129,9 @@ const Plans = () => {
                             {currentTier === 'static' ? 'Seu Plano Atual' : 'Incluído'}
                         </button>
                         <ul style={{ listStyle: 'none', padding: 0, margin: '32px 0', color: '#475569', lineHeight: '2' }}>
-                            <li>✅ 1 Landing Page</li>
-                            <li>✅ Editor Visual Básico</li>
-                            <li>❌ Domínio Próprio</li>
+                            <li>✅ 1 Landing Page Profissional</li>
+                            <li>✅ Editor de Conteúdo Intuitivo</li>
+                            <li>❌ Editor Visual (Cores & Fontes)</li>
                         </ul>
                     </div>
 
@@ -146,7 +146,7 @@ const Plans = () => {
                             {prices?.basic ? formatPrice(prices.basic[billingInterval].amount) : '...'}
                             <span style={{ fontSize: '1rem', color: '#64748b', fontWeight: '400' }}>/{billingInterval === 'monthly' ? 'mês' : 'ano'}</span>
                         </div>
-                        <p style={{ color: '#64748b', marginBottom: '24px' }}>Domínio profissional para o seu negócio.</p>
+                        <p style={{ color: '#64748b', marginBottom: '24px' }}>Personalização completa para sua marca.</p>
 
                         {currentTier === 'basic' ? (
                             <button onClick={handleManage} className="btn" style={{ width: '100%', background: '#fff', border: '1px solid #2563eb', color: '#2563eb' }}>Gerenciar</button>
@@ -157,10 +157,10 @@ const Plans = () => {
                         )}
 
                         <ul style={{ listStyle: 'none', padding: 0, margin: '32px 0', color: '#475569', lineHeight: '2' }}>
-                            <li>✅ <strong>Domínio Personalizado</strong></li>
-                            <li>✅ 3 Landing Pages</li>
-                            <li>✅ Editor Visual Completo</li>
-                            <li>❌ Módulos de Venda</li>
+                            <li>✅ <strong>Personalização de Cores & Fontes</strong></li>
+                            <li>✅ <strong>Logotipo & Foto de Perfil</strong></li>
+                            <li>✅ 1 Landing Page Completa</li>
+                            <li>❌ Módulos de Venda (Stripe)</li>
                         </ul>
                     </div>
 
@@ -193,9 +193,9 @@ const Plans = () => {
                         )}
 
                         <ul style={{ listStyle: 'none', padding: 0, margin: '32px 0', color: '#cbd5e1', lineHeight: '2' }}>
-                            <li>✅ <strong>Páginas Ilimitadas</strong></li>
-                            <li>✅ <strong>Módulos de Venda & Analytics</strong></li>
-                            <li>✅ Suporte Prioritário</li>
+                            <li>✅ <strong>Módulos de Venda (Checkout Stripe)</strong></li>
+                            <li>✅ <strong>Barra de Aviso (Anúncios)</strong></li>
+                            <li>✅ <strong>Analytics & Logs Detalhados</strong></li>
                             <li>✅ Tudo do Plano Básico</li>
                         </ul>
                     </div>
