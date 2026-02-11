@@ -157,8 +157,8 @@ const Plans = () => {
                         )}
 
                         <ul style={{ listStyle: 'none', padding: 0, margin: '32px 0', color: '#475569', lineHeight: '2' }}>
-                            <li>✅ **Personalização de Cores & Fontes**</li>
-                            <li>✅ **Logotipo & Foto de Perfil**</li>
+                            <li>✅ <strong>Personalização de Cores & Fontes</strong></li>
+                            <li>✅ <strong>Logotipo & Foto de Perfil</strong></li>
                             <li>✅ 1 Landing Page Completa</li>
                             <li>❌ Módulos de Venda (Stripe)</li>
                         </ul>
@@ -193,9 +193,9 @@ const Plans = () => {
                         )}
 
                         <ul style={{ listStyle: 'none', padding: 0, margin: '32px 0', color: '#cbd5e1', lineHeight: '2' }}>
-                            <li>✅ **Módulos de Venda (Checkout Stripe)**</li>
-                            <li>✅ **Barra de Aviso (Anúncios)**</li>
-                            <li>✅ **Analytics & Logs Detalhados**</li>
+                            <li>✅ <strong>Módulos de Venda (Checkout Stripe)</strong></li>
+                            <li>✅ <strong>Barra de Aviso (Anúncios)</strong></li>
+                            <li>✅ <strong>Analytics & Logs Detalhados</strong></li>
                             <li>✅ Tudo do Plano Básico</li>
                         </ul>
                     </div>
